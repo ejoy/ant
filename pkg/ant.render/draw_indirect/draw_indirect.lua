@@ -28,7 +28,7 @@ local function update_instance_buffer(e, instancememory, instancenum)
         create_indirect_buffer(ib.size)
     else
         if instancenum > ib.size then
-            ib.size = instancenum * 2
+            ib.size = instancenum
             bgfx.destroy(di.handle)
             create_indirect_buffer(ib.size)
         end
@@ -55,9 +55,10 @@ local function update_instance_buffer(e, instancememory, instancenum)
 end
 
 function di_sys.component_init()
-    for e in w:select "INIT draw_indirect:update indirect_object:update" do
+    for e in w:select "INIT draw_indirect:update indirect_object:update feature_set:in" do
         local ib = e.draw_indirect.instance_buffer
         update_instance_buffer(e, ib.memory, ib.num)
+        e.feature_set.DRAW_INDIRECT = true
     end
 end
 

@@ -38,7 +38,7 @@ local function motion_sampler_test()
     ig.enable(sampler_group, "view_visible", true)
 
     PC:create_instance {
-        prefab = "/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab",
+        prefab = "/pkg/ant.resources.binary/meshes/Duck.glb/mesh.prefab",
         parent = eid,
         group = sampler_group,
     }

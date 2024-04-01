@@ -13,51 +13,53 @@ local function add_view(name, afterview_idx)
 		error(("not enough view id, max viewid: %d"):format(MAX_VIEWID))
 	end
 
-	local real_id = (afterview_idx and afterview_idx+1 or id)
-
 	BINDINGS[name] = id
 	VIEWID_NAMES[id] = name
 
 	assert(#REMAPPING_LIST == id)
-	table.insert(REMAPPING_LIST, real_id+1, id)
+
+	local insert_idx = (afterview_idx or id)
+	--+1 for insert after
+	table.insert(REMAPPING_LIST, insert_idx+1, id)
 	return id
 end
 
-add_view "csm_fb"		-- 0
+add_view "csm_fb"
 add_view "skinning"
 add_view "csm1"
 add_view "csm2"
 add_view "csm3"
-add_view "csm4"			-- 5
+add_view "csm4"
+add_view "evsm"
 add_view "ibl"
 add_view "pre_depth"
 add_view "scene_depth"
 add_view "ssao"
-add_view "main_view"	--10
+add_view "main_view"
 add_view "outline"
 add_view "velocity"
 --TODO: blur and bloom can merge?
 --blur
 add_view "blur_ds1"
 add_view "blur_ds2"
-add_view "blur_ds3"		--15
+add_view "blur_ds3"
 add_view "blur_ds4"
 add_view "blur_us1"
 add_view "blur_us2"
 add_view "blur_us3"
-add_view "blur_us4"		--20
+add_view "blur_us4"
 --bloom
 add_view "bloom_ds1"
 add_view "bloom_ds2"
 add_view "bloom_ds3"
 add_view "bloom_ds4"
-add_view "bloom_us1"	--25
+add_view "bloom_us1"
 add_view "bloom_us2"
 add_view "bloom_us3"
 add_view "bloom_us4"
 add_view "tonemapping"
 add_view "tonemapping_blit"
-add_view "effect_view"	--30
+add_view "effect_view"
 add_view "taa"
 add_view "taa_copy"
 add_view "taa_present"
@@ -75,17 +77,22 @@ add_view "uiruntime"
 
 local remapping_need_update = true
 
-function mgr.generate(name, afterwho, count)
-	local _ = nil == mgr.get(name) or error (("%s already defined"):format(name))
-
-	count = count or 1
-	local viewid = add_view(name, mgr.get(afterwho))
-	for i=2, count do
-		add_view(name, viewid)
+local function find_remapping_idx(who)
+	if who then
+		local afterid = mgr.get(who)
+		for idx, id in ipairs(REMAPPING_LIST) do
+			if id == afterid then
+				return idx
+			end
+		end
 	end
+end
 
+function mgr.generate(name, afterwho)
+	local _ = nil == mgr.get(name) or error (("%s already defined"):format(name))
 	remapping_need_update = true
-	return viewid
+
+	return add_view(name, find_remapping_idx(afterwho))
 end
 
 function mgr.get(name)

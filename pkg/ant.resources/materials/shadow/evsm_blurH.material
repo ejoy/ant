@@ -1,0 +1,13 @@
+fx:
+  vs: /pkg/ant.resources/shaders/shadow/evsm/vs_quad.sc
+  fs: /pkg/ant.resources/shaders/shadow/evsm/fs_evsm_blur.sc
+  macros:
+    "EVSM_BLUR_H=1"
+properties:
+  s_input:
+    stage: 0
+    sampler: SAMPLER2DARRAY
+    texture: /pkg/ant.resources/textures/default.texture
+  u_filter_param: {0, 0, 0, 0}
+
+state: /pkg/ant.resources/materials/states/quad.state

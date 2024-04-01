@@ -1,0 +1,14 @@
+block:
+	/pkg/ant.vfs
+	/pkg/ant.efk/efkbgfx
+	/pkg/ant.resources.binary/meshes
+	/pkg/ant.resources.test/sky/doge2.texture
+	/pkg/ant.resources.test/sky/skybox.texture
+	/pkg/ant.resources.test/sky/space
+	/pkg/ant.resources.test/water
+	/pkg/ant.resources.test/particles
+	/pkg/ant.resources/textures/color_text.texture
+	/pkg/ant.resources/textures/irbtn_active.texture
+	/pkg/ant.resources/textures/irbtn_hover.texture
+	/pkg/ant.resources/textures/irbtn_normal.texture
+	/pkg/ant.resources/textures/texture_plane.texture

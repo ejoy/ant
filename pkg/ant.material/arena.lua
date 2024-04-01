@@ -63,4 +63,8 @@ function M.material_load(name, state, stencil, prog, system, attrib)
 	return m
 end
 
+function M.clear_all_uniforms()
+	arena.clear_all_uniforms(M._arena)
+end
+
 return M

@@ -1,7 +1,7 @@
 local assetmgr 	= import_package "ant.asset"
 local ImGui     = require "imgui"
 local faicons   = require "common.fa_icons"
-local icons   = require "common.icons"
+local icons     = require "common.icons"
 local m = {}
 
 function m.imguiBeginToolbar()
@@ -146,7 +146,7 @@ local global_data	= require "common.global_data"
 function m.load_imgui_layout(filename)
     local rf = io.open(filename:string(), "rb")
     if not rf then
-        rf = io.open(tostring(global_data.editor_root) .. "imgui.default.layout", "rb")
+        rf = io.open(tostring(global_data.editor_root) .. "/imgui.default.layout", "rb")
     end
     if rf then
         local setting = rf:read "a"
@@ -157,7 +157,7 @@ end
 
 function m.save_ui_layout()
     local setting = ImGui.SaveIniSettingsToMemory()
-    local wf = assert(io.open(tostring(global_data.editor_root) .. "imgui.layout", "wb"))
+    local wf = assert(io.open(tostring(global_data.editor_root) .. "/imgui.layout", "wb"))
     wf:write(setting)
     wf:close()
 end

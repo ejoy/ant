@@ -62,8 +62,12 @@ local params = {
 local m = {params = params}
 
 local function add_wait_queue(name)
-    table.insert(params.WAIT_QUEUE, 1, name)
-    --params.WAIT_QUEUE[#params.WAIT_QUEUE+1] = name
+    for _, pn in ipairs(params.WAIT_QUEUE) do
+        if pn == name then
+            return
+        end
+    end
+    params.WAIT_QUEUE[#params.WAIT_QUEUE+1] = name
 end
 
 local function parse_config(config)
@@ -107,7 +111,7 @@ local function destroy_prefab_cache(handle, destroy_rb)
             table.remove(params.WAIT_QUEUE, i)
         end
     end
-    params.PREFABS[name] = {type = prefab.type}
+    params.PREFABS[name] = nil
 end
 
 function m.register_new_rt()
@@ -179,7 +183,6 @@ function m.register_new_rt()
     init_mem_texture_queue(params.VIEWID, params.QUEUE_NAME)
     RENDER_ARG = irender.pack_render_arg(params.QUEUE_NAME,params.VIEWID)
 end
-
 
 function m.clear_prefab_cache()
     fbmgr.destroy_rb(params.DEFAULT_FB[1].rbidx, true)
@@ -254,7 +257,7 @@ local RM            = ecs.require "ant.material|material"
 function m.copy_main_material()
     for e in w:select "mem_texture_ready:update filter_result render_object:in filter_material:in material:in" do
         ivm.set_masks(e, "main_view|selectable|cast_shadow", false)
-        ivm.set_masks(e, params.QUEUE_NAME, true)
+        --ivm.set_masks(e, params.QUEUE_NAME, true)
         local fm = e.filter_material
         local matres = assetmgr.resource(e.material)
         local Dmi = fm.DEFAULT_MATERIAL
@@ -270,26 +273,33 @@ function m.copy_main_material()
     end
 end
 
+
+local function update_fb(new_fb)
+    if new_fb then
+        local viewid = params.VIEWID
+        local fbidx = fbmgr.get_fb_idx(viewid)
+        fbmgr.recreate(fbidx, new_fb)
+        local select_tag = ("%s render_target:update"):format(params.QUEUE_NAME)
+        local mtq = w:first(select_tag)
+        irq.update_rendertarget(params.QUEUE_NAME, mtq.render_target) 
+    end
+end
+
 function m.process_wait_queue()
 
-    local function update_fb(new_fb)
-        if new_fb then
-            local viewid = params.VIEWID
-            local fbidx = fbmgr.get_fb_idx(viewid)
-            fbmgr.recreate(fbidx, new_fb)
-            local select_tag = ("%s render_target:update"):format(params.QUEUE_NAME)
-            local mtq = w:first(select_tag)
-            irq.update_rendertarget(params.QUEUE_NAME, mtq.render_target) 
-        end
-    end
-
     local function set_camera_srt(prefab, name)
+        if prefab.camera_ready then return end
 
---[[         if prefab.camera_srt then
+        local objects, rotation, distance, camera_srt = prefab.objects, prefab.rotation, prefab.distance, prefab.camera_srt
+        
+        if prefab.camera_srt then
+            local select_tag = ("%s camera_ref:in"):format(params.QUEUE_NAME)
+            local mtq = w:first(select_tag)
+            local camera<close> = world:entity(mtq.camera_ref, "scene:update camera:in")
+            iom.set_position(camera, camera_srt.t)
+            iom.set_rotation(camera, camera_srt.r)
             return
-        end ]]
-
-        local objects, rotation, distance = prefab.objects, prefab.rotation, prefab.distance
+        end
 
         local function calc_srt(camera_rot, aabb, distance)
             if not math3d.aabb_isvalid(aabb) then return end
@@ -298,7 +308,7 @@ function m.process_wait_queue()
             local r = get_diagonal_length(a, b, c) / params.DEFAULT_EXTENTS
             local view_dir = math3d.todirection(camera_rot)
             local view_len = params.DEFAULT_LENGTH * distance * r
-            local camera_pos = math3d.sub(origin_world_center, math3d.mul(view_dir, view_len))
+            local camera_pos = math3d.sub(math3d.vector(0, math3d.index(origin_world_center, 2), 0), math3d.mul(view_dir, view_len))
             return camera_pos
         end
 
@@ -317,18 +327,17 @@ function m.process_wait_queue()
             local camera_pos = calc_srt(camera_rot, scene_aabb, distance)
             params.PREFABS[name].camera_srt = {r = math3d.mark(camera_rot), t = math3d.mark(camera_pos)}
             iom.set_position(camera, camera_pos)
-            iom.set_rotation(camera, camera_rot) 
+            iom.set_rotation(camera, camera_rot)
         end
-
---[[         local center, _ = math3d.aabb_center_extents(scene_aabb)
-        prefab.center = center ]]
     end
 
     local function set_objects_visible_state(prefab, state)
         if prefab and prefab.objects then
             for _, eid in ipairs(prefab.objects) do
-                local ee <close> = world:entity(eid, "visible?out")
-                irender.set_visible(ee, state)
+                local ee <close> = world:entity(eid, "render_object?in")
+                if ee.render_object then
+                    ivm.set_masks(ee, params.QUEUE_NAME, state)
+                end
             end
         end
     end
@@ -368,24 +377,19 @@ function m.process_wait_queue()
             table.remove(wait_queue, 1)
         elseif not is_prefab_ready(cur_prefab) then
             -- should be removed later
-        else
+        elseif cur_prefab.state == "draw" then
+            cur_prefab.state = "after_draw"
+        elseif cur_prefab.state == "after_draw" then
+            cur_prefab.state = nil
+            set_objects_visible_state(cur_prefab, false)
             table.remove(wait_queue, 1)
+            update_fb(params.DEFAULT_FB)
+        else
             update_fb(cur_prefab.fb)
             set_camera_srt(cur_prefab, cur_name)
             set_objects_visible_state(cur_prefab, true)
             adjust_prefab_rot(cur_prefab)
-            if (params.LAST_PREFAB and params.LAST_PREFAB ~= cur_name) or (not params.LAST_PREFAB) then
-                set_objects_visible_state(params.PREFABS[params.LAST_PREFAB], false)
-            end
-            params.LAST_PREFAB = cur_name
-        end
-
-        -- extra dynamic texture should be removed
-        for i, v in ipairs(wait_queue) do
-            local prefab = params.PREFABS[v]
-            if not prefab or (prefab and prefab.type and prefab.type:match "dynamic")  then
-                table.remove(wait_queue, i)
-            end
+            cur_prefab.state = "draw"
         end
     end
 end

@@ -1,38 +1,38 @@
-local function start(initargs)
-    local boot = dofile "/engine/ltask.lua"
-    local config = {
-        bootstrap = {
-            ["logger"] = {},
-            ["ant.window|boot"] = {
-                args = {initargs},
-                unique = false,
-            }
-        },
-        worker = 6,
-        worker_bind = {
-            ["ant.window|window"] = 0,
-            ["ant.hwi|bgfx"] = 1,
-        },
-    }
-    local platform = require "bee.platform"
-    if platform.os == "ios" then
-        local window = require "window.ios"
-        window.mainloop(function (what)
-            if what == "init" then
-                boot:start(config)
-            elseif what == "exit" then
-                boot:wait()
-            end
-        end)
-        return
+local ltask = require "ltask"
+
+local function start(config)
+    local function spawn_window()
+        local ServiceWindow = ltask.spawn_service {
+            unique = true,
+            name = "ant.window|window",
+            args = { config },
+            worker_id = 0,
+        }
+        ltask.call(ServiceWindow, "wait")
     end
-    config.mainthread = 0
-    boot:start(config)
-    boot:wait()
+    local function spawn_bgfx()
+        ltask.spawn_service {
+            unique = true,
+            name = "ant.hwi|bgfx",
+            worker_id = 1,
+        }
+    end
+    local function spawn_rmlui()
+        ltask.uniqueservice "ant.rmlui|rmlui"
+    end
+    local function spawn_resource()
+        ltask.uniqueservice "ant.resource_manager|resource"
+    end
+    for _ in ltask.parallel {
+        { spawn_window },
+        { spawn_bgfx },
+        { spawn_rmlui },
+        { spawn_resource },
+    } do
+    end
 end
 
 local function newproxy(t, k)
-    local ltask = require "ltask"
     local ServiceWindow = ltask.queryservice "ant.window|window"
 
     local function reboot(initargs)

@@ -21,6 +21,12 @@ local r2l_mat <const> = mathpkg.constant.R2L_MAT
 local m = ecs.system "skinning_system"
 local api = {}
 
+function m:component_init()
+	for e in w:select "INIT skinning feature_set:in" do
+        e.feature_set.GPU_SKINNING = true
+    end
+end
+
 function m:follow_scene_update()
 	for e in w:select "scene_changed animation animation_changed?out" do
 		e.animation_changed = true
@@ -76,6 +82,19 @@ end
 
 function api.build(models, skinning)
 	ozz.BuildSkinningMatrices(skinning.matrices, models, skinning.inverseBindMatrices, skinning.jointsRemap)
+end
+
+local c = ecs.component "skinning"
+
+function c.remove(v)
+	if ENABLE_TAA then
+		if v.prev_matrices_id ~= nil then
+			math3d.unmark(v.prev_matrices_id)
+			v.prev_matrices_id = nil
+		end
+	end
+	math3d.unmark(v.matrices_id)
+	v.matrices_id = mathpkg.constant.NULL
 end
 
 return api

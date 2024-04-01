@@ -134,6 +134,7 @@ namespace ozzlua {
 	static int AnimationBuilder(lua_State* L) {
 		auto& raw_animation = bee::lua::checkudata<ozz::animation::offline::RawAnimation>(L, 1);
 		ozz::animation::offline::AnimationBuilder builder;
+		builder.iframe_interval = (float)luaL_optnumber(L, 2, 10.f);
 		auto animation = builder(raw_animation);
 		if (!animation) {
 			luaL_error(L, "Failed to build runtime animation.");

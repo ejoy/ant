@@ -5,6 +5,7 @@ local w     = world.w
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 local renderpkg = import_package "ant.render"
+local MESH      = world:clibs "render.mesh"
 local layoutmgr = renderpkg.layoutmgr
 local mathpkg   = import_package "ant.math"
 local mc, mu    = mathpkg.constant, mathpkg.util
@@ -153,10 +154,11 @@ local function update_drawer_items(de)
 
         local objbuffer = table.concat(buffers, "")
         local vbnum = #objbuffer//layout.stride
-        ro.vb_start, ro.vb_num = 0, vbnum
-        ro.ib_start, ro.ib_num = 0, (vbnum//4)*6
 
-        bgfx.update(ro.vb_handle, 0, bgfx.memory_buffer(objbuffer))
+        MESH.set_num(ro.mesh_idx, "vb0", vbnum)
+        MESH.set_num(ro.mesh_idx, "ib", (vbnum//4)*6)
+        local handle = MESH.fetch_handle(ro.mesh_idx, "vb0")
+        bgfx.update(handle, 0, bgfx.memory_buffer(objbuffer))
     else
         ro.vb_num, ro.ib_num = 0, 0
     end

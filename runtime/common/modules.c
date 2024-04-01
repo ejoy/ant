@@ -4,6 +4,7 @@
 #include <bgfx/c99/bgfx.h>
 
 int luaopen_android(lua_State* L);
+int luaopen_bee_debugging(lua_State* L);
 int luaopen_bee_filesystem(lua_State* L);
 int luaopen_bee_filewatch(lua_State* L);
 int luaopen_bee_platform(lua_State* L);
@@ -37,9 +38,7 @@ int luaopen_imgui_backend(lua_State* L);
 int luaopen_imgui_internal(lua_State* L);
 int luaopen_imgui_widgets(lua_State* L);
 int luaopen_ios(lua_State* L);
-int luaopen_ltask(lua_State* L);
 int luaopen_ltask_bootstrap(lua_State* L);
-int luaopen_ltask_exclusive(lua_State* L);
 int luaopen_luadebug(lua_State* L);
 int luaopen_luadebug_hookmgr(lua_State* L);
 int luaopen_luadebug_stdio(lua_State* L);
@@ -59,6 +58,7 @@ int luaopen_programan_client(lua_State *L);
 int luaopen_programan_server(lua_State *L);
 int luaopen_render_material(lua_State *L);
 int luaopen_render_queue(lua_State *L);
+int luaopen_render_mesh(lua_State *L);
 int luaopen_render_cache(lua_State *L);
 int luaopen_rmlui(lua_State* L);
 int luaopen_system_cull(lua_State* L);
@@ -75,6 +75,7 @@ int luaopen_cell_core(lua_State *L);
 
 void ant_loadmodules(lua_State* L) {
     static const luaL_Reg modules[] = {
+        { "bee.debugging", luaopen_bee_debugging },
         { "bee.filesystem", luaopen_bee_filesystem },
         { "bee.select", luaopen_bee_select },
         { "bee.serialization", luaopen_bee_serialization },
@@ -110,9 +111,7 @@ void ant_loadmodules(lua_State* L) {
         { "efk", luaopen_efk},
         { "effekseer.callback", luaopen_effekseer_callback},
         { "fmod", luaopen_fmod},
-        { "ltask", luaopen_ltask},
         { "ltask.bootstrap", luaopen_ltask_bootstrap},
-        { "ltask.exclusive", luaopen_ltask_exclusive},
         { "ecs.core", luaopen_ecs_core},
         { "ecs.components", luaopen_ecs_components},
         { "ecs.util", luaopen_ecs_util},
@@ -121,6 +120,7 @@ void ant_loadmodules(lua_State* L) {
         { "render.material.core",   luaopen_material_core},
         { "render.render_material", luaopen_render_material},
         { "render.queue",           luaopen_render_queue},
+        { "render.mesh",           luaopen_render_mesh},
         { "system.render",      luaopen_system_render},
         { "render.cache",        luaopen_render_cache},
         { "entity.drawer",      luaopen_entity_drawer},

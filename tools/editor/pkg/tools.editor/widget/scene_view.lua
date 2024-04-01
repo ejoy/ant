@@ -266,7 +266,7 @@ function m.show()
         end
         if ImGui.BeginPopup("CreateEntity") then
             if prefab_mgr:can_create_empty() then
-                -- only for xxx.glb(gltf)|mesh.prefab
+                -- only for xxx.glb(gltf)/mesh.prefab
                 if ImGui.MenuItem("EmptyNode") then
                     world:pub {"Create", "empty"}
                 end

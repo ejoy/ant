@@ -14,6 +14,7 @@ local bgfx 		= require "bgfx"
 local math3d 	= require "math3d"
 
 local Q			= world:clibs "render.queue"
+local MESH		= world:clibs "render.mesh"
 
 local queuemgr	= ecs.require "queue_mgr"
 
@@ -64,23 +65,17 @@ end
 
 local function update_ro(ro, m)
 	local vb = m.vb
- 	ro.vb_start = vb.start
-	ro.vb_num 	= vb.num
-	ro.vb_handle= vb.handle
+	MESH.set(ro.mesh_idx, "vb0", vb.start, vb.num, vb.handle)
 
 	local vb2 = m.vb2
 	if vb2 then
-		ro.vb2_start	= vb2.start
-		ro.vb2_num		= vb2.num
-		ro.vb2_handle	= vb2.handle
+		MESH.set(ro.mesh_idx, "vb1", vb2.start, vb2.num, vb2.handle)
 	end
 
 	local ib = m.ib
 	if ib then
-		ro.ib_start = ib.start
-		ro.ib_num 	= ib.num
-		ro.ib_handle= ib.handle
-	end 
+		MESH.set(ro.mesh_idx, "ib", ib.start, ib.num, ib.handle)
+	end
 end
 
 local RENDER_ARGS = setmetatable({}, {__index = function (t, k)
@@ -93,21 +88,16 @@ local RENDER_ARGS = setmetatable({}, {__index = function (t, k)
 end})
 
 local function create_material_instance(e)
-	--TODO: add render_features flag to replace skinning and draw_indirect component check
-	w:extend(e, "draw_indirect?in")
+	local fs = e.feature_set
 	local mr = assetmgr.resource(e.material)
-	if e.draw_indirect then
-		local di = mr.di
-		if not di then
-			error("use draw_indirect component, but material file not define draw_indirect material")
-		end
-
-		return RM.create_instance(di.object)
-	end
-	return RM.create_instance(mr.object)
+	local mo = fs.DRAW_INDIRECT and assert(mr.di, "use draw_indirect component, but material file not define draw_indirect material") or mr
+	return RM.create_instance(mo.object)
 end
 
 local function update_default_material_index(e)
+	w:extend(e, "material:in")
+	w:extend(e, "feature_set:in")
+	w:extend(e, "filter_material:in")
 	local ro = e.render_object
 	local mi = create_material_instance(e)
 	local midx = queuemgr.default_material_index()
@@ -148,21 +138,24 @@ local function check_update_main_queue_material(e)
 	end
 end
 
+function render_sys:opt_component_init()
+	for e in w:select "INIT feature_set:update" do
+		e.feature_set = {}
+	end
+
+	for e in w:select "INIT filter_material:update" do
+		e.filter_material	= {}
+	end
+end
 
 function render_sys:component_init()
-	for e in w:select "INIT material:in render_object:update filter_material:update filter_result:new" do
+	for e in w:select "INIT render_object:update" do
 		local ro = e.render_object
 		ro.rm_idx = R.alloc()
 
 		ro.visible_idx	= Q.alloc()
 		ro.cull_idx		= Q.alloc()
-
-		e.filter_material	= {}
-
-		--filter_material&filter_result
-		w:extend(e, "filter_material:in filter_result:new")
-		e.filter_result = true
-		update_default_material_index(e)
+		ro.mesh_idx		= MESH.alloc()
 	end
 
 	for e in w:select "INIT mesh:in mesh_result?update" do
@@ -211,8 +204,13 @@ end
 
 function render_sys:entity_init()
 	for e in w:select "INIT render_object:update" do
+		--filter_result
+		w:extend(e, "filter_result?out")
+		e.filter_result = true
+		update_default_material_index(e)
+
 		--mesh & material
-		w:extend(e, "mesh_result:in material:in")
+		w:extend(e, "mesh_result:in")
 		update_ro(e.render_object, e.mesh_result)
 		check_varyings(e.mesh_result, e.material)
 

@@ -8,11 +8,6 @@ local rhwi      = import_package "ant.hwi"
 
 rhwi.init_bgfx()
 
-local ServiceRmlUi
-ltask.fork(function ()
-    ServiceRmlUi = ltask.uniqueservice("ant.rmlui|rmlui", ltask.self())
-end)
-
 local world
 local WillReboot
 local initargs = ...
@@ -88,14 +83,10 @@ local function render(init, args, initialized)
         audio.frame()
         world._frametime = bgfx.encoder_frame()
     end
-    if ServiceRmlUi then
-        ltask.send(ServiceRmlUi, "shutdown")
-        ServiceRmlUi = nil
-    end
     world:pipeline_exit()
     world = nil
     bgfx.encoder_destroy()
-    rhwi.shutdown()
+    bgfx.shutdown()
     ltask.wakeup(WindowQuit)
 end
 
@@ -127,13 +118,14 @@ function WindowEvent.suspend(m)
                 window.peek_message()
                 if #WindowQueue > 0 then
                     ltask.wakeup(WindowToken)
-                    ltask.sleep(0)
                 else
                     thread.sleep(0.01)
                 end
+                ltask.sleep(0)
             end
         end)
     elseif m.what == "did_resume" then
+        world:dispatch_message(m)
         bgfx.continue()
         PAUSE = nil
     end
@@ -156,8 +148,10 @@ ltask.fork(function ()
             local f = WindowEvent[msg.type]
             if f then
                 f(msg)
-            elseif not world:dispatch_imgui(msg) then
-                world:dispatch_message(msg)
+            else
+                if not world:dispatch_imgui(msg) then
+                    world:dispatch_message(msg)
+                end
             end
         end
         ltask.wait(WindowToken)

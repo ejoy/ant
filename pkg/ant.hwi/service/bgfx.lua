@@ -16,7 +16,6 @@ local CALL = {
     "request_screenshot",
     "reset",
     "set_debug",
-    "get_log",
 
     "encoder_create",
     "encoder_destroy",

@@ -1,9 +1,11 @@
-system "splitviews_system"
-    .implement "splitviews.lua"
+--TODO: need implement
 
-component "ortho_right_queue"
-component "ortho_left_queue"
-component "ortho_back_queue"
-component "ortho_front_queue"
-component "ortho_top_queue"
-component "ortho_bottom_queue"
+-- system "splitviews_system"
+--     .implement "splitviews.lua"
+
+-- component "ortho_right_queue"
+-- component "ortho_left_queue"
+-- component "ortho_back_queue"
+-- component "ortho_front_queue"
+-- component "ortho_top_queue"
+-- component "ortho_bottom_queue"

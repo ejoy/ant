@@ -12,6 +12,7 @@ extern "C"{
 
 #include "queue.h"
 #include "hash.h"
+#include "mesh.h"
 
 #include "lua.hpp"
 #include "luabgfx.h"
@@ -102,30 +103,34 @@ static bool obj_visible(struct queue_container* Q, const ObjType &o, uint8_t qid
 
 static bool
 mesh_submit(struct ecs_world* w, const component::render_object* ro,  int vid){
-	const uint16_t vb_type = BUFFER_TYPE(ro->vb_handle);
+	auto mesh = mesh_fetch(w->MESH, ro->mesh_idx);
+	const auto& vb0 = mesh->buffers[BT_vertexbuffer0];
+	assert(vb0.isvalid());
+	const uint16_t vb_type = BUFFER_TYPE(vb0.handle);
 	
 	switch (vb_type){
-		case BGFX_HANDLE_VERTEX_BUFFER:	w->bgfx->encoder_set_vertex_buffer(w->holder->encoder, 0, bgfx_vertex_buffer_handle_t{(uint16_t)ro->vb_handle}, ro->vb_start, ro->vb_num); break;
+		case BGFX_HANDLE_VERTEX_BUFFER:	w->bgfx->encoder_set_vertex_buffer(w->holder->encoder, 0, bgfx_vertex_buffer_handle_t{(uint16_t)vb0.handle}, vb0.start, vb0.num); break;
 		case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS:	//walk through
-		case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER: w->bgfx->encoder_set_dynamic_vertex_buffer(w->holder->encoder, 0, bgfx_dynamic_vertex_buffer_handle_t{(uint16_t)ro->vb_handle}, ro->vb_start, ro->vb_num); break;
+		case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER: w->bgfx->encoder_set_dynamic_vertex_buffer(w->holder->encoder, 0, bgfx_dynamic_vertex_buffer_handle_t{(uint16_t)vb0.handle}, vb0.start, vb0.num); break;
 		default: assert(false && "Invalid vertex buffer type");
 	}
 
-	const uint16_t vb2_type = BUFFER_TYPE(ro->vb2_handle);
-	if((vb2_type != INVALID_BUFFER_TYPE)){
-		switch (vb2_type){
-			case BGFX_HANDLE_VERTEX_BUFFER:	w->bgfx->encoder_set_vertex_buffer(w->holder->encoder, 1, bgfx_vertex_buffer_handle_t{(uint16_t)ro->vb2_handle}, ro->vb2_start, ro->vb2_num); break;
+	const auto& vb1 = mesh->buffers[BT_vertexbuffer1];
+	if((vb1.isvalid())){
+		switch (BUFFER_TYPE(vb1.handle)){
+			case BGFX_HANDLE_VERTEX_BUFFER:	w->bgfx->encoder_set_vertex_buffer(w->holder->encoder, 1, bgfx_vertex_buffer_handle_t{(uint16_t)vb1.handle}, vb1.start, vb1.num); break;
 			case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS:	//walk through
-			case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER: w->bgfx->encoder_set_dynamic_vertex_buffer(w->holder->encoder, 1, bgfx_dynamic_vertex_buffer_handle_t{(uint16_t)ro->vb2_handle}, ro->vb2_start, ro->vb2_num); break;
+			case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER: w->bgfx->encoder_set_dynamic_vertex_buffer(w->holder->encoder, 1, bgfx_dynamic_vertex_buffer_handle_t{(uint16_t)vb1.handle}, vb1.start, vb1.num); break;
 			default: assert(false && "Invalid vertex buffer type");
 		}
 	}
 
-	if (ro->ib_num > 0){
-		switch (BUFFER_TYPE(ro->ib_handle)){
-			case BGFX_HANDLE_INDEX_BUFFER: w->bgfx->encoder_set_index_buffer(w->holder->encoder, bgfx_index_buffer_handle_t{(uint16_t)ro->ib_handle}, ro->ib_start, ro->ib_num); break;
+	const auto& ib = mesh->buffers[BT_indexbuffer];
+	if (ib.num > 0){
+		switch (BUFFER_TYPE(ib.handle)){
+			case BGFX_HANDLE_INDEX_BUFFER: w->bgfx->encoder_set_index_buffer(w->holder->encoder, bgfx_index_buffer_handle_t{(uint16_t)ib.handle}, ib.start, ib.num); break;
 			case BGFX_HANDLE_DYNAMIC_INDEX_BUFFER:	//walk through
-			case BGFX_HANDLE_DYNAMIC_INDEX_BUFFER_32: w->bgfx->encoder_set_dynamic_index_buffer(w->holder->encoder, bgfx_dynamic_index_buffer_handle_t{(uint16_t)ro->ib_handle}, ro->ib_start, ro->ib_num); break;
+			case BGFX_HANDLE_DYNAMIC_INDEX_BUFFER_32: w->bgfx->encoder_set_dynamic_index_buffer(w->holder->encoder, bgfx_dynamic_index_buffer_handle_t{(uint16_t)ib.handle}, ib.start, ib.num); break;
 			default: assert(false && "Unknown index buffer type"); break;
 		}
 	}
@@ -172,15 +177,14 @@ find_submit_material(lua_State *L, struct ecs_world *w, const component::render_
 }
 
 static inline bool
-find_submit_mesh(const component::render_object *ro, const component::indirect_object *io) {
-	if (ro->vb_num == 0 || (io && io->draw_num == 0))
+find_submit_mesh(struct ecs_world*w, const component::render_object *ro, const component::indirect_object *io) {
+	auto mesh = mesh_fetch(w->MESH, ro->mesh_idx);
+	const auto& vb0 = mesh->buffers[BT_vertexbuffer0];
+	if (vb0.num == 0 || (io && io->draw_num == 0))
 		return false;
 
-	const uint16_t ibtype = BUFFER_TYPE(ro->ib_handle);
-	if (ibtype != INVALID_BUFFER_TYPE && ro->ib_num == 0)
-		return false;
-
-	return true;
+	const auto& ib = mesh->buffers[BT_indexbuffer];
+	return ib.isvalid() ? (ib.num > 0) : true;
 }
 
 static inline void
@@ -337,7 +341,7 @@ struct obj_submitter {
 			const component::indirect_object* io = e.component<component::indirect_object>();
 			const auto ro = &e.get<component::render_object>();
 
-			if (!find_submit_mesh(ro, io))
+			if (!find_submit_mesh(ctx->w, ro, io))
 				continue;
 
 			add(ro, io);
@@ -509,7 +513,7 @@ struct hitch_submitter {
 				#ifdef RENDER_DEBUG
 					auto eid = e.component<component::eid>();
 				#endif //RENDER_DEBUG
-					if (ro && find_submit_mesh(ro, nullptr)){
+					if (ro && find_submit_mesh(ctx->w, ro, nullptr)){
 						objs.add(ro, &g);
 						#ifdef RENDER_DEBUG
 						objs.append_eid(eid);
@@ -688,6 +692,7 @@ linit_system(lua_State *L){
 	auto w = getworld(L);
 	w->R = render_material_create();
 	w->Q = queue_create();
+	w->MESH = mesh_create();
 	w->submit_cache = new submit_cache;
 	return 1;
 }
@@ -700,6 +705,9 @@ lexit(lua_State *L){
 
 	queue_destroy(w->Q);
 	w->Q = nullptr;
+
+	mesh_destroy(w->MESH);
+	w->MESH = nullptr;
 
 	delete w->submit_cache;
 	return 0;
@@ -808,7 +816,7 @@ lentity_draw(lua_State *L){
 	auto mi = find_submit_material(L, w, ra, ro->rm_idx);
 	if (mi){
 		const auto prog = material_prog(L, mi);
-		if (BGFX_HANDLE_IS_VALID(prog) && find_submit_mesh(ro, nullptr)){
+		if (BGFX_HANDLE_IS_VALID(prog) && find_submit_mesh(w, ro, nullptr)){
 			apply_material_instance(L, mi, w);
 			mesh_submit(w, ro, ra->viewid);
 			set_world_transform(w, ro->worldmat);

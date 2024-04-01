@@ -1,4 +1,5 @@
 local ltask = require "ltask"
+local atlas = import_package "ant.atlas_setting"
 local ServiceResource
 
 local PM = require "programan.client"
@@ -6,7 +7,7 @@ local PM = require "programan.client"
 local m = {}
 
 function m.init()
-    ServiceResource = ltask.uniqueservice "ant.resource_manager|resource"
+    ServiceResource = ltask.queryservice "ant.resource_manager|resource"
 end
 
 function m.material_create(filename)
@@ -35,15 +36,15 @@ function m.material_isvalid(pid)
 end
 
 function m.texture_create(filename)
-	return ltask.call(ServiceResource, "texture_create", filename)
+	return ltask.call(ServiceResource, "texture_create", atlas:get(filename))
 end
 
 function m.texture_create_fast(filename)
-	return ltask.call(ServiceResource, "texture_create_fast", filename)
+	return ltask.call(ServiceResource, "texture_create_fast", atlas:get(filename))
 end
 
 function m.texture_reload(filename, block)
-	return ltask.call(ServiceResource, "texture_reload", filename, nil, block)
+	return ltask.call(ServiceResource, "texture_reload", atlas:get(filename), nil, block)
 end
 
 function m.texture_default()

@@ -3,6 +3,8 @@
 
 #include "common/shadow/define.sh"
 
+#define u_pcf_kernelsize		u_shadow_filter_param.x
+
 #ifndef USE_SHADOW_COMPARE
 #error "PCF4x4 need shadow2DProj work"
 #endif //USE_SHADOW_COMPARE
@@ -11,10 +13,10 @@
 #error "need define PCF_FILTER_SIZE"
 #endif //PCF_FILTER_SIZE
 
-float sample_shadow_hardware(sampler2DShadow shadowsampler, vec4 shadowcoord, vec2 offset)
+float sample_shadow_compare_offset(shadow_sampler_type shadowsampler, vec4 shadowcoord, uint cascadeidx, vec2 offset)
 {
 	const vec4 coord = vec4(shadowcoord.xy + offset, shadowcoord.z, shadowcoord.w);
-	return sample_shadow_hardware(shadowsampler, coord);
+	return sample_shadow_compare(shadowsampler, coord, cascadeidx);
 }
 
 #define PCF_TYPE_FAST_CONVENTIONAL_SHADOW_FILTERING 1
@@ -76,7 +78,7 @@ float total_weight() {
 	return w;
 }
 
-float fastPCF(sampler2DShadow shadowsampler, vec4 shadowcoord)
+float fastPCF(shadow_sampler_type shadowsampler, vec4 shadowcoord, uint cascadeidx)
 {
 	vec4 s = vec4_splat(0.0);
 	float depthlinear = shadowcoord.z;
@@ -183,7 +185,7 @@ float fastPCF(sampler2DShadow shadowsampler, vec4 shadowcoord)
 
 #elif PCF_TYPE == PCF_TYPE_FIX4
 //see: https://developer.nvidia.com/gpugems/gpugems/part-ii-lighting-and-shadows/chapter-11-shadow-map-antialiasing
-float PCF4x4_fix4(shadow_sampler_type shadowsampler, vec4 shadowcoord)
+float PCF4x4_fix4(shadow_sampler_type shadowsampler, vec4 shadowcoord, uint cascadeidx)
 {
 	vec2 offset = (vec2)(frac(shadowcoord.xy * 0.5) > 0.25);  // mod
 	offset.y += offset.x;  // y ^= x in floating point 
@@ -191,10 +193,10 @@ float PCF4x4_fix4(shadow_sampler_type shadowsampler, vec4 shadowcoord)
 		offset.y = 0;
 
 	const float SM_TEXEL_SIZE = 1.0/1024.0;
-	return (sample_shadow_hardware(shadowsampler, shadowcoord, (offset + vec2(-1.5,  0.5))*u_shadowmap_texelsize)
-		   +sample_shadow_hardware(shadowsampler, shadowcoord, (offset + vec2( 0.5,  0.5))*u_shadowmap_texelsize)
-		   +sample_shadow_hardware(shadowsampler, shadowcoord, (offset + vec2(-1.5, -1.5))*u_shadowmap_texelsize)
-		   +sample_shadow_hardware(shadowsampler, shadowcoord, (offset + vec2( 0.5, -1.5))*u_shadowmap_texelsize)) * 0.25;
+	return (sample_shadow_compare_offset(shadowsampler, shadowcoord, cascadeidx, (offset + vec2(-1.5,  0.5))*u_shadowmap_texelsize)
+		   +sample_shadow_compare_offset(shadowsampler, shadowcoord, cascadeidx, (offset + vec2( 0.5,  0.5))*u_shadowmap_texelsize)
+		   +sample_shadow_compare_offset(shadowsampler, shadowcoord, cascadeidx, (offset + vec2(-1.5, -1.5))*u_shadowmap_texelsize)
+		   +sample_shadow_compare_offset(shadowsampler, shadowcoord, cascadeidx, (offset + vec2( 0.5, -1.5))*u_shadowmap_texelsize)) * 0.25;
 }
 
 #define shadowPCF PCF4x4_fix4
@@ -225,7 +227,7 @@ float PCF4x4_fix4(shadow_sampler_type shadowsampler, vec4 shadowcoord)
 // 	return visibility / 49.0;	
 // }
 
-float PCF(shadow_sampler_type shadowsampler, vec4 shadowcoord)
+float PCF(shadow_sampler_type shadowsampler, vec4 shadowcoord, uint cascadeidx)
 {
 	float visibility = 0;
 	const float s = PCF_FILTER_SIZE * 0.5 - 0.5;
@@ -233,7 +235,7 @@ float PCF(shadow_sampler_type shadowsampler, vec4 shadowcoord)
 	{
 		for (float x = -s; x <= s; x += 1.0)
 		{
-			visibility += sample_shadow_hardware(shadowsampler, shadowcoord, vec2(x, y) * u_shadowmap_texelsize);
+			visibility += sample_shadow_compare(shadowsampler, shadowcoord, cascadeidx, vec2(x, y) * u_shadowmap_texelsize);
 		}
 	}
 	return visibility / (PCF_FILTER_SIZE * PCF_FILTER_SIZE);

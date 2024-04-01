@@ -5,7 +5,7 @@ data:
     scene: 
         s: 100
     material: /pkg/ant.resources/materials/singlecolor.material
-    mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin"
+    mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb/meshes/Cube_P1.meshbin"
     visible: true
 ---
 policy:
@@ -21,3 +21,5 @@ data:
     decal:
         w: 2.5
         h: 2.5
+#use scene.parent as attach object
+mount: 1

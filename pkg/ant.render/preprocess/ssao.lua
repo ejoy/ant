@@ -204,7 +204,7 @@ function ssao_sys:init_world()
     update_bilateral_filter_kernels(bfd.dispatch.material)
 end
 
-local texmatrix<const> = mu.calc_texture_matrix()
+local TEXTURE_BIAS_MATRIX<const> = mu.texture_bias_matrix
 
 local function calc_ssao_config(camera, aobuf_w, aobuf_h, depthlevel)
     --calc projection scale
@@ -246,7 +246,7 @@ local function update_ao_frame_properties(dispatcher, ce)
             0.0, aobuf_h, 0.0, 0.0,
             0.0, 0.0, 1.0, 0.0,
             aobuf_w, aobuf_h, 0.0, 1.0
-        ), texmatrix)
+        ), TEXTURE_BIAS_MATRIX)
         m.u_ssct_screen_from_view_mat = math3d.mul(baismatrix, projmat)
     end
 end

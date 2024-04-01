@@ -86,7 +86,6 @@ local function new_fs()
 	end
 
 	function fs.read(fullpath)
-		fullpath = fullpath:gsub("|", "/")
 		local d, name = fetch(fullpath)
 		if not d then
 			return nil, name

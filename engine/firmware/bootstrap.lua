@@ -1,76 +1,52 @@
-local _dofile = dofile
-function dofile(path)
-	local fastio = require "fastio"
-    return fastio.loadfile(path)()
-end
-local i = 1
-while true do
-    if arg[i] == '-e' then
-        i = i + 1
-        assert(arg[i], "'-e' needs argument")
-        load(arg[i], "=(expr)")()
-    elseif arg[i] == nil then
-        break
+do
+    local function LoadFile(path, env)
+        local fastio = require "fastio"
+        local data = fastio.readall_v(path, path)
+        local func, err = fastio.loadlua(data, path, env)
+        if not func then
+            error(err)
+        end
+        return func
     end
-    i = i + 1
+    local function LoadDbg(expr)
+        local env = setmetatable({}, {__index = _G})
+        function env.dofile(path)
+            return LoadFile(path, env)()
+        end
+        assert(load(expr, "=(expr)", "t", env))()
+    end
+    local i = 1
+    while true do
+        if arg[i] == nil then
+            break
+        elseif arg[i] == '-e' then
+            assert(arg[i + 1], "'-e' needs argument")
+            LoadDbg(arg[i + 1])
+            table.remove(arg, i)
+            table.remove(arg, i)
+            break
+        end
+        i = i + 1
+    end
 end
-dofile = _dofile
-
-__ANT_RUNTIME__ = true
 
 local platform = require "bee.platform"
 local fs = require "bee.filesystem"
 
-local function app_path(name)
-	if platform.os == "windows" then
-		return fs.path(os.getenv "LOCALAPPDATA") / name
-	elseif platform.os == "linux" then
-		return fs.path(os.getenv "XDG_DATA_HOME" or (os.getenv "HOME" .. "/.local/share")) / name
-	elseif platform.os == "macos" then
-		return fs.path(os.getenv "HOME" .. "/Library/Caches") / name
-	else
-		error "unknown os"
-	end
-end
-
-local sandbox_path = (function ()
-	if platform.os == "ios" then
-		local ios = require "ios"
-		return fs.path(ios.directory(ios.NSDocumentDirectory))
-	elseif platform.os == "android" then
-		local android = require "android"
-		return fs.path(android.directory(android.ExternalDataPath))
-	else
-		return app_path "ant" / "sandbox"
-	end
-end)()
-
-local bundle_path = (function ()
-	if platform.os == "ios" then
-		local ios = require "ios"
-		return fs.path(ios.bundle())
-	elseif platform.os == "android" then
-		local android = require "android"
-		return fs.path(android.directory(android.InternalDataPath))
-	else
-		return app_path "ant" / "bundle"
-	end
-end)()
+local directory = dofile "/engine/firmware/directory.lua"
 
 local config = {
-	vfs = { slot = "" }
+	vfs = {}
 }
-
-local needcleanup
 
 if platform.os == "ios" then
 	local ios = require "ios"
 	local clean_up_next_time = ios.setting "clean_up_next_time"
 	if clean_up_next_time == true then
 		ios.setting("clean_up_next_time", false)
-		needcleanup = true
+		config.vfs.needcleanup = true
 	end
-	config.vfs.slot = ios.setting "root_slot" or ""
+	config.vfs.slot = ios.setting "root_slot"
 	local server_type = ios.setting "server_type"
 	if server_type == nil or server_type == "usb" then
 		config.nettype = "listen"
@@ -96,7 +72,7 @@ elseif platform.os == "android" then
 	config.port = 2018
 else
 	local datalist = require "datalist"
-	local f <close> = io.open((sandbox_path / "boot.settings"):string(), "rb")
+	local f <close> = io.open(directory.external .. "boot.settings", "rb")
 	if f then
 		local setting = datalist.parse(f:read "a")
 		config.nettype = setting.nettype
@@ -109,34 +85,49 @@ else
 	end
 end
 
-config.vfs.bundlepath = bundle_path:string():gsub("/?$", "/")
-config.vfs.localpath = (sandbox_path / "vfs"):string():gsub("/?$", "/")
-fs.create_directories(sandbox_path)
-fs.current_path(sandbox_path)
-if needcleanup then
-	fs.remove_all(config.vfs.localpath)
+config.directory = directory
+
+local ltask_config = {
+	core = {
+		worker = 8,
+		debuglog = directory.external .. "debug.log",
+		crashlog = directory.external .. "crash.log",
+	},
+	root = {
+		bootstrap = {
+			{
+				name = "io",
+				unique = true,
+				initfunc = [[return loadfile "/engine/firmware/io.lua"]],
+				args = { config },
+			},
+			{
+				name = "ant.engine|timer",
+				unique = true,
+			},
+			{
+				name = "ant.engine|logger",
+				unique = true,
+			},
+			{
+				name = "/main.lua",
+				args = { arg },
+			},
+		},
+	}
+}
+local boot = dofile "/engine/firmware/ltask.lua"
+if platform.os == "ios" then
+	local window = require "window.ios"
+	window.mainloop(function (what)
+		if what == "init" then
+			boot:start(ltask_config)
+		elseif what == "exit" then
+			boot:wait()
+		end
+	end)
+	return
 end
-fs.create_directories(config.vfs.localpath)
-
-local boot = require "ltask.bootstrap"
-local vfs = require "vfs"
-local thread = require "bee.thread"
-local socket = require "bee.socket"
-
-thread.newchannel "IOreq"
-
-local s, c = socket.pair()
-local io_req = thread.channel "IOreq"
-io_req:push(config, s:detach())
-
-vfs.iothread = boot.preinit [[
--- IO thread
-local fw = require "firmware"
-assert(fw.loadfile "io.lua")()
-]]
-
-vfs.initfunc("init_thread.lua", {
-	fd = c:detach(),
-	editor = __ANT_EDITOR__,
-})
-dofile "/main.lua"
+ltask_config.mainthread = 0
+boot:start(ltask_config)
+boot:wait()

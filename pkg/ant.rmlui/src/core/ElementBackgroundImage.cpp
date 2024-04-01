@@ -65,7 +65,7 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	if (path.empty()) {
 		return false;
 	}
-
+	
 	const auto& bounds = element->GetBounds();
 	const auto& border = element->GetBorder();
 	const auto& padding = element->GetPadding();
@@ -178,7 +178,7 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	auto atlasData = std::get_if<TextureData::Atlas>(&texture.extra);
 	if (atlasData) {
 		uv.origin.x = uv.origin.x + atlasData->ux;
-		uv.origin.x = uv.origin.x + atlasData->uy;
+		uv.origin.y = uv.origin.y + atlasData->uy;
 		uv.size.w = uv.size.w * atlasData->uw;
 		uv.size.h = uv.size.h * atlasData->uh;
 	}

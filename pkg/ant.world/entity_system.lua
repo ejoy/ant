@@ -62,3 +62,31 @@ function init_sys:frame_create_entity()
     world:_flush_instance_queue()
     world:_flush_entity_queue()
 end
+
+function update_sys:exit_stat()
+    world._templates = {}
+    collectgarbage "collect"
+    local material = ecs.require "ant.material|material"
+    if material.clear_all_uniforms then
+        material.clear_all_uniforms()
+    end
+    local destruct = world._destruct
+    if #destruct > 0 then
+        world._destruct = {}
+        for _, f in ipairs(destruct) do
+            f(world)
+        end
+    end
+    for name, func in pairs(world._component_remove) do
+        for v in w:select(name..":update") do
+            func(v[name])
+        end
+    end
+    math3d.reset()
+    math3d.reset()
+    print("math3d marked:", math3d.info "marked")
+    print("math3d ref:", math3d.info "ref")
+    for k, v in pairs(math3d.marked_list()) do
+        print(k, v)
+    end
+end

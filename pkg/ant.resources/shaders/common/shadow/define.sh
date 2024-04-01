@@ -6,7 +6,7 @@
 
 //#define SM_HARD 
 //#define SM_PCF
-//#define SM_ESM
+//#define SM_EVSM
 
 #ifndef USE_SHADOW_COMPARE
 #define USE_SHADOW_COMPARE	//define by default
@@ -25,14 +25,6 @@ uniform vec4 u_shadow_param1;
 
 uniform vec4 u_shadow_filter_param;
 
-#if defined(SM_PCF)
-#define u_pcf_kernelsize		u_shadow_filter_param.x
-#elif defined(SM_ESM)
-#define u_far_offset			u_shadow_filter_param.x
-#define u_minVariance 			u_shadow_filter_param.y
-#define u_depthMultiplier 		u_shadow_filter_param.z
-#endif 
-
 // omni
 uniform mat4 u_omni_matrix[4];
 uniform vec4 u_tetra_normal_Green;
@@ -44,20 +36,16 @@ uniform vec4 u_tetra_normal_Red;
 uniform vec4 u_omni_param;
 #define u_omni_count u_omni_param.x
 
-#ifdef USE_SHADOW_COMPARE
-#define SHADOW_SAMPLER2D	SAMPLER2DSHADOW
-#define shadow_sampler_type sampler2DShadow
-#else
-#define SHADOW_SAMPLER2D	SAMPLER2D
-#define shadow_sampler_type sampler2D 
-#endif
+#ifdef SM_EVSM
+#define SHADOW_SAMPLER2DARRAY	SAMPLER2DARRAY
+#define shadow_sampler_type     sampler2DArray
+#define sample_shadow           sample_shadow_directly
+#else //!SM_EVSM
+#define SHADOW_SAMPLER2DARRAY	SAMPLER2DARRAYSHADOW
+#define shadow_sampler_type     sampler2DArrayShadow
+#define sample_shadow           sample_shadow_compare
+#endif //SM_EVSM
 
-SHADOW_SAMPLER2D(s_shadowmap, 8);
-
-#ifdef USE_SHADOW_COMPARE
-#define sample_shadow sample_shadow_hardware
-#else //!USE_SHADOW_COMPARE
-#define sample_shadow sample_shadow_directly
-#endif //USE_SHADOW_COMPARE
+SHADOW_SAMPLER2DARRAY(s_shadowmap, 8);
 
 #endif //__SHADOW_DEFINES_SH__

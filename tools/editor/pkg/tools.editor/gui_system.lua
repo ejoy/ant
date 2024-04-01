@@ -194,6 +194,9 @@ local entity_event          = world:sub {"EntityEvent"}
 local event_window_title    = world:sub {"WindowTitle"}
 local event_gizmo           = world:sub {"Gizmo"}
 function m:handle_event()
+    if global_data.fileserver then
+        global_data.fileserver.handle_event()
+    end
     for _, e in event_update_aabb:unpack() do
         update_highlight_aabb(e)
     end

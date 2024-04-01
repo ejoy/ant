@@ -29,7 +29,7 @@ function group_test_sys:init()
     local g1, g2 = group_states.group_test1.gid, group_states.group_test2.gid
 
     PC:create_instance {
-        prefab = "/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab",
+        prefab = "/pkg/ant.resources.binary/meshes/base/cube.glb/mesh.prefab",
         group = g1,
         on_ready = function(e)
             local eid = e.tag['*'][1]
@@ -39,7 +39,7 @@ function group_test_sys:init()
     }
 
     PC:create_instance {
-        prefab = "/pkg/ant.resources.binary/meshes/base/cone.glb|mesh.prefab",
+        prefab = "/pkg/ant.resources.binary/meshes/base/cone.glb/mesh.prefab",
         group = g1,
         on_ready = function(e)
             local eid = e.tag['*'][1]
@@ -48,7 +48,7 @@ function group_test_sys:init()
     }
 
     PC:create_instance {
-        prefab = "/pkg/ant.resources.binary/meshes/base/cylinder.glb|mesh.prefab",
+        prefab = "/pkg/ant.resources.binary/meshes/base/cylinder.glb/mesh.prefab",
         group = g2,
         on_ready = function(e)
             local eid = e.tag['*'][1]
@@ -58,7 +58,7 @@ function group_test_sys:init()
     }
 
     PC:create_instance {
-        prefab = "/pkg/ant.resources.binary/meshes/base/ring.glb|mesh.prefab",
+        prefab = "/pkg/ant.resources.binary/meshes/base/ring.glb/mesh.prefab",
         group = g2,
         on_ready = function(e)
             local eid = e.tag['*'][1]
@@ -97,7 +97,7 @@ function group_test_sys:data_changed()
             switch_group_visible "group_test2"
         elseif key == "B" and press == 0 then
             PC:create_instance {
-                prefab = "/pkg/ant.resources.binary/meshes/base/ring.glb|mesh.prefab",
+                prefab = "/pkg/ant.resources.binary/meshes/base/ring.glb/mesh.prefab",
                 group = ig.groupid "group_test2",
                 on_ready = function(e)
                     local eid = e.tag['*'][1]

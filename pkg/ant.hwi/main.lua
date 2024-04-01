@@ -3,27 +3,22 @@ local hw = {}
 local platform = require "bee.platform"
 local bgfx     = require "bgfx"
 
-local math3d   = require "math3d"
-
-local caps = nil
-function hw.get_caps()
-	if caps == nil then
-    	caps = bgfx.get_caps()
-	end
-	return caps
-end
+local default_renderer <const> = {
+	windows = "DIRECT3D11",
+	macos = "METAL",
+	ios = "METAL",
+	android = "VULKAN",
+}
 
 local function check_renderer(renderer)
 	if renderer == nil then
-		return hw.default_renderer()
+		return default_renderer[platform.os]
 	end
-
 	if platform.os == "ios" and renderer ~= "METAL" then
 		assert(false, 'iOS platform context layer is select before bgfx renderer created \
 			the default layter is metal, if we need to test OpenGLES on iOS platform \
 			we need to change the context layter to OpenGLES')
 	end
-
 	return renderer
 end
 
@@ -41,7 +36,7 @@ local function cvt_flags(flags)
 	return table.concat(t)
 end
 
-local function bgfx_init(args)
+function hw.init(args)
 	local LOG_NONE  <const> = 1
 	local LOG_ERROR <const> = 2
 	local LOG_WARN  <const> = 3
@@ -60,13 +55,6 @@ local function bgfx_init(args)
 		--debug = true,
 	}
 	bgfx.init(init_args)
-end
-
-function hw.init(args)
-	bgfx_init(args)
-	hw.get_caps()
-	math3d.set_homogeneous_depth(caps.homogeneousDepth)
-	math3d.set_origin_bottom_left(caps.originBottomLeft)
 end
 
 function hw.native_window()
@@ -96,10 +84,6 @@ function hw.set_profie(enable)
 	end
 end
 
-function hw.screen_size()
-	return init_args.width, init_args.height
-end
-
 function hw.reset(t, w, h)
 	if t then
 		init_args.reset = cvt_flags(t)
@@ -113,36 +97,6 @@ function hw.reset(t, w, h)
 	end
 
 	bgfx.reset(init_args.width, init_args.height, init_args.reset)
-end
-
-local platform_relates = {
-	windows = {
-		renderer="DIRECT3D11",
-	},
-	macos = {
-		renderer="METAL",
-	},
-	ios = {
-		renderer="METAL",
-	},
-	android = {
-		renderer="VULKAN",
-	},
-}
-
-function hw.default_renderer(plat)
-	plat = plat or platform.os
-	local pi = platform_relates[plat]
-	return pi.renderer
-end
-
-function hw.shutdown()
-	caps = nil
-	bgfx.shutdown()
-end
-
-function hw.renderer()
-	return init_args.renderer
 end
 
 local ltask = require "ltask"

@@ -22,8 +22,6 @@ end
 
 function m.gen_main()
     local main_code = [[
-package.path = "/engine/?.lua"
-require "bootstrap"
 import_package "ant.window".start "$PackageName"
 ]]
     local test_code = [[

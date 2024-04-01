@@ -19,6 +19,8 @@ writeline ""
 writeline "#include <map>"
 writeline "#include <string_view>"
 writeline ""
+writeline "using namespace std::literals;"
+writeline ""
 
 for _, input in ipairs(inputs) do
     writeline(("#include \"embed/%s.h\""):format(input))
@@ -27,6 +29,6 @@ writeline ""
 
 writeline "std::map<std::string_view, std::string_view> firmware = {"
 for _, input in ipairs(inputs) do
-    writeline(("    { \"%s.lua\", embed_%s },"):format(input, input))
+    writeline(("    { \"%s.lua\"sv, embed_%s },"):format(input, input))
 end
 writeline "};"

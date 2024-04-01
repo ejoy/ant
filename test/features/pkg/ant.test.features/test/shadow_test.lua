@@ -38,7 +38,7 @@ local function multi_entities()
 	for i=1, rn * 24 do
 		local xidx, zidx = (i-1)%rn, (i-1)//rn
 		local pos = math3d.vector(xidx * 80 - 80, 10, zidx * 80 - 80)
-		util.create_instance("/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab", function (e)
+		util.create_instance("/pkg/ant.resources.binary/meshes/DamagedHelmet.glb/mesh.prefab", function (e)
 			local root<close> = world:entity(e.tag['*'][1])
 			iom.set_scale(root, 10)
 			iom.set_position(root, pos)
@@ -66,7 +66,7 @@ end
 
 local function simple_entities()
 	PC:create_instance{
-		prefab = "/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab",
+		prefab = "/pkg/ant.resources.binary/meshes/base/cube.glb/mesh.prefab",
 		on_ready = function (p)
 			local root<close> = world:entity(p.tag['*'][1], "scene:in")
 			iom.set_position(root, math3d.vector(0.0, 3.0, 0.0, 1.0))
@@ -75,7 +75,7 @@ local function simple_entities()
 	PC:add_entity(util.create_shadow_plane(25))
 
 	-- PC:create_instance{
-	-- 	prefab = "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab", on_ready = function (e)
+	-- 	prefab = "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb/mesh.prefab", on_ready = function (e)
 	-- 	local root<close> = world:entity(e.tag['*'][1])
 	-- end}
 

@@ -8,6 +8,7 @@ policy "skinrender"
     .component_opt "render_layer"
     .component_opt "mesh_result"
     .component_opt "visible_masks"
+    .component_opt "feature_set"
     .component "material"
     .component "mesh"
 

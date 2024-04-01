@@ -128,6 +128,14 @@ ldestory_tracks(lua_State *L){
 	return 0;
 }
 
+static void
+math3d_update(struct math_context* math3d, math_t& id, math_t const& m) {
+	int r = math_unmark(math3d, id);
+	assert(r >= 0);
+	(void)r;
+	id = math_mark(math3d, m);
+}
+
 static int lsample(lua_State *L){
 	auto w = getworld(L);
 
@@ -164,8 +172,7 @@ static int lsample(lua_State *L){
 					luaL_error(L, "Sampling scale failed");
 				}
 
-				math_unmark(M, scene.s);
-				scene.s = math_mark(M, sid);
+				math3d_update(M, scene.s, sid);
 			}
 
 			if (mt->r.get()){
@@ -178,8 +185,7 @@ static int lsample(lua_State *L){
 					luaL_error(L, "Sampling rotation failed");
 				}
 
-				math_unmark(M, scene.r);
-				scene.r = math_mark(M, qid);
+				math3d_update(M, scene.r, qid);
 			}
 
 			if (mt->t.get()){
@@ -192,8 +198,7 @@ static int lsample(lua_State *L){
 					luaL_error(L, "Sampling translation failed");
 				}
 
-				math_unmark(M, scene.t);
-				scene.t = math_mark(M, tid);
+				math3d_update(M, scene.t, tid);
 			}
             e.enable_tag<component::scene_needchange>();
 		}

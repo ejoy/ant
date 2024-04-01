@@ -6,7 +6,6 @@ local uiconfig  = require "widget.config"
 local fs        = require "filesystem"
 local lfs       = require "bee.filesystem"
 local global_data = require "common.global_data"
-local access    = global_data.repo_access
 
 local utils     = require "common.utils"
 local rc        = import_package "ant.compile_resource"
@@ -283,7 +282,7 @@ function TextureResource:do_update()
     if #r > 1 then
         self.metadata = serialize.parse(self.path, aio.readall(self.path))
         if self.metadata.path[1] ~= '/' then
-            self.metadata.path = r[1] .. "|images/" .. fs.path(self.metadata.path):filename():string()
+            self.metadata.path = r[1] .. "/images/" .. fs.path(self.metadata.path):filename():string()
         end
     else
         self.metadata = utils.readtable(self.path)
@@ -378,11 +377,11 @@ function TextureResource:show()
         if ImGui.Button("Select...") then
             local glb_filename = uiutils.get_open_file_path("Textures", "glb")
             if glb_filename then
-                local vp = access.virtualpath(global_data.repo, glb_filename)
+                local vp = global_data:lpath_to_vpath(glb_filename)
                 assert(vp)
                 glb_path = "/" .. vp
                 rc.compile(glb_path)
-                image_path = rc.compile(glb_path .. "|images")
+                image_path = rc.compile(glb_path .. "/images")
                 ImGui.OpenPopup("select_image")
             end
         end
@@ -393,7 +392,7 @@ function TextureResource:show()
                     if path:equal_extension ".png" or path:equal_extension ".dds" then
                         local filename = path:filename():string()
                         if ImGui.SelectableEx(filename, false) then
-                            self:set_file(glb_path .. "|images/" .. filename)
+                            self:set_file(glb_path .. "/images/" .. filename)
                             image_path = nil
                         end
                     end

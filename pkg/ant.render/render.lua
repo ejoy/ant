@@ -73,31 +73,6 @@ if ENABLE_PRE_DEPTH then
 	default_clear_state.clear = "C"
 end
 
-function irender.create_view_queue(view_rect, view_queuename, camera_ref, filtertype, exclude, visible)
-	filtertype = filtertype or "main_view"
-
-	local fbidx = fbmgr.get_fb_idx(hwi.viewid_get "main_view")
-	world:create_entity {
-		policy = {
-			"ant.render|render_queue",
-			"ant.render|watch_screen_buffer",
-		},
-		data = {
-			camera_ref = assert(camera_ref),
-			render_target = {
-				viewid		= hwi.viewid_get(view_queuename),
-				clear_state	= default_clear_state,
-				view_rect	= {x=view_rect.x, y=view_rect.y, w=view_rect.w, h=view_rect.h, ratio=view_rect.ratio},
-				fb_idx		= fbidx,
-			},
-			[view_queuename]	= true,
-			queue_name			= view_queuename,
-			submit_queue		= true,
-			visible 			= visible or false,
-			watch_screen_buffer	= true,
-		}
-	}
-end
 
 local function create_depth_rb(ww, hh)
 	return fbmgr.create_rb{

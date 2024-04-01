@@ -22,9 +22,25 @@ local function readonly()
 	error "_G is readonly"
 end
 
+local fastio = require "fastio"
+local vfs = require "vfs"
+
+local function package_loadfile(packname, file, env)
+	local path = "/pkg/"..packname.."/"..file
+	local mem, symbol = vfs.read(path)
+	if not mem then
+		error(("file '%s' not found"):format(path))
+	end
+	local func, err = fastio.loadlua(mem, symbol, env)
+	if not func then
+		error(("error loading file '%s':\n\t%s"):format(path, err))
+	end
+	return func
+end
+
 local import_feature
 
-local function genenv(envs, decl, newdecl, loader, packname)
+local function genenv(envs, decl, newdecl, packname)
 	local env = envs[packname]
 	if env then
 		return env
@@ -37,11 +53,11 @@ local function genenv(envs, decl, newdecl, loader, packname)
 			return
 		end
 		LOADED[filename] = true
-		local func = loader(packname, filename, env)
+		local func = package_loadfile(packname, filename, env)
 		func()
 	end
 	function env.import_feature(fullname)
-		import_feature(envs, decl, newdecl, loader, fullname)
+		import_feature(envs, decl, newdecl, fullname)
 	end
 	function env.pipeline(name)
 		if decl.pipeline[name] then
@@ -96,13 +112,13 @@ local function genenv(envs, decl, newdecl, loader, packname)
 	return env
 end
 
-function import_feature(envs, decl, newdecl, loader, fullname)
+function import_feature(envs, decl, newdecl, fullname)
 	local pname = fullname:match "^([^|]*)|.*$"
 	if not pname then
-		genenv(envs, decl, newdecl, loader, fullname).import "package.ecs"
+		genenv(envs, decl, newdecl, fullname).import "package.ecs"
 		return
 	end
-	local penv = genenv(envs, decl, newdecl, loader, pname)
+	local penv = genenv(envs, decl, newdecl, pname)
 	penv.import "package.ecs"
 	local feature = decl.feature[fullname]
 	if not feature then

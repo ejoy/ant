@@ -10,7 +10,7 @@ policy "main_queue"
     .include_policy "ant.render|render_queue"
     .component "main_queue"
 
-component "filter_result".type "lua"
+component "filter_result"
 component "postprocess_obj"
 
 component "submit_queue"

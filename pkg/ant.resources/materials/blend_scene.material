@@ -2,7 +2,7 @@ fx:
   vs: /pkg/ant.resources/shaders/fullscreen/vs_fullscreen.sc
   fs: /pkg/ant.resources/shaders/postprocess/fs_blend_scene.sc
   macros:
-    ALPHAMODE_OPAQUE=1
+    "ALPHAMODE_OPAQUE=1"
   setting: /pkg/ant.resources/settings/nolighting.ant
   varyings: /pkg/ant.resources/materials/nolighting.varyings
 properties:

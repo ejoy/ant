@@ -1,5 +1,4 @@
 local lfs           = require "bee.filesystem"
-local fs            = require "filesystem"
 
 local toolset       = require "material.toolset"
 local fxsetting     = require "material.setting"
@@ -21,7 +20,7 @@ local IRRADIANCE_SH_BAND_NUM<const> = settings:get "graphic/ibl/irradiance_bandn
 local ENABLE_IBL_LUT<const>         = settings:get "graphic/ibl/enable_lut"
 local USE_CS_SKINNING<const>        = settings:get "graphic/skinning/use_cs"
 
-local ENABLE_CS<const>              = settings:get "graphic/lighting/cluster_shading" ~= 0
+local ENABLE_CS<const>              = settings:get "graphic/lighting/cluster_shading"
 local ENABLE_BLOOM<const>           = settings:get "graphic/postprocess/bloom/enable"
 local ENABLE_FXAA<const>            = settings:get "graphic/postprocess/fxaa/enable"
 local FXAA_USE_GREEN_AS_LUMA<const> = settings:get "graphic/postprocess/fxaa/use_green_as_luma"
@@ -163,6 +162,9 @@ local function get_macros(setting, mat, stage)
     local macros = default_macros(setting)
     CHECK_SETTING(mat, macros)
     if mat.fx.macros then
+        if #mat.fx.macros == 0 and nil ~= next(mat.fx.macros) then
+            error("material-macros feild should use the format: '{macro_name}={value}', like 'ENABLE_SHADOW=1', DO NOT use 'ENABLE_SHADOW: 1'")
+        end
         table.move(mat.fx.macros, 1, #mat.fx.macros, #macros+1, macros)
     end
     if stage:match "di" then
@@ -225,7 +227,7 @@ local function check_update_shader_type(fx)
                 fx.shader_type = "CUSTOM"
             end
         else
-            if fx.shader_type == "CUSTOM" and (fx.vs_code or fs.fs_code) then
+            if fx.shader_type == "CUSTOM" and (fx.vs_code or fx.fs_code) then
                 error "Define shader_type as 'CUSTOM', 'vs_code' or 'fs_code' should not define"
             end
             assert(fx.shader_type == "PBR" or fx.shader_type == "CUSTOM", "render shader 'shader_type' should only be 'PBR' or 'CUSTOM'")

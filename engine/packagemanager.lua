@@ -1,28 +1,10 @@
---TODO: remove they
-require "log"
-require "filesystem"
-require "directory"
-
 local vfs = require "vfs"
 local fastio = require "fastio"
 
 local registered = {}
 
-local loadenv
-
-local function searchpath(name, path)
-    name = string.gsub(name, '%.', '/')
-    for c in string.gmatch(path, '[^;]+') do
-        local filename = string.gsub(c, '%?', name)
-        if vfs.type(filename) ~= nil then
-            return filename
-        end
-    end
-    return nil, "no file '"..path:gsub(';', "'\n\tno file '"):gsub('%?', name).."'"
-end
-
 local function sandbox_env(packagename)
-    local env = setmetatable({}, {__index=_G})
+    local env = {}
     local _LOADED = {}
     local _PRELOAD = package.preload
     local PATH = "/pkg/"..packagename..'/?.lua'
@@ -78,42 +60,42 @@ local function sandbox_env(packagename)
         error(("module '%s' not found:\n\tno field package.preload['%s']\n\tno file '%s'"):format(name, name, path))
     end
 
-    --TODO: remove it
     function env.loadfile(path)
-        local package = path:match "^/pkg/([^/]+)/.+$"
-        if not package then
-            return nil, ("invalid path: %s"):format(path)
-        end
-        local mem, symbol = vfs.read(path)
+        local filename = "/pkg/"..packagename.."/"..path
+        local mem, symbol = vfs.read(filename)
         if not mem then
-            return nil, ("file '%s' not found"):format(path)
+            return nil, ("file '%s' not found"):format(filename)
         end
-        local func, err = fastio.loadlua(mem, symbol, loadenv(package))
+        local func, err = fastio.loadlua(mem, symbol, env)
         if not func then
-            return nil, ("error loading file '%s':\n\t%s"):format(path, err)
+            return nil, ("error loading file '%s':\n\t%s"):format(filename, err)
         end
         return func
     end
 
+    function env.dofile(path)
+        local func, err = env.loadfile(path)
+        if not func then
+            error(err)
+        end
+        return func()
+    end
+
     env.package = {
-        config = table.concat({"/",";","?","!","-"}, "\n"),
         loaded = _LOADED,
         preload = _PRELOAD,
-        path = PATH,
-        cpath = "",
-        searchpath = searchpath,
         searchers = {
             searcher_preload,
             searcher_lua,
         }
     }
-    return env
+    return setmetatable(env, {__index=_G})
 end
 
-function loadenv(name)
+local function loadenv(name)
     local env = registered[name]
     if not env then
-        if vfs.type("/pkg/"..name) ~= 'dir' then
+        if vfs.type("/pkg/"..name) ~= "d" then
             error(('`/pkg/%s` is not a directory.'):format(name))
         end
         env = sandbox_env(name)
@@ -122,14 +104,10 @@ function loadenv(name)
     return env
 end
 
-local function import(name)
+function import_package(name)
     return loadenv(name).require "main"
 end
 
----@diagnostic disable-next-line: lowercase-global
-import_package = import
-
 return {
-    import = import,
     loadenv = loadenv,
 }

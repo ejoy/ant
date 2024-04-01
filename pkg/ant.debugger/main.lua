@@ -1,5 +1,5 @@
 local function get_protocol()
-    return dofile "/pkg/ant.debugger/script/common/protocol.lua"
+    return dofile "script/common/protocol.lua"
 end
 
 return {

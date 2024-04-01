@@ -1,59 +1,41 @@
 #ifndef __SHADOW_EVSM_SH__
 #define __SHADOW_EVSM_SH__
 
-#ifdef SM_VSM
-float VSM(
-	shadow_sampler_type _sampler,
-	vec4 _shadowCoord,
-	float _depthMultiplier, float _minVariance) 
+#ifdef SM_EVSM
+#include "common/shadow/evsm_utils.sh"
+
+// float shadowEVSM(in float3 shadowPos, in float3 shadowPosDX,
+//                           in float3 shadowPosDY, uint cascadeIdx)
+
+#define u_shadow_filter_exponents	    u_shadow_filter_param.xy
+#define u_shadow_filter_depth_scale	    u_shadow_filter_param.z
+#define u_shadow_filter_light_bleeding  u_shadow_filter_param.w
+
+float shadowEVSM(shadow_sampler_type shadowsampler, vec4 shadowcoord, int cascadeidx)
 {
-	vec2 texCoord = _shadowCoord.xy / _shadowCoord.w;
-	bool outside = any(greaterThan(texCoord, vec2_splat(1.0)))
-				|| any(lessThan   (texCoord, vec2_splat(0.0)))
-				 ;
+    vec2 wd = warp_depth(shadowcoord.z, u_shadow_filter_exponents);
 
-	if (outside)
-	{
-		return 1.0;
-	}
+	vec4 occluder = texture2DArray(shadowsampler, vec3(shadowcoord.xy, cascadeidx));
 
-	float receiver = (_shadowCoord.z) / _shadowCoord.w * _depthMultiplier;
-	vec2  occluder = texture2D(_sampler, texCoord);
-	float depth    = occluder.x * _depthMultiplier;
-	float depthSq  = occluder.y * _depthMultiplier;
-	if (receiver > depth)
-	{
-		return 1.0;
-	}	
-	float variance = max(depth * depth - depthSq, _minVariance);
-	float d = depth - receiver;
-	float visibility = variance / (variance + d * d);
-	return visibility;
+    // Derivative of warping at depth
+    vec2 depthscale = u_shadow_filter_depth_scale * u_shadow_filter_exponents * wd;
+    vec2 variance = depthscale * depthscale;
+
+#if EVSM_COMPONENT == 2
+    // why 1.0 - 
+    const float visibility = chebyshev_upper_bound(occluder.xy, wd.x, variance.x, u_shadow_filter_light_bleeding);
+    
+#endif //
+
+#if EVSM_COMPONENT == 4
+	float p = chebyshev_upper_bound(occluder.xz, wd.x, variance.x, u_shadow_filter_light_bleeding);
+	float n = chebyshev_upper_bound(occluder.yw, wd.y, variance.y, u_shadow_filter_light_bleeding);
+	const float visibility = min(p, n);
+#endif //
+
+    //why need 1.0 - visibility, because we using inverse-z
+    return 1.0 - visibility;
 }
-#endif //SM_VSM
-
-#ifdef SM_ESM
-float ESM(
-	shadow_sampler_type _sampler,
-	vec4 _shadowCoord,
-	float _depthMultiplier) 
-{
-	vec2 texCoord = _shadowCoord.xy / _shadowCoord.w;
-	bool outside = any(greaterThan(texCoord, vec2_splat(1.0)))
-				|| any(lessThan   (texCoord, vec2_splat(0.0)))
-				 ;
-
-	if (outside)
-	{
-		return 1.0;
-	}	
-	float receiver = (_shadowCoord.z + 0.005) / _shadowCoord.w;
-
-	float occluder = texture2D(_sampler, texCoord);	
-
-	float visibility = clamp(exp(_depthMultiplier * (receiver - occluder) ), 0.0, 1.0);
-	return visibility;
-}
-#endif //SM_ESM
+#endif //SM_EVSM
 
 #endif //__SHADOW_EVSM_SH__

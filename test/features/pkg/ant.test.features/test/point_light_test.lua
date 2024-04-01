@@ -56,7 +56,7 @@ function plt_sys.init_world()
 	}
 
     PC:create_instance {
-        prefab = "/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab",
+        prefab = "/pkg/ant.resources.binary/meshes/base/cube.glb/mesh.prefab",
         on_ready = function (ce)
             local root<close> = world:entity(ce.tag['*'][1], "scene:update")
             iom.set_position(root, {0, 0, 0, 1})

@@ -1,5 +1,7 @@
-package.path = "/engine/?.lua"
-require "bootstrap"
+print "Hello World"
 
--- See pkg/main/service/startup.lua
-import_package "main".start(arg)
+local arg = ...
+-- ... is command line args
+for k, v in ipairs(arg) do
+	print(k,v)
+end

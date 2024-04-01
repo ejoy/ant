@@ -7,11 +7,9 @@ if not dbg then
     return
 end
 
-local vfs = require "vfs"
+local engine = import_package "ant.engine"
 local lfs = require "bee.filesystem"
-local LogDir = vfs.repopath
-    and lfs.path(vfs.repopath()) / ".log"
-    or lfs.current_path() / ".log"
+local LogDir = engine.app_path()
 lfs.create_directories(LogDir)
 
 local world = ecs.world

@@ -4,4 +4,5 @@ return {
     sampler     = import_package "ant.render.core".sampler,
 	fbmgr       = require "framebuffer_mgr",
     layoutmgr   = require "vertexlayout_mgr",
+    featureset  = require "feature_set",
 }

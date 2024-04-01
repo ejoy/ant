@@ -58,7 +58,14 @@ function m:init_world()
 	ImGuiAnt.FontAtlasBuild()
 end
 
+local event_save_layout = world:sub {"save_layout"}
 function m:exit()
+	for _, path in event_save_layout:unpack() do
+		local setting = ImGui.SaveIniSettingsToMemory()
+		local wf = assert(io.open(path, "wb"))
+		wf:write(setting)
+		wf:close()
+	end
 	ImGuiBackend.RenderDestroy()
 	ImGuiBackend.PlatformDestroy()
 	ImGui.DestroyContext()

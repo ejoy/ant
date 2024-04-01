@@ -227,7 +227,6 @@ local function get_filter_path(parent, key)
     end
     return filter[current_filter_idx].path, filter[current_filter_idx].pos
 end
-local access    = global_data.repo_access
 local item_height
 local function pre_init_item_height()
     if item_height then
@@ -267,7 +266,7 @@ function m.show()
             local postfix = string.sub(path, -4)
             if (postfix == '.png' or postfix == '.dds') and not dirtyflag[path] then
                 dirtyflag[path] = true
-                world:pub {"FileWatch", type, access.virtualpath(global_data.repo, path:gsub('\\', '/'))}
+                world:pub {"FileWatch", type, global_data:lpath_to_vpath(path:gsub('\\', '/'))}
             end
         end
     end

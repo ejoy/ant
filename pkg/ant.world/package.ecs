@@ -1,4 +1,5 @@
 pipeline "_entity_init"
+    .stage "opt_component_init"
     .stage "component_init"
     .stage "entity_init"
     .stage "entity_ready"
@@ -25,6 +26,7 @@ pipeline "_update"
 
 pipeline "_exit"
     .pipeline "exit"
+    --.stage "exit_stat"
 
 pipeline "_pipeline"
     .stage "pipeline"

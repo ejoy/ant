@@ -1,1 +1,1 @@
-return dofile "/pkg/ant.json/main.lua"
+return import_package "ant.json"

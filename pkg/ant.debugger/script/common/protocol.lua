@@ -1,4 +1,4 @@
-local json = dofile "/pkg/ant.json/main.lua"
+local json = import_package "ant.json"
 
 local m = {}
 

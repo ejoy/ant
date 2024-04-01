@@ -22,6 +22,7 @@ lm:lua_source "render_core" {
         "render/render.cpp",
         "render/hash.cpp",
         "render/queue.cpp",
+        "render/mesh.cpp",
     },
 }
 

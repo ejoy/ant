@@ -1,43 +1,86 @@
-local sha1          = require "sha1"
-local lfs           = require "bee.filesystem"
-local datalist      = require "datalist"
-local lfastio       = require "fastio"
-local L             = import_package "ant.render.core".layout
+local sha1     = require "sha1"
+local lfs      = require "bee.filesystem"
+local datalist = require "datalist"
+local fastio   = require "fastio"
+local L        = import_package "ant.render.core".layout
 
 local settings      = import_package "ant.settings"
 local ENABLE_SHADOW<const>      = settings:get "graphic/shadow/enable"
 
-local function soft_shadow_type(sst)
-    if sst then
-        local SST<const> = {
-            pcf = "SM_PCF",
-            vsm = "SM_VSM",
-            esm = "SM_ESM",
+local FILTER_MODE_MACROS<const> = {
+    pcf  = "SM_PCF=1",
+    evsm = "SM_EVSM=1",
+    hard = "SM_HARD=1",
+}
+
+local FILTER_MODE<const> = settings:get "graphic/shadow/filter_mode" or "hard"
+local SHADOW_FILTER_MACROS = setmetatable({}, {__index=function(t, fm)
+    local r
+    if fm == "pcf" then
+        local PCF = settings:get "graphic/shadow/pcf"
+        local _ = PCF or error "Invalid setting for filter mode:pcf, need define 'graphic/shadow/pcf'"
+
+        local PCF_TYPE_DEFINES<const> = {
+            fast = 1,
+            fix4 = 2,
+            simple = 3,
         }
-        return assert(SST[sst])
+
+        local PCF_TYPE<const>           = assert(PCF.type, "'pcf' needed 'type'")
+        local PCF_FILTER_SIZE<const>    = assert(PCF.size, "'pcf' needed 'size'")
+
+        r = {}
+        r[#r+1] = "PCF_TYPE=" .. PCF_TYPE_DEFINES[PCF_TYPE]
+        r[#r+1] = "PCF_FILTER_SIZE=" .. assert(PCF_FILTER_SIZE)
+        if PCF_TYPE == "fast" then
+            local PCF_FILTER_TYPES<const> = {
+                disc            = 1,
+                triangle        = 2,
+                halfmoon        = 3,
+                uniform         = 4,
+                gaussian_like   = 5,
+            }
+            r[#r+1] = "PCF_FILTER_TYPE=" .. PCF_FILTER_TYPES[PCF.filter or "uniform"]
+        end
     end
-    return "SM_HARD"
-end
 
-local SOFT_SHADOW_TYPE<const> = soft_shadow_type(settings:get "graphic/shadow/soft_shadow") .. "=1"
-local PCF_TYPE_DEFINES<const> = {
-    fast = 1,
-    fix4 = 2,
-    simple = 3,
-}
+    if fm == "evsm" then
+        r = {}
+        local evsm = settings:get "graphic/shadow/evsm"
+        local format_count = {
+            RGBA16F = 4,
+            RGBA32F = 4,
+            RG16F   = 2,
+            RG32F   = 2,
+        }
+        
+        local c = format_count[evsm.format] or error(("Invalid format:%s"):format(evsm.format))
+        local sampleradius = evsm.sample_radius
+        if sampleradius ~= 1 and sampleradius ~= 2 and sampleradius ~= 3 then
+            error(("evsm sample radius should only be [1/2/3], %f defined"):format(sampleradius))
+        end
 
-local PCF_FILTER_TYPES<const> = {
-    disc            = 1,
-    triangle        = 2,
-    halfmoon        = 3,
-    uniform         = 4,
-    gaussian_like   = 5,
-}
+        r[#r+1] = "EVSM_COMPONENT=" .. c
+        r[#r+1] = "EVSM_SAMPLE_RADIUS=" ..evsm.sample_radius
 
-local PCF_TYPE<const>           = settings:get "graphic/shadow/pcf/type"
-local PCF_FILTER_SIZE<const>    = settings:get "graphic/shadow/pcf/size"
-local pcf_filter                = settings:get "graphic/shadow/pcf/filter"
-local PCF_FILTER_TYPE<const>    = pcf_filter and PCF_FILTER_TYPES[pcf_filter] or nil
+        local filter_types<const> = {
+            uniform = 1,
+            gaussian = 2,
+        }
+        r[#r+1] = "EVSM_FILTER_TYPE=" .. (filter_types[evsm.filter_type] or error(("Invalid filter type for evsm: %s, only [uniform/gaussian] is valid"):format(evsm.filter_type or "")))
+    end
+
+    if fm == "hard" then
+        r = {}
+    end
+
+    if nil == r then
+        error(("Not support filter_mode: %s"):format(FILTER_MODE))
+    end
+
+    t[fm] = r
+    return r
+end})
 
 local LOCAL_SHADER_BASE <const> = lfs.current_path() / "pkg/ant.resources/shaders"
 
@@ -53,7 +96,7 @@ local DEF_SHADER_INFO <const> = {
             INPUT_INIT          = "@VSINPUT_INIT",
             OUTPUT_VARYINGS     = "@OUTPUT_VARYINGS",
         },
-        template                = lfastio.readall_s((LOCAL_SHADER_BASE / "default/vs_default.sc"):string()),
+        template                = fastio.readall_s((LOCAL_SHADER_BASE / "default/vs_default.sc"):string()),
         filename                = "vs_%s.sc",
     },
     di = {
@@ -67,7 +110,7 @@ local DEF_SHADER_INFO <const> = {
             INPUT_INIT          = "@VSINPUT_INIT",
             OUTPUT_VARYINGS     = "@OUTPUT_VARYINGS",
         },
-        template                = lfastio.readall_s((LOCAL_SHADER_BASE / "default/vs_default.sc"):string()),
+        template                = fastio.readall_s((LOCAL_SHADER_BASE / "default/vs_default.sc"):string()),
         filename                = "di_%s.sc",
     },
     fs = {
@@ -80,7 +123,7 @@ local DEF_SHADER_INFO <const> = {
     
             INPUT_INIT          = "@FSINPUT_INIT",
         },
-        template                = lfastio.readall_s((LOCAL_SHADER_BASE / "default/fs_default.sc"):string()),
+        template                = fastio.readall_s((LOCAL_SHADER_BASE / "default/fs_default.sc"):string()),
         filename                = "fs_%s.sc",
     }
 }
@@ -215,7 +258,7 @@ local function read_varyings_input(setting, inputfolder, fx)
                 error(("Invalid varyings path:%s, not in resource folder:%s"):format(varyings, inputfolder:string()))
             end
         end
-        varyings = datalist.parse(lfastio.readall_s(varyings))
+        varyings = datalist.parse(fastio.readall_s(varyings))
     else
         assert(type(varyings) == "table")
     end
@@ -721,15 +764,10 @@ local function macros_from_setting(setting, m)
 
     if ENABLE_SHADOW and setting.receive_shadow == "on" then
         m[#m+1] = "ENABLE_SHADOW=1"
-        m[#m+1] = SOFT_SHADOW_TYPE
-
-        if PCF_TYPE then
-            m[#m+1] = "PCF_TYPE=" .. PCF_TYPE_DEFINES[PCF_TYPE]
-            m[#m+1] = "PCF_FILTER_SIZE=" .. assert(PCF_FILTER_SIZE)
-            assert(PCF_TYPE ~= "fast" or nil ~= PCF_FILTER_TYPE, "fast pcf need define PCF_FILTER_TYPE")
-            if PCF_FILTER_TYPE then
-                m[#m+1] = "PCF_FILTER_TYPE=" .. PCF_FILTER_TYPE
-            end
+        m[#m+1] = FILTER_MODE_MACROS[FILTER_MODE]
+        local mm = SHADOW_FILTER_MACROS[FILTER_MODE]
+        if mm then
+            table.move(mm, 1, #mm, #m+1, m)
         end
     end
 

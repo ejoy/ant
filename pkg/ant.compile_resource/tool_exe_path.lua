@@ -2,21 +2,48 @@ local lfs = require "bee.filesystem"
 local platform = require "bee.platform"
 
 local BASETOOLS<const> = {
-    "shaderc", "texturec", "gltf2ozz"
+	shaderc = 1,
+	texturec = 1,
+	gltf2ozz = 1,
 }
 
 local TOOLSUFFIX<const> = platform.os == "windows" and ".exe" or ""
+
+local function checkversion(path)
+	local version = path / "tools_version"
+	local f <close> = io.open(version:string())
+	if not f then
+		return false
+	end
+	local env = {}
+	local code = load(f:read "a", "version", "t", env)
+	if not code then
+		return false
+	end
+	if not pcall(code) then
+		return false
+	end
+	for name, v in pairs(BASETOOLS) do
+		local vf = tonumber(env[name])
+		if not vf then
+			return false
+		end
+		if vf < v then
+			return false
+		end
+	end
+	return true
+end
 
 local function check_tool_path_valid(path)
     if not lfs.exists(path) then
         return false
     end
-    for _, n in ipairs(BASETOOLS) do
-        if not lfs.exists(path / (n .. TOOLSUFFIX)) then
+    for name, version in pairs(BASETOOLS) do
+        if not lfs.exists(path / (name .. TOOLSUFFIX)) then
             return false
         end
     end
-
     return true
 end
 
@@ -39,6 +66,9 @@ end
 
 local BINDIR<const>     = find_bindir()--lfs.exe_path():parent_path()
 log.info(("Use tools path:"):format(BINDIR))
+if not checkversion(BINDIR) then
+	error "Tools are expired, run `luamake tools` first"
+end
 
 return function (toolname)
     local exepath = BINDIR / (toolname .. TOOLSUFFIX)

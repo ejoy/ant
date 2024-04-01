@@ -43,7 +43,7 @@ local function createTexture(c)
         local ti = c.info
         h = bgfx.create_texture2d(ti.width, ti.height, ti.numMips ~= 0, ti.numLayers, ti.format, c.flag)
     else
-        h = bgfx.create_texture(bgfx.memory_buffer(aio.readall(c.name.."|main.bin")), c.flag)
+        h = bgfx.create_texture(bgfx.memory_buffer(aio.readall((c.info.atlas and c.info.atlas.path or c.name) .."/main.bin")), c.flag)
     end
     bgfx.set_name(h, c.name)
     return h
@@ -62,12 +62,24 @@ local function loadExt(protocol, path, config, name)
 	return c
 end
 
+local function loadAtlas(name)
+    local sc = datalist.parse(aio.readall(name))
+    local path = sc.atlas.path .. "/source.ant"
+    local pc = datalist.parse(aio.readall(path))
+    pc.info.atlas = sc.atlas
+    pc.name = name
+    return pc
+end
+
 local function loadTexture(name)
 	local protocol, path, config = name:match "(%w+):(.*)%s(.*)"
 	if protocol then
 		return loadExt(protocol, path, config, name)
 	end
-    local path = name.."|source.ant"
+    if name:find ".atlas" then
+        return loadAtlas(name)
+    end
+    local path = name.."/source.ant"
     local c = datalist.parse(aio.readall(path))
     c.name = name
     return c
@@ -226,9 +238,6 @@ local function asyncLoadTexture(c)
         c.texinfo = textureData.info
         c.sampler = textureData.sampler
         c.lifespan = textureData.lifespan
-        if textureData.info.atlas and atlas[textureData.image] then
-            textureData.handle = atlas[textureData.image]
-        end
         asyncCreateTexture(c.name, textureData)
         loadQueue[c.id] = nil
         ltask.multi_wakeup(Token)
@@ -271,6 +280,9 @@ ltask.fork(function ()
                 ltask.sleep(10)
             end
             local textureData = createQueue[name]
+            if textureData.info.atlas and atlas[textureData.image] then
+                textureData.handle = atlas[textureData.image]
+            end
             createQueue[name] = nil
             local c = textureByName[name]
             local handle = textureData.handle or createTexture(textureData)
@@ -339,7 +351,7 @@ local update; do
             for i = 1, #results do
                 local id = results[i]
                 local c = textureById[id]
-                if c and (not rt_table[id]) and (not chain_table[id]) then
+                if c and (not rt_table[id]) and (not chain_table[id]) and (not c.texinfo.atlas) then
                     asyncDestroyTexture(c)
                     print("Destroy Texture: " .. c.name)
                 end
@@ -478,7 +490,7 @@ end
 function S.texture_png(id)
 	local c = textureById[id]
 	if c then
-	    local nc = image.cvt2file(aio.readall(c.name.."|main.bin"), "RGBA8", "PNG")
+	    local nc = image.cvt2file(aio.readall(c.name.."/main.bin"), "RGBA8", "PNG")
 		assert(nc)
 		return nc
 	end
@@ -487,7 +499,7 @@ end
 function S.texture_memory(id)
 	local c = textureById[id]
 	if c then
-		return aio.readall_s(c.name.."|main.bin")
+		return aio.readall_s(c.name.."/main.bin")
 	end
 end
 

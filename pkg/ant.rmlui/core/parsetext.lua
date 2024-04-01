@@ -119,9 +119,8 @@ end
 
 
 for idx, info in pairs(texture_cfg_table) do
-    local bundle_cfg_path = fs.path(info.cfg_path)
-    if fs.exists(bundle_cfg_path) then
-        local cfg = datalist.parse(aio.readall(bundle_cfg_path:string()))
+    if fs.exists(info.cfg_path) then
+        local cfg = datalist.parse(aio.readall(info.cfg_path))
         if cfg then
             if not config_table then
                 config_table = {}
