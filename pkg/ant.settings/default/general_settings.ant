@@ -23,7 +23,7 @@ graphic:
     clear_stencil: 0
   shadow:
     normal_offset: 1.0
-    size: 512
+    size: 1024
     split_ratios:
       {0.00, 1.00}
     filter_mode: evsm
