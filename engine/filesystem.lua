@@ -135,22 +135,28 @@ function fs.is_directory(path)
     if type(path) ~= "string" then
         path = path._value
     end
-    return vfs.type(path) == "d"
+    local status = vfs.type(path)
+    return status == "d" or status == "r"
 end
 
 function fs.is_regular_file(path)
     if type(path) ~= "string" then
         path = path._value
     end
-    return vfs.type(path) ~= "d"
+    return vfs.type(path) == "f"
 end
 
 local status_mt = {}
 status_mt.__index = status_mt
 
 function status_mt:is_directory()
-    local file_type = self[1]
-    return file_type == "d" or file_type == "r"
+    local status = self[1]
+    return status == "d" or status == "r"
+end
+
+function status_mt:is_regular_file()
+    local status = self[1]
+    return status == "f"
 end
 
 function fs.pairs(path)
