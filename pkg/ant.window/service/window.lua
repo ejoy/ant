@@ -86,7 +86,7 @@ local function render(init, args, initialized)
     world:pipeline_exit()
     world = nil
     bgfx.encoder_destroy()
-    rhwi.shutdown()
+    bgfx.shutdown()
     ltask.wakeup(WindowQuit)
 end
 
