@@ -30,9 +30,9 @@ local tiny_vfs = vfsrepo.new_tiny (repopath)
 do
 	-- second step init vfs.
 	local vfs = require "vfs"
-	for k, v in pairs(tiny_vfs) do
-		vfs[k] = v
-	end
+	vfs.read = tiny_vfs.read
+	vfs.list = tiny_vfs.list
+	vfs.type = tiny_vfs.type
 end
 
 local repo = vfsrepo.new_std {
