@@ -82,14 +82,8 @@ return function (repopath)
             end
         end
     end
-    function vfs.directory(what)
-        if what == "repo" then
-            return repopath
-        elseif what == "internal" then
-            return repopath ..".app/internal/"
-        elseif what == "external" then
-            return repopath ..".app/external/"
-        end
+    function vfs.repopath()
+        return repopath
     end
     return vfs
 end

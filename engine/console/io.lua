@@ -149,8 +149,6 @@ function S.DIRECTORY(what)
 		return repopath ..".app/external/"
 	elseif what == "internal" then
 		return repopath ..".app/internal/"
-	elseif what == "repo" then
-		return repopath
 	end
 end
 
