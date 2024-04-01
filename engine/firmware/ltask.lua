@@ -14,7 +14,7 @@ local function bootstrap_root(config)
 	boot.post_message {
 		from = SERVICE_ROOT,
 		to = SERVICE_ROOT,
-		session = 0,	-- 0 for root init
+		session = 1,	-- 1 for root init
 		type = MESSSAGE_SYSTEM,
 		message = init_msg,
 		size = sz,
