@@ -30,9 +30,11 @@
 12. 关于ibl：
   - 使用sh(Spherical Harmonic)来表示irradiance中的数据；
   - 使用多项式直接计算LUT，而不使用一张额外的贴图（节省带宽和采样器）：https://knarkowicz.wordpress.com/2014/12/27/analytical-dfg-term-for-ibl/；（2023.06.27已经完成）
-13. 使用无穷远的far plane构建透视投影矩阵，并将near plane的位置设定为0.1，而不是现在1，1的距离有时候会导致近处能够看到的物体，但被裁剪掉的问题；(2023.06已经完成，目前在camera component上会保存: infviewprojmat和viewprojmat)；
-14. 修改贴图的mipmap颜色为某种纯色，用来检测场景中的贴图是否过大（看到蓝色意味着原来做的图就是过大的）；（2023.10已经完成，debug_mipmap_system）
-15. 解决动态材质的问题；(2023.11.19已经完成)
+13. 优化PBR的计算量：
+  - 预烘培GGX：http://filmicworlds.com/blog/optimizing-ggx-shaders-with-dotlh/；（2024.02已经完成）
+14. 使用无穷远的far plane构建透视投影矩阵，并将near plane的位置设定为0.1，而不是现在1，1的距离有时候会导致近处能够看到的物体，但被裁剪掉的问题；(2023.06已经完成，目前在camera component上会保存: infviewprojmat和viewprojmat)；
+15. 修改贴图的mipmap颜色为某种纯色，用来检测场景中的贴图是否过大（看到蓝色意味着原来做的图就是过大的）；（2023.10已经完成，debug_mipmap_system）
+16. 解决动态材质的问题；(2023.11.19已经完成)
   - 重新思考动态材质的实现。需要从模型->顶点着色器输入->像素着色器输入的链条思考如何有效、简单便捷和兼顾一致性的情况定义材质；
   需要实现：
   1) 自定义数据输入。如a_position是vec2/vec3/vec4/uvec2等。通过bgfx的varying.def.sc的文件能够很好的实现这个输入和输出的自定义，还能够与bgfx的编译过程进行结合；
@@ -40,18 +42,15 @@
   3) 自定义顶点着色的输出。这往往与具体的模型数据与着色实现相关，例如法线究竟来源于法线贴图还是几何体、几何法线是否压缩到一个四元数中等等；
   4) 自定义像素着色的输入。有时候，顶点着色器的数据并不重要，需要能够在像素着色器阶段自定义着色相关的数据，如法线、tangent、instance数据等；
   5) 能够在runtime的时候，对绑定的vb layout与顶点着色的输入进行检查；
-16. 使用更优质的line渲染：（2023.11.10已经完成）
+17. 使用更优质的line渲染：（2023.11.10已经完成）
   - 优化目前使用的polyline的效果。尤其是不在使用MSAA，换用FXAA之后，polyline的线会丢失（https://mattdesl.svbtle.com/drawing-lines-is-hard，参考的库：https://github.com/spite/THREE.MeshLine）；
   - 需要一个更优质的网格：https://bgolus.medium.com/the-best-darn-grid-shader-yet-727f9278b9d8
-17. 预烘培Tonemapping计算到3D贴图中：（2023.09.10已经完成）
+18. 预烘培Tonemapping计算到3D贴图中：（2023.09.10已经完成）
   - - tonemapping能够预先bake到一张贴图里面，而不需要单独在fragment阶段进行计算。具体要看filament里面的tonemapping的操作；
-18. 增加开关，用于控制场景是否继续渲染，并把前一刻的画面存下来进行模糊，用于在操作UI的时候，停止场景渲染用的；（2023.10.30已经完成）
-19. 优化HDR的贴图使用。例如ColorGrading中的RGBA32F应该使用R10G10B10A2的格式，HDR的环境贴图等；(2023.12.01已经完成)
-20. 对相同材质的物体进行排序渲染，目前渲染顺序的提交，都是按照提交的先后次序来的。还需要单独对alpha test的物体进行分类（分类的队列顺序应该为：opaque->alpha test-> translucent）。而对于translucent的物体来讲，还需要根据从远到近的排序来渲染（避免alpha blend错误）；（2024.01.24 利用bgfx的view_mode DepthAscending，结合submit的depth值（上层的render_layer就是传给这个depth），排序的问题基本能够解决了）
-21. 移除v_posWS.w 中需要在vertex shader中计算视图空间下z的值。D3D/Vulkan/Metal都能够通过系统变量获得这个值，如gl_FragCoord.w和SV_Position.w都是保存了z的值，但gl_FragCoord.w保存的是1/z，而SV_Position.w保存的是z的值。其次，需要在代码生成的地方，只在有光照的着色器中生成相关的代码；（2024.01.01已经解决。目前在genshader.lua里面，根据具体的platform，会生成对应的.w的数据，而不是通过viewmat在着色器中在运算一次）
-22. 优化PBR的计算量：
-  - 预烘培GGX：http://filmicworlds.com/blog/optimizing-ggx-shaders-with-dotlh/；（2024.02已经完成）
-
+19. 增加开关，用于控制场景是否继续渲染，并把前一刻的画面存下来进行模糊，用于在操作UI的时候，停止场景渲染用的；（2023.10.30已经完成）
+20. 优化HDR的贴图使用。例如ColorGrading中的RGBA32F应该使用R10G10B10A2的格式，HDR的环境贴图等；(2023.12.01已经完成)
+21. 对相同材质的物体进行排序渲染，目前渲染顺序的提交，都是按照提交的先后次序来的。还需要单独对alpha test的物体进行分类（分类的队列顺序应该为：opaque->alpha test-> translucent）。而对于translucent的物体来讲，还需要根据从远到近的排序来渲染（避免alpha blend错误）；（2024.01.24 利用bgfx的view_mode DepthAscending，结合submit的depth值（上层的render_layer就是传给这个depth），排序的问题基本能够解决了）
+22. 移除v_posWS.w 中需要在vertex shader中计算视图空间下z的值。D3D/Vulkan/Metal都能够通过系统变量获得这个值，如gl_FragCoord.w和SV_Position.w都是保存了z的值，但gl_FragCoord.w保存的是1/z，而SV_Position.w保存的是z的值。其次，需要在代码生成的地方，只在有光照的着色器中生成相关的代码；（2024.01.01已经解决。目前在genshader.lua里面，根据具体的platform，会生成对应的.w的数据，而不是通过viewmat在着色器中在运算一次）
 
 ##### 未完成
 1. 关于ibl:
