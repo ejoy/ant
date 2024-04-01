@@ -7,7 +7,7 @@
 
 float warp_depth_positive(float depth, float exponent)
 {
-    const float d = 2.0 * d - 1.0;
+    const float d = 2.0 * depth - 1.0;
     return exp(exponent * d);
 }
 
