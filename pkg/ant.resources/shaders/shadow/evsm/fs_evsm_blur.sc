@@ -24,6 +24,7 @@ static const float GAUSSIAN_WEIGHTS[7] = {1.0/21, 3.0/21, 7.0/21, 9.0/21, 7.0/21
 #   else
 //#   error Not support EVSM_SAMPLE_RADIUS
 #   endif 
+#endif //EVSM_FILTER_TYPE == EVSM_FILTER_TYPE_GAUSSIAN
 
 SAMPLER2DARRAY(s_input, 0);
 
@@ -44,8 +45,6 @@ vec4 fetch_texel(vec2 screenpos, int offset)
 
     return texelFetch(s_input, ivec3(screenpos, u_filter_layer), 0);
 }
-
-#endif //EVSM_FILTER_TYPE == EVSM_FILTER_TYPE_GAUSSIAN
 
 void main()
 {
