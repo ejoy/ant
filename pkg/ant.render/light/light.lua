@@ -12,7 +12,7 @@ local iexposure = ecs.require "ant.camera|exposure"
 local imaterial = ecs.require "ant.render|material"
 
 local setting	= import_package "ant.settings"
-local enable_cluster_shading = setting:get "graphic/lighting/cluster_shading" ~= 0
+local enable_cluster_shading = setting:get "graphic/lighting/cluster_shading"
 
 local DEFAULT_LIGHT<const> = {
 	directional = {

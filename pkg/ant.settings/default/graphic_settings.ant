@@ -7,13 +7,6 @@ graphic:
     enable      : true
     bent_normal : false
     quality     : low
-    radius      : 3.0            # Ambient Occlusion radius in meters, between 0 and ~10.
-    power       : 4.0            # Controls ambient occlusion's contrast. Must be positive.
-    bias        : 0.0005         # Self-occlusion bias in meters. Use to avoid self-occlusion. Between 0 and a few mm.
-    resolution  : 0.5            # How each dimension of the AO buffer is scaled. Must be either 0.5 or 1.0.
-    intensity   : 3.0            # Strength of the Ambient Occlusion effect.
-    bilateral_threshold : 0.5    # depth distance that constitute an edge for filtering
-    min_horizon_angle : 0.0      # min angle in radian to consider
   inv_z: true
   lighting:
     cluster_shading: 1
@@ -22,8 +15,6 @@ graphic:
       enable: true
     bloom:
       enable: true
-      inv_highlight: 0.2
-      threshold: 2.200000047683716
     fxaa:
       enable: true
     tonemapping:
@@ -35,26 +26,14 @@ graphic:
       enable: false
     fsr:
       enable: false
-  render:
-    clear: CDS
-    clear_color: 255
-    clear_depth: 1
-    clear_stencil: 0
   shadow:
     enable: true
-    normal_offset: 1.0
-    size: 1024
-    split_ratios:
-      {0.00, 1.00}
-    filter_mode: pcf
+    filter_mode: evsm
     pcf:
       type: fix4
       size: 4
       filter: uniform
     evsm:
-      exponents: {40, 5}    #first element for positive exponent, second element for nagitive exponent, we will check exponent for different texture format
-      bias: 0.1
-      bleeding: 0           #range from[0, 1]
       sample_radius: 2      #[1/2/3] mean: sample [3/5/7] times in evsm texture blur horizonal/vericial
       filter_type: uniform  #mean: how to filter the reolved depth buffer. can be [gussian/uniform]
       format: RGBA16F       #[RGBA16F/RGBA32F/RG16F/RG32F], use RGxxF format, mean it will degenerate to vsm
