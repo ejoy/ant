@@ -5,8 +5,8 @@ local w = world.w
 local vfs = require "vfs"
 local fs = require "filesystem"
 local lfs = require "bee.filesystem"
-local subprocess = require "bee.subprocess"
-local ImGui = require "imgui"
+local subprocess        = require "bee.subprocess"
+local ImGui             = require "imgui"
 local editor_setting    = require "editor_setting"
 
 
@@ -37,68 +37,6 @@ end
 local ICON_FA_FOLDER_PLUS = "\xef\x99\x9e"
 local ICON_FA_FOLDER_OPEN = "\xef\x81\xbc"
 local ICON_FA_BAN = "\xef\x81\x9e"
-local function choose_project()
-    local exit = false;
-    local selected_proj
-    -- if global_data.project_root then return end
-    local lastprojs = editor_setting.setting.lastprojs
-    local title = "Choose project"
-    if not ImGui.IsPopupOpen(title) then
-        ImGui.OpenPopup(title)
-    end
-
-    local change, opened = ImGui.BeginPopupModal(title, true, ImGui.WindowFlags {"AlwaysAutoResize"})
-    if change then
-        ImGui.Text("Create new or open existing project.")
-        if ImGui.Button(ICON_FA_FOLDER_PLUS.." Create") then
-            local path = choose_project_dir()
-            if path then
-                local lpath = lfs.path(path)
-                local n = fs.pairs(lpath)
-                -- if not n() then
-                --     log_widget.error({tag = "Editor", message = "folder not empty!"})
-                -- else
-                --     on_new_project(path)
-                --     global_data:update_root(lpath)
-                --     editor_setting.update_lastproj("", path)
-                -- end
-            end
-        end
-        ImGui.SameLine()
-        if ImGui.Button(ICON_FA_FOLDER_OPEN.." Open") then
-            local path = choose_project_dir()
-            if path then
-                do_open_proj(path)
-                exit = true
-            end
-        end
-        ImGui.SameLine()
-        if ImGui.Button(ICON_FA_BAN.." Quit") then
-            exit = true
-        end
-
-        ImGui.Separator()
-        if lastprojs then
-            for i, proj in ipairs(lastprojs) do
-                if ImGui.SelectableEx(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, ImGui.SelectableFlags {"AllowDoubleClick"}) then
-                    selected_proj = lastprojs[i]
-                    do_open_proj(selected_proj)
-                    exit = true
-                end
-            end
-        end
-        -- if global_data.project_root then
-        --     local bfw = require "bee.filewatch"
-        --     local fw = bfw.create()
-        --     fw:add(global_data.project_root:string())
-        --     global_data.filewatch = fw
-        --     log.warn "need handle effect file"
-        --     ImGui.CloseCurrentPopup()
-        -- end
-        ImGui.EndPopup()
-    end
-    return exit
-end
 
 local m = ecs.system 'init_system'
 
@@ -148,7 +86,7 @@ function m:data_changed()
         local selected_proj
         local lastprojs = editor_setting.setting.lastprojs
         ImGui.Text("Create new or open existing project.")
-        if ImGui.Button(ICON_FA_FOLDER_PLUS.." Create") then
+        if ImGui.Button("Create") then
             local path = choose_project_dir()
             if path then
                 local lpath = lfs.path(path)
@@ -163,7 +101,7 @@ function m:data_changed()
             end
         end
         ImGui.SameLine()
-        if ImGui.Button(ICON_FA_FOLDER_OPEN.." Open") then
+        if ImGui.Button("Open") then
             local path = choose_project_dir()
             if path then
                 do_open_proj(path)
@@ -171,7 +109,7 @@ function m:data_changed()
             end
         end
         ImGui.SameLine()
-        if ImGui.Button(ICON_FA_BAN.." Quit") then
+        if ImGui.Button("Quit") then
             exit = true
         end
 

@@ -11,15 +11,14 @@ local function get_package(entry_path, readmount)
         access.readmount(repo)
     end
     local packages = {}
-    for _, value in ipairs(repo._mountlpath) do
-        local strvalue = value:string()
-        if strvalue:sub(-7) == '/engine' then
+    for _, lpath in ipairs(repo._mountlpath) do
+        if lpath:filename():string() == 'engine' then
             goto continue
         end
-        if strvalue:sub(-4) ~= '/pkg' then
-            value = value / 'pkg'
+        if lpath == entry_path then
+            lpath = lpath / 'pkg'
         end
-        for item in lfs.pairs(value) do
+        for item in lfs.pairs(lpath) do
             local _, pkgname = item:string():match'(.*/)(.*)'
             local skip = false
             if pkgname:sub(1, 4) == "ant." and pkgname:sub(1, 8) ~= "ant.test" then

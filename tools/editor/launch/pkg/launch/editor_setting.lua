@@ -4,7 +4,7 @@ local lfs       = require "bee.filesystem"
 local datalist  = require "datalist"
 local fastio    = require "fastio"
 
-local settingpath = lfs.path(vfs.repopath()):parent_path():string().."/pkg/tools.editor/editor.settings"
+local settingpath = lfs.path(vfs.repopath()):parent_path():parent_path():string().."/pkg/tools.editor/editor.settings"
 local editor_setting = lfs.exists(settingpath) and datalist.parse(fastio.readall_f(settingpath)) or {}
 
 local function save()
