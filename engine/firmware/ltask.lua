@@ -1,25 +1,4 @@
-local boot = require "ltask.bootstrap"
 local vfs = require "vfs"
-
-local SERVICE_ROOT <const> = 1
-local MESSSAGE_SYSTEM <const> = 0
-
-local function bootstrap_root(config)
-	assert(boot.new_service("root", config.root.service_source, config.root.service_chunkname, SERVICE_ROOT))
-	boot.init_root(SERVICE_ROOT)
-	local init_msg, sz = boot.pack("init", {
-		initfunc = [[return loadfile "/engine/firmware/root.lua"]],
-		args = { config.root }
-	})
-	boot.post_message {
-		from = SERVICE_ROOT,
-		to = SERVICE_ROOT,
-		session = 1,	-- 1 for root init
-		type = MESSSAGE_SYSTEM,
-		message = init_msg,
-		size = sz,
-	}
-end
 
 local function readall(path)
 	local fastio = require "fastio"
@@ -28,7 +7,9 @@ local function readall(path)
 end
 
 local function init_config(config)
-	local servicelua = readall "/engine/firmware/service.lua"
+	config.root_initfunc = [[return loadfile "/engine/firmware/ltask_root.lua"]]
+
+	local servicelua = readall "/engine/firmware/ltask_service.lua"
 	local dbg = debug.getregistry()["lua-debug"]
 	if dbg then
 		dbg:event("setThreadName", "Thread: Bootstrap")
@@ -40,7 +21,7 @@ local function init_config(config)
 		}, ";")
 	end
 	config.root.service_source = servicelua
-	config.root.service_chunkname = "@/engine/firmware/service.lua"
+	config.root.service_chunkname = "@/engine/firmware/ltask_service.lua"
 
 	config.root.initfunc = [[
 local name = ...
@@ -93,15 +74,12 @@ local m = {}
 
 function m:start(config)
 	init_config(config)
-	boot.init(config.core)
-	boot.init_timer()
-	bootstrap_root(config)
-	self._ctx = boot.run(config.mainthread)
+	self._obj = dofile "/engine/firmware/ltask_bootstrap.lua"
+	self._ctx = self._obj.start(config)
 end
 
 function m:wait()
-	boot.wait(self._ctx)
-	boot.deinit()
+	self._obj.wait(self._ctx)
 end
 
 return m
