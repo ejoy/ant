@@ -1,0 +1,5 @@
+---
+file: materials/Material.001.material
+op: replace
+path: /state/CULL
+value: NONE
