@@ -27,7 +27,7 @@ return function (status)
     status.skeleton = ozz.load(fastio.readall_f((folder / "skeleton.bin"):string()))
     local list = {}
     for path in lfs.pairs(folder) do
-        if path:equal_extension ".bin" then
+        if path:extension() == ".bin" then
             local filename = path:filename():string()
             if filename ~= "skeleton.bin" then
                 list[#list+1] = path
@@ -42,7 +42,7 @@ return function (status)
             local newpath = path:parent_path() / (newname .. path:extension())
             lfs.rename(path, newpath)
         end
-        animations[newname] = newname .. path:extension():string()
+        animations[newname] = newname .. path:extension()
     end
     status.animation.skeleton = "skeleton.bin"
     status.animation.animations = animations

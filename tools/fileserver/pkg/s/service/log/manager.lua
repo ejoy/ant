@@ -51,7 +51,7 @@ function S.CREATE()
     end
     fs.create_directories(LOGDIR)
     for LOGFILE in fs.pairs(LOGDIR) do
-        if fs.is_regular_file(LOGFILE) and LOGFILE:equal_extension ".log" then
+        if fs.is_regular_file(LOGFILE) and LOGFILE:extension() == ".log" then
             local index = getlogindex(LOGFILE:filename():string())
             if index and not repo[index] then
                 movelog(LOGDIR, index)

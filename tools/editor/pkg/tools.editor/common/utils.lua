@@ -124,8 +124,8 @@ end
 function utils.split_ant_path(path_str)
     local path = fs.path(path_str)
     local ppath = path:parent_path()
-    local ext = ppath:extension():string()
-    if ext and (ext == ".glb" or ".gltf") then
+    local ext = ppath:extension()
+    if ext == ".glb" or ext == ".gltf" then
         return { ppath:string(), path:filename():string() }
     else
         return { path_str }
