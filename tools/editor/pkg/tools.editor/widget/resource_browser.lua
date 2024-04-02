@@ -60,7 +60,7 @@ local function construct_resource_tree(fspath)
         end
         table.sort(sorted_path, function(a, b) return string.lower(tostring(a)) < string.lower(tostring(b)) end)
         for _, item in ipairs(sorted_path) do
-            local ext = item:extension():string()
+            local ext = item:extension()
             if lfs.is_directory(item) and ext ~= ".glb" and ext ~= ".gltf" and ext ~= ".material" and ext ~= ".texture" then
                 table.insert(tree.dirs, {item, construct_resource_tree(item), parent = {tree}})
                 if selected_folder[1] == item then
@@ -428,16 +428,16 @@ function m.show()
                         selected_file = path
                         current_filter_key = 1
                         if ImGui.IsMouseDoubleClicked(ImGui.MouseButton.Left) then
-                            local isprefab = path:equal_extension(".prefab")
-                            if path:equal_extension(".gltf") or path:equal_extension(".glb") or path:equal_extension(".fbx") or isprefab then
+                            local isprefab = path:extension() == ".prefab"
+                            if path:extension() == ".gltf" or path:extension() == ".glb" or path:extension() == ".fbx" or isprefab then
                                 world:pub {"OpenFile", tostring(path), isprefab}
-                            elseif path:equal_extension ".material" then
+                            elseif path:extension() == ".material" then
                                 local me = ecs.require "widget.material_editor"
                                 me.open(path)
                             end
                         end
                         
-                        if path:equal_extension(".png") then
+                        if path:extension() == ".png" then
                             if not preview_images[selected_file] then
                                 local parent_path = path:parent_path()
                                 local dirname = parent_path:string():match("([^/]*)$")
@@ -451,7 +451,7 @@ function m.show()
                             end
                         end
 
-                        if path:equal_extension(".texture") then
+                        if path:extension() == ".texture" then
                             if not texture_detail[selected_file] then
                                 local pkg_path = global_data:lpath_to_vpath(path:string())
                                 texture_detail[selected_file] = utils.readtable(pkg_path)
@@ -466,15 +466,15 @@ function m.show()
                     if selected_file == path then
                         ShowContextMenu()
                     end
-                    if path:equal_extension(".material")
-                        or path:equal_extension(".texture")
-                        or path:equal_extension(".png")
-                        or path:equal_extension(".dds")
-                        or path:equal_extension(".prefab")
-                        or path:equal_extension(".glb")
-                        or path:equal_extension(".gltf")
-                        or path:equal_extension(".efk")
-                        or path:equal_extension(".lua") then
+                    if path:extension() == ".material"
+                        or path:extension() == ".texture"
+                        or path:extension() == ".png"
+                        or path:extension() == ".dds"
+                        or path:extension() == ".prefab"
+                        or path:extension() == ".glb"
+                        or path:extension() == ".gltf"
+                        or path:extension() == ".efk"
+                        or path:extension() == ".lua" then
                         if ImGui.BeginDragDropSource() then
                             ImGui.SetDragDropPayload("DragFile", tostring(path))
                             ImGui.Text(tostring(path:filename()))
@@ -489,7 +489,7 @@ function m.show()
             ImGui.TableNextColumn()
             child_width, child_height = ImGui.GetContentRegionAvail()
             ImGui.BeginChild("##ResourceBrowserPreview", child_width, child_height)
-            if selected_file and (selected_file:equal_extension(".png") or selected_file:equal_extension(".texture")) then
+            if selected_file and (selected_file:extension() == ".png" or selected_file:extension() == ".texture") then
                 local preview = preview_images[selected_file]
                 if preview then
                     if texture_detail[selected_file] then

@@ -156,7 +156,7 @@ local function checkLuaExe(args, dbg)
         if fs.exists(luaexe) then
             return luaexe
         end
-        if platform_os() == "Windows" and luaexe:equal_extension "" then
+        if platform_os() == "Windows" and luaexe:extension() == "" then
             luaexe = fs.path(luaexe):replace_extension "exe"
             if fs.exists(luaexe) then
                 return luaexe

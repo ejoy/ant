@@ -64,7 +64,7 @@ function m.show()
                 if rf then
                     for _, filepath in ipairs(editor_setting.setting.recent_files) do
                         if lfs.exists(lfs.path(filepath)) and ImGui.MenuItem(filepath) then
-                            world:pub{"OpenFile", filepath, lfs.path(filepath):equal_extension(".prefab")}
+                            world:pub{"OpenFile", filepath, lfs.path(filepath):extension() == ".prefab"}
                         end
                     end
                 end

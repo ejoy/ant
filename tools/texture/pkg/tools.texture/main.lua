@@ -94,7 +94,7 @@ elseif options.cubemap2equirect then
     write_file(outfile, equirectangular)
 elseif options.equirect2cubemap then
     local equirectangular = read_file(lfs.path(options.equirect2cubemap))
-    if outfile:extension():string():lower() ~= ".ktx" then
+    if outfile:extension() ~= ".ktx" then
         error "cubemap file output file should be ktx format"
     end
 

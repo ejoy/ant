@@ -81,7 +81,7 @@ local function writefile(filename, data)
 end
 
 local function is_png(path)
-	return path:equal_extension "png" ~= nil
+	return path:extension() == ".png"
 end
 
 local function gray2rgb(path, outfile)

@@ -3,7 +3,6 @@ local world = ecs.world
 
 local platform = require "bee.platform"
 local ImGui = require "imgui"
-local ImGuiAnt = import_package "ant.imgui"
 local ImGuiBackend = require "imgui.backend"
 local rhwi = import_package "ant.hwi"
 local assetmgr = import_package "ant.asset"
@@ -39,23 +38,11 @@ function m:init_system()
 		imageUniform = imgui_image.fx.uniforms.s_tex.handle,
 		viewIdPool = viewIdPool,
 	}
-	if platform.os == "windows" then
-		ImGuiAnt.FontAtlasAddFont {
-			SystemFont = "Segoe UI Emoji",
-			SizePixels = 18,
-			GlyphRanges = { 0x23E0, 0x329F, 0x1F000, 0x1FA9F }
-		}
-	end
-	ImGuiAnt.FontAtlasAddFont {
-		FontPath = "/pkg/ant.resources.binary/font/Alibaba-PuHuiTi-Regular.ttf",
-		SizePixels = 18,
-		GlyphRanges = { 0x0020, 0xFFFF }
-	}
 	world:enable_imgui()
 end
 
 function m:init_world()
-	ImGuiAnt.FontAtlasBuild()
+    ImGuiBackend.RenderCreateFontsTexture()
 end
 
 local event_save_layout = world:sub {"save_layout"}

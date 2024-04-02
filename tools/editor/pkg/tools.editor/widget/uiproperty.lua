@@ -247,7 +247,7 @@ function ResourcePath:show()
         local payload = ImGui.AcceptDragDropPayload("DragFile")
         if payload then
             local relative_path = lfs.path(payload)--lfs.relative(lfs.path(payload), fs.path "/":localpath())
-            local extension = tostring(relative_path:extension())
+            local extension = relative_path:extension()
             if extension == self.extension then
                 local path_str = tostring(payload)
                 self.path = path_str
@@ -344,7 +344,7 @@ function TextureResource:show()
             local payload = ImGui.AcceptDragDropPayload("DragFile")
             if payload then
                 local path = fs.path(payload);
-                if path:equal_extension ".png" or path:equal_extension ".dds" then
+                if path:extension() == ".png" or path:extension() == ".dds" then
                     self:set_file(tostring(path))
                     assetmgr.unload(self.path)
                 end
@@ -389,7 +389,7 @@ function TextureResource:show()
         if image_path then
             if ImGui.BeginPopup("select_image") then
                 for path in fs.pairs(image_path) do
-                    if path:equal_extension ".png" or path:equal_extension ".dds" then
+                    if path:extension() == ".png" or path:extension() == ".dds" then
                         local filename = path:filename():string()
                         if ImGui.SelectableEx(filename, false) then
                             self:set_file(glb_path .. "/images/" .. filename)

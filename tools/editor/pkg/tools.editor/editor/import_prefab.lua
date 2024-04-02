@@ -30,9 +30,9 @@ return function (input, output)
     local outputPath = fs.path(output):localpath()
     lfs.remove_all(outputPath:parent_path())
     lfs.create_directories(outputPath:parent_path())
-    if inputPath:equal_extension ".fbx" then
+    if inputPath:extension() == ".fbx" then
         import_fbx(inputPath, outputPath)
-    elseif inputPath:equal_extension ".glb" then
+    elseif inputPath:extension() == ".glb" then
         lfs.copy_file(inputPath, outputPath, fs.copy_options.overwrite_existing)
     else
         error "unsupport file format"

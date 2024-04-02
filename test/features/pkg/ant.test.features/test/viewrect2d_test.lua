@@ -33,15 +33,15 @@ function viewrect2d_test_sys:init()
         },
         data = {
             scene = {t={700, 255, 0}},
-            material = "/pkg/ant.resources/materials/default2d.material",
+            material = "/pkg/ant.resources/materials/default2d_blend.material",
             dynamicquad = {
                 texture = "/pkg/ant.test.features/assets/textures/test_dynamic_quad.texture",
                 --texture = "/pkg/ant.resources/textures/atlas/t1.atlas",
                 width = 320,
                 height = 320,
-                clear = {255, 255, 255, 255}    --initial clear color, default 0,0,0,0
+                clear = {255, 255, 255, 128}    --initial clear color, default 0,0,0,0
             },
-            render_layer = "translucent",
+            visible_masks   = "",
             visible     = true,
         }
     }
