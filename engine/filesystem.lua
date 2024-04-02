@@ -28,8 +28,8 @@ local function concat(a, b)
     if b:sub(1, 1) == "/" then
         return constructor(b)
     end
-    local value = a:gsub("(.-)/?$", "%1")
-    return constructor(value .. "/" .. b)
+    local value = a:gsub("/?$", "/")
+    return constructor(value .. b)
 end
 
 function path_mt:__tostring()
