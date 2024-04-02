@@ -39,23 +39,11 @@ function m:init_system()
 		imageUniform = imgui_image.fx.uniforms.s_tex.handle,
 		viewIdPool = viewIdPool,
 	}
-	if platform.os == "windows" then
-		ImGuiAnt.FontAtlasAddFont {
-			SystemFont = "Segoe UI Emoji",
-			SizePixels = 18,
-			GlyphRanges = { 0x23E0, 0x329F, 0x1F000, 0x1FA9F }
-		}
-	end
-	ImGuiAnt.FontAtlasAddFont {
-		FontPath = "/pkg/ant.resources.binary/font/Alibaba-PuHuiTi-Regular.ttf",
-		SizePixels = 18,
-		GlyphRanges = { 0x0020, 0xFFFF }
-	}
 	world:enable_imgui()
 end
 
 function m:init_world()
-	ImGuiAnt.FontAtlasBuild()
+    ImGuiBackend.RenderCreateFontsTexture()
 end
 
 local event_save_layout = world:sub {"save_layout"}
