@@ -1,13 +1,16 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
+local hwi       = import_package "ant.hwi"
 local bgfx      = require "bgfx"
 local imaterial = ecs.require "ant.render|material"
 local dynamic2d_sys = ecs.system "dynamic2d_system"
 local assetmgr  = import_package "ant.asset"
 local ltask = require "ltask"
+local irender   = ecs.require "ant.render|render"
 local ServiceResource = ltask.queryservice "ant.resource_manager|resource"
 local idq = {}
+local fxaa_viewid<const>      = hwi.viewid_get "fxaa"
 
 local function get_memory(width, height, clear)
     local t = {}
@@ -35,6 +38,16 @@ function idq.update_pixels(eid, pixels)
         memory[pitch*4 + 1] = ("BBBB"):pack(table.unpack(value))
     end
     bgfx.update_texture2d(handle, 0, 0, 0, 0, tw, th, memory)
+end
+
+function dynamic2d_sys:init_world()
+    RENDER_ARG = irender.pack_render_arg("fxaa_queue", fxaa_viewid)
+end
+
+function dynamic2d_sys:render_submit()
+    for e in w:select "dynamicquad:in eid:in" do
+        irender.draw(RENDER_ARG, e.eid)
+    end
 end
 
 function dynamic2d_sys:component_init()
