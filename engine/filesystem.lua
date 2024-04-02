@@ -28,8 +28,8 @@ local function concat(a, b)
     if b:sub(1, 1) == "/" then
         return constructor(b)
     end
-    local value = a:gsub("(.-)/?$", "%1")
-    return constructor(value .. "/" .. b)
+    local value = a:gsub("/?$", "/")
+    return constructor(value .. b)
 end
 
 function path_mt:__tostring()
@@ -73,7 +73,7 @@ function path_mt:stem()
 end
 
 function path_mt:extension()
-    return constructor(self._value:match "[^/](%.[%w*?_%-]*)$")
+    return self._value:match "[^/](%.[%w*?_%-]*)$" or ""
 end
 
 function path_mt:remove_filename()
@@ -89,18 +89,6 @@ function path_mt:replace_extension(ext)
     end
     self._value = self._value .. stem._value .. ext
     return self
-end
-
-function path_mt:equal_extension(ext)
-    if type(ext) ~= "string" then
-        ext = ext._value
-    end
-    local selfext = self._value:match "[^/](%.[%w*?_%-]*)$" or ""
-    if selfext == "" then
-        return ext == ""
-    end
-    ext = (ext:sub(1,1) ~= ".") and ("."..ext) or ext
-    return selfext == ext
 end
 
 function path_mt:is_absolute()

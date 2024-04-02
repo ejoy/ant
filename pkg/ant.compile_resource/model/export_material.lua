@@ -158,7 +158,7 @@ return function (status)
             if ext == nil then
                 error(("not support image type:%d"):format(img.mimeType))
             end
-            if lfs.path(name):extension():string() ~= ext then
+            if lfs.path(name):extension() ~= ext then
                 name = name .. ext
             end
         end

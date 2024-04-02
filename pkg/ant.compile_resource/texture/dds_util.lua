@@ -269,7 +269,7 @@ local function find_compress_format_name(ddspf)
 end
 
 function util.dds_format(filepath)
-    assert(filepath:extension():string():lower() == ".dds")
+    assert(filepath:extension() == ".dds")
 
     local header = load_dds_header(filepath)
     local ddspf  = header.ddspf

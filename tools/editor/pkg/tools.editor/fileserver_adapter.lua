@@ -25,7 +25,7 @@ function event.RUNTIME_CREATE(repo)
     local logdir = repo._root / '.log'
     lfs.create_directories(logdir)
     for path in lfs.pairs(logdir) do
-        if path:equal_extension ".log" then
+        if path:extension() == ".log" then
             lfs.create_directories(logdir / 'backup')
             lfs.rename(path, logdir / 'backup' / path:filename())
         end

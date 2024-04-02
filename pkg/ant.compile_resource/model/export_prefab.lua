@@ -381,7 +381,7 @@ local function serialize_prefab(status, data)
 end
 
 local function compile_animation(status, skeleton, name, file)
-    if not lfs.path(file):equal_extension ".anim" then
+    if not lfs.path(file):extension() == ".anim" then
         return serialize_path(file)
     end
     local anim2ozz = require "model.anim2ozz"

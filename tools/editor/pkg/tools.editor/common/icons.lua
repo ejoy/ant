@@ -53,7 +53,7 @@ local icons = {
     end,
     get_file_icon = function(self, path_str)
         local fs   = require "filesystem"
-        local ext = tostring(fs.path(path_str):extension())
+        local ext = fs.path(path_str):extension()
         if ext == ".lua" then
             return self.ICON_SCRIPT
         elseif ext == ".shader" then

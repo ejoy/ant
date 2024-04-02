@@ -2085,11 +2085,19 @@ function ImGui.GetColorU32Ex(idx, alpha_mul) end
 function ImGui.GetColorU32ImVec4(col_x, col_y, col_z, col_w) end
 
 --
--- retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
+-- Implied alpha_mul = 1.0f
 --
 ---@param col ImU32
 ---@return ImU32
 function ImGui.GetColorU32ImU32(col) end
+
+--
+-- retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
+--
+---@param col ImU32
+---@param alpha_mul? number | `1.0`
+---@return ImU32
+function ImGui.GetColorU32ImU32Ex(col, alpha_mul) end
 
 --
 -- retrieve style color as stored in ImGuiStyle structure. use to feed back into PushStyleColor(), otherwise use GetColorU32() to get style color with style alpha baked in.
@@ -4465,9 +4473,5 @@ function ImGui.RenderPlatformWindowsDefault() end
 ---@param id ImGuiID
 ---@return ImGuiViewport
 function ImGui.FindViewportByID(id) end
-
----@param key ImGui.Key
----@return ImGui.Key
-function ImGui.GetKeyIndex(key) end
 
 return ImGui

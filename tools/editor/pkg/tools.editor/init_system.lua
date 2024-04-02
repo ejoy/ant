@@ -28,7 +28,13 @@ local function start_fileserver(luaexe, path)
 end
 
 local function init_font()
-	ImGuiAnt.FontAtlasAddFont {
+	local fonts = {}
+	fonts[#fonts+1] = {
+		FontPath = "/pkg/ant.resources.binary/font/Alibaba-PuHuiTi-Regular.ttf",
+		SizePixels = 18,
+		GlyphRanges = { 0x0020, 0xFFFF }
+	}
+	fonts[#fonts+1] = {
 		FontPath = "/pkg/tools.editor/resource/fonts/fa-solid-900.ttf",
 		SizePixels = 16,
 		GlyphRanges = {
@@ -87,6 +93,7 @@ local function init_font()
 			0xf0c5, 0xf0c5, -- ICON_FA_COPY					"\xef\x83\x85" U+f0c5
 			0xf0ea, 0xf0ea, -- ICON_FA_PASTE				"\xef\x83\xaa" U+f0ea
 	}}
+	ImGuiAnt.FontAtlasBuild(fonts)
 end
 
 local memfs = import_package "ant.vfs".memory

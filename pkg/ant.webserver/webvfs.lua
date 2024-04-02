@@ -88,7 +88,7 @@ local content_text_types = {
 
 local function gen_get(fs)
 	local function get_file(path)
-		local ext = path:extension():string():lower()
+		local ext = path:extension()
 		local content = fs.reader(path:string())
 		local ctype = content_text_types[ext]
 		if not ctype then

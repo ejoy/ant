@@ -922,7 +922,7 @@ end
 local function check_disable_file_fetch_ui(matfile_ui)
     local fetch = matfile_ui:find_property "fetch_material"
     local f = rb.selected_file()
-    fetch.disable = f == nil or (not f:equal_extension ".material")
+    fetch.disable = f == nil or (not f:extension() == ".material")
 end
 
 local default_files<const> = {

@@ -1,16 +1,13 @@
 local aio = import_package "ant.io"
-local fontutil = require "font.util"
 local fastio = require "fastio"
 local bgfx = require "bgfx"
 local viewIdPool = require "viewid_pool"
 
 local ImGui = require "imgui"
-local ImGuiBackend = require "imgui.backend"
 local ImGuiAnt = {}
 ---@class ImGuiIO
 local ImGuiIO
 
-local FontAtlas = {}
 
 local function glyphRanges(t)
 	assert(#t % 2 == 0)
@@ -22,42 +19,23 @@ local function glyphRanges(t)
 	return table.concat(s)
 end
 
-function ImGuiAnt.FontAtlasClear()
-    FontAtlas = {}
-end
-
-function ImGuiAnt.FontAtlasAddFont(config)
-    if config.SystemFont then
-        FontAtlas[#FontAtlas+1] = {
-            FontData = fontutil.systemfont(config.SystemFont),
-            SizePixels = config.SizePixels,
-            GlyphRanges = glyphRanges(config.GlyphRanges),
-        }
-        return
-    end
-    FontAtlas[#FontAtlas+1] = {
-        FontData = aio.readall_v(config.FontPath),
-        SizePixels = config.SizePixels,
-        GlyphRanges = glyphRanges(config.GlyphRanges),
-    }
-end
-
-function ImGuiAnt.FontAtlasBuild()
+function ImGuiAnt.FontAtlasBuild(list)
     local atlas = ImGui.GetIO().Fonts
     atlas.Clear()
     local _, ImFontConfig = ImGui.FontConfig()
     ImFontConfig.FontDataOwnedByAtlas = false
-    for i, config in ipairs(FontAtlas) do
-        local data, size = fastio.wrap(config.FontData)()
+    local FontDatas = {}
+    for i, config in ipairs(list) do
+        local FontData = aio.readall_v(config.FontPath)
+        FontDatas[#FontDatas+1] = FontData
+        local data, size = fastio.wrap(FontData)()
         ImFontConfig.MergeMode = i > 1
-        atlas.AddFontFromMemoryTTF(data, size, config.SizePixels, ImFontConfig, config.GlyphRanges)
+        atlas.AddFontFromMemoryTTF(data, size, config.SizePixels, ImFontConfig, glyphRanges(config.GlyphRanges))
     end
     atlas.Build()
-    ImGuiBackend.RenderCreateFontsTexture()
-    for _, config in ipairs(FontAtlas) do
-        fastio.free(config.FontData)
+    for _, data in ipairs(FontDatas) do
+        fastio.free(data)
     end
-    FontAtlas = {}
 end
 
 local ImGuiEvent = {}
