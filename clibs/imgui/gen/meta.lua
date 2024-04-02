@@ -43,6 +43,7 @@ local TodoFunction <const> = {
 
     ImGui_DebugTextEncoding = true,
     ImGui_DebugFlashStyleColor = true,
+    ImGui_DebugStartItemPicker = true,
     ImGui_DebugCheckVersionAndDataLayout = true,
 
     ImGui_GetPlatformIO = true,

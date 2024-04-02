@@ -1325,6 +1325,14 @@ static int GetColorU32ImU32(lua_State* L) {
     return 1;
 }
 
+static int GetColorU32ImU32Ex(lua_State* L) {
+    auto col = (ImU32)luaL_checkinteger(L, 1);
+    auto alpha_mul = (float)luaL_optnumber(L, 2, 1.0f);
+    auto&& _retval = ImGui::GetColorU32(col, alpha_mul);
+    lua_pushinteger(L, _retval);
+    return 1;
+}
+
 static int GetStyleColorVec4(lua_State* L) {
     auto idx = (ImGuiCol)luaL_checkinteger(L, 1);
     auto&& _retval = ImGui::GetStyleColorVec4(idx);
@@ -4520,13 +4528,6 @@ static int FindViewportByID(lua_State* L) {
     return 1;
 }
 
-static int GetKeyIndex(lua_State* L) {
-    auto key = (ImGuiKey)luaL_checkinteger(L, 1);
-    auto&& _retval = ImGui::GetKeyIndex(key);
-    lua_pushinteger(L, _retval);
-    return 1;
-}
-
 namespace wrap_ImGuiIO {
 
 static int AddKeyEvent(lua_State* L) {
@@ -7040,6 +7041,7 @@ static void init(lua_State* L) {
         { "GetColorU32Ex", GetColorU32Ex },
         { "GetColorU32ImVec4", GetColorU32ImVec4 },
         { "GetColorU32ImU32", GetColorU32ImU32 },
+        { "GetColorU32ImU32Ex", GetColorU32ImU32Ex },
         { "GetStyleColorVec4", GetStyleColorVec4 },
         { "GetCursorScreenPos", GetCursorScreenPos },
         { "SetCursorScreenPos", SetCursorScreenPos },
@@ -7329,7 +7331,6 @@ static void init(lua_State* L) {
         { "UpdatePlatformWindows", UpdatePlatformWindows },
         { "RenderPlatformWindowsDefault", RenderPlatformWindowsDefault },
         { "FindViewportByID", FindViewportByID },
-        { "GetKeyIndex", GetKeyIndex },
         { NULL, NULL },
     };
 
