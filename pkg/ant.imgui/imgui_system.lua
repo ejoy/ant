@@ -3,7 +3,6 @@ local world = ecs.world
 
 local platform = require "bee.platform"
 local ImGui = require "imgui"
-local ImGuiAnt = import_package "ant.imgui"
 local ImGuiBackend = require "imgui.backend"
 local rhwi = import_package "ant.hwi"
 local assetmgr = import_package "ant.asset"
