@@ -183,19 +183,19 @@ function S.RESOURCE(CompileId, path)
     if not file or not file.resource_path then
         return
     end
-	compiling = compiling + 1
-    local ok, lpath = pcall(cr.compile_file, s.config, file.resource, file.resource_path)
+    compiling = compiling + 1
+    local ok, lpath = xpcall(cr.compile_file, debug.traceback, s.config, file.resource, file.resource_path)
     if not ok then
         if type(lpath) == "table" then
-            print(table.concat(lpath, "\n"))
+            log.warn("compile resource failed:", table.concat(lpath, "\n"))
         else
-            print(lpath)
+            log.warn("compile resource failed:", lpath)
         end
-		compiling = compiling - 1
+        compiling = compiling - 1
         return
     end
     local hash = repo:build_resource(lpath, path):root()
-	compiling = compiling - 1
+    compiling = compiling - 1
     return hash
 end
 
