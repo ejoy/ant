@@ -45,8 +45,10 @@ function dynamic2d_sys:init_world()
 end
 
 function dynamic2d_sys:render_submit()
-    for e in w:select "dynamicquad:in eid:in" do
-        irender.draw(RENDER_ARG, e.eid)
+    for e in w:select "dynamicquad:in eid:in visible?in" do
+        if e.visible then
+            irender.draw(RENDER_ARG, e.eid) 
+        end
     end
 end
 
