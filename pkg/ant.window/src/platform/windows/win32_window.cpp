@@ -93,14 +93,6 @@ static void get_xy(LPARAM lParam, int *x, int *y) {
 	*y = (short)((lParam>>16) & 0xffff); 
 }
 
-static void get_screen_xy(HWND hwnd, LPARAM lParam, int *x, int *y) {
-	get_xy(lParam, x, y);
-	POINT pt = { *x, *y };
-	ScreenToClient(hwnd, &pt);
-	*x = pt.x;
-	*y = pt.y;
-}
-
 static void UpdateKeyboardCodePage() {
 	HKL keyboard_layout = ::GetKeyboardLayout(0);
 	LCID keyboard_lcid = MAKELCID(HIWORD(keyboard_layout), SORT_DEFAULT);
