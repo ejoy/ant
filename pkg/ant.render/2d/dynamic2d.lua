@@ -38,6 +38,7 @@ function idq.update_pixels(eid, pixels)
         memory[pitch*4 + 1] = ("BBBB"):pack(table.unpack(value))
     end
     bgfx.update_texture2d(handle, 0, 0, 0, 0, tw, th, memory)
+    dq.handle = handle
 end
 
 function dynamic2d_sys:init_world()
@@ -45,8 +46,10 @@ function dynamic2d_sys:init_world()
 end
 
 function dynamic2d_sys:render_submit()
-    for e in w:select "dynamicquad:in eid:in" do
-        irender.draw(RENDER_ARG, e.eid)
+    for e in w:select "dynamicquad:in eid:in visible?in" do
+        if e.visible then
+            irender.draw(RENDER_ARG, e.eid) 
+        end
     end
 end
 
@@ -74,6 +77,7 @@ function dynamic2d_sys:entity_ready()
         local dq = e.dynamicquad
         local id, tw, th, memory = dq.id, dq.tw, dq.th, dq.memory
         local handle = ltask.call(ServiceResource, "texture_content", id).handle
+        dq.handle = handle
         bgfx.update_texture2d(handle, 0, 0, 0, 0, tw, th, memory)
         imaterial.set_property(e, "s_basecolor", id)
     end
@@ -81,8 +85,7 @@ end
 
 function dynamic2d_sys:entity_remove()
     for e in w:select "REMOVED dynamicquad:in" do
-        bgfx.destroy(e.dynamicquad.id)
-        bgfx.destroy(e.dynamicquad.memory)
+        bgfx.destroy(e.dynamicquad.handle)
     end
 end
 

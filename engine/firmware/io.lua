@@ -373,7 +373,7 @@ end
 
 local function connect_server(address, port)
 	LOG("Connecting", address, port)
-	local fd, err = socket "tcp"
+	local fd, err = socket.create "tcp"
 	if not fd then
 		LOG("[ERROR]: "..err)
 		return
@@ -402,7 +402,7 @@ end
 
 local function listen_server(address, port)
 	LOG("Listening", address, port)
-	local fd, err = socket "tcp"
+	local fd, err = socket.create "tcp"
 	if not fd then
 		LOG("[ERROR] socket: "..err)
 		return

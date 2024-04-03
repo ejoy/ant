@@ -32,7 +32,10 @@ local function init_fx_files()
         end}
     end
 
-    for _, t in ltask.parallel(tasks) do
+    for _, resp in ltask.parallel(tasks) do
+        if resp.error then
+            resp:rethrow()
+        end
     end
     return FxFiles
 end

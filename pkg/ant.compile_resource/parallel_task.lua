@@ -11,7 +11,10 @@ function m.add(t, f)
 end
 
 function m.wait(t)
-    for _ in ltask.parallel(t) do
+    for _, resp in ltask.parallel(t) do
+        if resp.error then
+            resp:rethrow()
+        end
     end
 end
 

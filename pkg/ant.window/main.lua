@@ -23,12 +23,15 @@ local function start(config)
     local function spawn_resource()
         ltask.uniqueservice "ant.resource_manager|resource"
     end
-    for _ in ltask.parallel {
+    for _, resp in ltask.parallel {
         { spawn_window },
         { spawn_bgfx },
         { spawn_rmlui },
         { spawn_resource },
     } do
+        if resp.error then
+            resp:rethrow()
+        end
     end
 end
 
