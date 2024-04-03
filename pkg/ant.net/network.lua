@@ -16,7 +16,7 @@ function net.new(selector)
 	local wakeup = ltask.wakeup
 
 	function api.listen(addr, port)
-		local fd, err = socket "tcp"
+		local fd, err = socket.create "tcp"
 		if not fd then
 			return false, err
 		end
@@ -98,7 +98,7 @@ function net.new(selector)
 	end
 
 	function api.connect(addr, port)
-		local fd, err = socket "tcp"
+		local fd, err = socket.create "tcp"
 		if not fd then
 			return false, err
 		end

@@ -86,7 +86,7 @@ function message.LOG(type, data)
 end
 
 local function connectFileServer()
-    local fd = assert(socket "tcp")
+    local fd = assert(socket.create "tcp")
     selector:event_add(fd, SELECT_WRITE)
     assert(fd:connect("127.0.0.1", 2019) ~= nil)
     for f, ev in selector:wait() do

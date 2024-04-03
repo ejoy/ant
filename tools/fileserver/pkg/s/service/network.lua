@@ -165,7 +165,7 @@ end
 local S = {}
 
 function S.bind(protocol, ...)
-    local fd = assert(socket(protocol))
+    local fd = assert(socket.create(protocol))
     local ok, err = fd:bind(...)
     if not ok then
         return ok, err
@@ -181,7 +181,7 @@ function S.bind(protocol, ...)
 end
 
 function S.connect(protocol, ...)
-    local fd = assert(socket(protocol))
+    local fd = assert(socket.create(protocol))
     local r, err = fd:connect(...)
     if r == nil then
         return r, err
