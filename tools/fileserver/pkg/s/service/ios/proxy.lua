@@ -33,9 +33,20 @@ local function connectIOS()
                 end
             end
         end
-        ::continue::
         socket.close(fd)
         ltask.sleep(20)
+    end
+end
+
+local function proxy(from, to)
+    while true do
+        local data = socket.recv(from)
+        if data == nil then
+            return
+        end
+        if socket.send(to, data) == nil then
+            return
+        end
     end
 end
 
@@ -44,10 +55,13 @@ local function updateProxy()
         local cfd = connectIOS()
         local sfd = socket.connect('tcp', '127.0.0.1', 2018)
         SERVER_FD, CLIENT_FD = sfd, cfd
-        for _ in ltask.request
-            { ltask.self(), "__Proxy", sfd, cfd }
-            { ltask.self(), "__Proxy", cfd, sfd }
-        :select() do
+        for _, resp in ltask.parallel {
+            { proxy, sfd, cfd },
+            { proxy, cfd, sfd },
+        } do
+            if resp.error then
+                resp:rethrow()
+            end
             SERVER_FD, CLIENT_FD = nil, nil
             socket.close(sfd)
             socket.close(cfd)
@@ -70,18 +84,6 @@ function S.Detached()
 end
 
 function S.Paired()
-end
-
-function S.__Proxy(from, to)
-    while true do
-        local data = socket.recv(from)
-        if data == nil then
-            return
-        end
-        if socket.send(to, data) == nil then
-            return
-        end
-    end
 end
 
 return S
