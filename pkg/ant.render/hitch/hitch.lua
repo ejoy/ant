@@ -231,9 +231,7 @@ function hitch_sys:refine_camera()
             
             local memory, draw_num = get_hitch_worldmats_instance_memory(indirect_draw_group.hitchs)
             local glbs = {}
-            for re in w:select "hitch_tag mesh_result:in draw_indirect:update eid:in render_object_visible?update bounding?update" do
-                -- render_object_visible only set in render_system entity_init by view_visible
-                re.render_object_visible = true
+            for re in w:select "hitch_tag mesh_result:in draw_indirect:update eid:in bounding?update" do
                 re.bounding.aabb       = mu.M3D_mark(re.bounding.aabb, math3d.aabb())
                 re.bounding.scene_aabb = mu.M3D_mark(re.bounding.scene_aabb, math3d.aabb())
                 glbs[#glbs+1] = { diid = re.eid, cid = re.draw_indirect.cid}
