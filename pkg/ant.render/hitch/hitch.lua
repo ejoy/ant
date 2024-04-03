@@ -178,8 +178,8 @@ function hitch_sys:finish_scene_update()
         end
         ig.enable(gid, "hitch_tag", true)
         local objaabb = math3d.aabb()
-        for re in w:select "hitch_tag bounding:in skinning?in dynamic_mesh?in" do
-            if re.skinning or re.dynamic_mesh  then
+        for re in w:select "hitch_tag bounding:in skinning?in dynamic_mesh?in animation?in" do
+            if re.skinning or re.dynamic_mesh or re.animation  then
                 DIRECT_DRAW_GROUPS[gid] = true
             end
             if re.bounding.scene_aabb ~= mc.NULL then
