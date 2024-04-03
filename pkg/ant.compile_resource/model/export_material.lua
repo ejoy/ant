@@ -5,6 +5,9 @@ local vfs_fastio = require "vfs_fastio"
 local texture_compile = require "texture.compile"
 local parallel_task = require "parallel_task"
 
+local setting = import_package "ant.settings"
+local INV_Z<const> = setting:get "graphic/inv_z"
+
 local image_extension = {
     ["image/jpeg"] = ".jpg",
     ["image/png"] = ".png",
@@ -112,8 +115,6 @@ local UV_map = {
     MIRRORED_REPEAT = "MIRROR",
     REPEAT          = "WRAP",
 }
-
-local INV_Z<const> = false
 
 local ALPHA_MODE_STATES<const> = {
     OPAQUE  = {

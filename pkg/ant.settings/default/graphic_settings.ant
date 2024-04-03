@@ -8,6 +8,7 @@ graphic:
     bent_normal : false
     quality     : low
   inv_z: true
+  inf_f: true
   lighting:
     cluster_shading: 1
   postprocess:

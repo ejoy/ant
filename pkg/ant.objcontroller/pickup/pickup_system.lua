@@ -16,14 +16,15 @@ local sampler	= renderpkg.sampler
 local assetmgr  = import_package "ant.asset"
 local featureset= import_package "ant.render".featureset
 
+local setting 	= import_package "ant.settings"
+
 local RM		= ecs.require "ant.material|material"
 
 local hwi		= import_package "ant.hwi"
 
 local queuemgr  = ecs.require "ant.render|queue_mgr"
 
-local INV_Z<const> = false
-local INF_F<const> = true
+local INV_Z<const> = setting:get "graphic/inv_z"
 
 local function packeid_as_rgba(eid)
     return {(eid & 0x000000ff) / 0xff,

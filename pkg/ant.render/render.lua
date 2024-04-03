@@ -8,7 +8,7 @@ local ENABLE_PRE_DEPTH<const>	= not setting:get "graphic/disable_pre_z"
 local ENABLE_FXAA<const> 		= setting:get "graphic/postprocess/fxaa/enable"
 local ENABLE_TAA<const>			= setting:get "graphic/postprocess/taa/enable"
 
-local INV_Z<const>				= false
+local INV_Z<const> = setting:get "graphic/inv_z"
 local CLEAR_DEPTH_VALUE<const>  = INV_Z and 0 or 1
 local bgfx 			= require "bgfx"
 local fbmgr			= require "framebuffer_mgr"

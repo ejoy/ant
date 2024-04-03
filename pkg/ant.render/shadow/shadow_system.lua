@@ -32,7 +32,7 @@ local imaterial = ecs.require "ant.render|material"
 local ivm		= ecs.require "ant.render|visible_mask"
 local irender	= ecs.require "ant.render|render"
 
-local INV_Z<const> = false
+local INV_Z<const> = setting:get "graphic/inv_z"
 local CLEAR_DEPTH_VALUE<const> = INV_Z and 0 or 1
 bgfx.set_palette_color(0, CLEAR_DEPTH_VALUE, CLEAR_DEPTH_VALUE, CLEAR_DEPTH_VALUE, CLEAR_DEPTH_VALUE)
 
@@ -391,12 +391,12 @@ local CULL_REVERSE<const> = {
 	NONE	= "CCW",
 }
 
-local function create_depth_state(srcstate, dststate)
+local function create_shadow_state(srcstate, dststate)
 	local s, d = bgfx.parse_state(srcstate), bgfx.parse_state(dststate)
 	d.PT = s.PT
 	local c = s.CULL or "NONE"
-	d.CULL = s.CULL --"NONE"--CULL_REVERSE[c]
-	d.DEPTH_TEST = "GREATER"
+	d.CULL = CULL_REVERSE[c]
+	d.DEPTH_TEST = INV_Z and "GREATER" or "LESS"
 
 	return bgfx.make_state(d)
 end
@@ -418,7 +418,7 @@ function shadow_sys:entity_ready()
 				local fm = e.filter_material
 				local mi = RM.create_instance(dstres.depth.object)
 				local Dmi = fm.DEFAULT_MATERIAL
-				mi:set_state(create_depth_state(Dmi:get_state(), dstres.state))
+				mi:set_state(create_shadow_state(Dmi:get_state(), dstres.state))
 				fm[midx] = mi
 				R.set(ro.rm_idx, midx, mi:ptr())
 				castshadow = hasaabb
