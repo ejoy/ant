@@ -27,11 +27,13 @@ local EVSM_SAMPLE_RADIUS<const> = EVSMSETTING.sample_radius
 local EVSM_SM_FORMAT<const>     = EVSMSETTING.format
 
 local function check_evsm_exponents()
+    --math.log(max_half()) * 0.5f;
+    --math.log(max_float()) * 0.5f;
     local VALID_FMT<const> = {
         RGBA16F = 5.54,
-        RG16F = 5.54,
+        RG16F   = 5.54,
         RGBA32F = 42,
-        RG32F = 42,
+        RG32F   = 42,
     }
     local MAX_EXPONENT = VALID_FMT[EVSM_SM_FORMAT] or error(("Invalid evsm shadowmap format:%s, should only be: [RGBA16F/RGBA32F/RG16F/RG32F] is valid"):format(EVSM_SM_FORMAT))
     EVSM_EXPONENTS[1] = math.min(MAX_EXPONENT, EVSM_EXPONENTS[1])

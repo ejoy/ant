@@ -69,10 +69,18 @@ local function simple_entities()
 		prefab = "/pkg/ant.resources.binary/meshes/base/cube.glb/mesh.prefab",
 		on_ready = function (p)
 			local root<close> = world:entity(p.tag['*'][1], "scene:in")
-			iom.set_position(root, math3d.vector(0.0, 3.0, 0.0, 1.0))
+			iom.set_position(root, math3d.vector(5.0, 3.0, 0.0, 1.0))
 		end
 	}
-	PC:add_entity(util.create_shadow_plane(25))
+	PC:add_entity(util.create_shadow_plane(1000))
+
+	PC:create_instance{
+		prefab = "/pkg/ant.test.features/assets/wind-turbine-1.glb/mesh.prefab",
+		on_ready = function (p)
+			local root<close> = world:entity(p.tag['*'][1], "scene:in")
+			iom.set_scale(root, 0.1)
+		end
+	}
 
 	-- PC:create_instance{
 	-- 	prefab = "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb/mesh.prefab", on_ready = function (e)

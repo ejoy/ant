@@ -231,7 +231,6 @@ struct HttpcTask {
             }
         }
         if (buffer.size() != 0) {
-            DWORD write = 0;
             if (auto write = output->write(buffer.data(), buffer.size())) {
                 if (*write == 0) {
                     return Status::Idle;
