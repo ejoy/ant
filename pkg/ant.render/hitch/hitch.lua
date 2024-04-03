@@ -179,12 +179,15 @@ function hitch_sys:finish_scene_update()
         ig.enable(gid, "hitch_tag", true)
         local objaabb = math3d.aabb()
         for re in w:select "hitch_tag bounding:in skinning?in dynamic_mesh?in animation?in" do
-            if re.skinning or re.dynamic_mesh or re.animation  then
+            if re.skinning or re.dynamic_mesh or re.animation then
                 DIRECT_DRAW_GROUPS[gid] = true
             end
             if re.bounding.scene_aabb ~= mc.NULL then
                 objaabb = math3d.aabb_merge(objaabb, re.bounding.scene_aabb)
             end
+        end
+        if not DIRECT_DRAW_GROUPS[gid] then
+            ig.enable(gid, "view_visible", true)
         end
         ig.enable(gid, "hitch_tag", false)
         for _, heid in ipairs(hitchs) do
@@ -218,7 +221,7 @@ function hitch_sys:refine_camera()
         if MARKED_GROUPS[gid] then
             goto continue
         end
-        ig.enable(gid, "view_visible", true)
+        
         local indirect_draw_group = INDIRECT_DRAW_GROUPS[gid]
         if indirect_draw_group.glbs then
             update_group_instance_buffer(indirect_draw_group)
