@@ -22,7 +22,7 @@ local hwi		= import_package "ant.hwi"
 
 local queuemgr  = ecs.require "ant.render|queue_mgr"
 
-local INV_Z<const> = true
+local INV_Z<const> = false
 local INF_F<const> = true
 
 local function packeid_as_rgba(eid)

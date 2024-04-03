@@ -9,7 +9,7 @@ local mc    = mathpkg.constant
 local defcomp 	= import_package "ant.general".default
 local iom = ecs.require "ant.objcontroller|obj_motion"
 
-local INV_Z<const> = true
+local INV_Z<const> = false
 local INF_F<const> = true
 
 local ic = {}

@@ -2,7 +2,7 @@ fx:
   shader_type: PBR
   setting:
     lighting: on
-    cast_shadow: off
+    cast_shadow: on
     receive_shadow: on
   varyings:
     a_position: vec3
@@ -18,7 +18,7 @@ properties:
 state:
   ALPHA_REF: 0
   CULL: CCW
-  DEPTH_TEST: GREATER
+  DEPTH_TEST: LESS
   MSAA: true
   PT: TRISTRIP
   WRITE_MASK: RGBAZ

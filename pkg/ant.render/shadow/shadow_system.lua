@@ -32,15 +32,16 @@ local imaterial = ecs.require "ant.render|material"
 local ivm		= ecs.require "ant.render|visible_mask"
 local irender	= ecs.require "ant.render|render"
 
-bgfx.set_palette_color(0, 0.0, 0.0, 0.0, 0.0)
+local INV_Z<const> = false
+local CLEAR_DEPTH_VALUE<const> = INV_Z and 0 or 1
+bgfx.set_palette_color(0, CLEAR_DEPTH_VALUE, CLEAR_DEPTH_VALUE, CLEAR_DEPTH_VALUE, CLEAR_DEPTH_VALUE)
 
 local csm_matrices			= {math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT), math3d.ref(mc.IDENTITY_MAT)}
 local split_distances_VS	= math3d.ref(math3d.vector(math.maxinteger, math.maxinteger, math.maxinteger, math.maxinteger))
 
-local INV_Z<const> = true
+
 --NOTE: use PSC far should enable depth clamp. we should enable reset flag: BGFX_RESET_DEPTH_CLAMP in bgfx.init or bgfx.reset
 local usePSCFar<const> = false
-
 local moveCameraToOrigin<const> = false
 
 local SM_SIZE<const>		= setting:get "graphic/shadow/size"
@@ -66,8 +67,8 @@ local function calc_focus_matrix(aabb)
 	tx, ty = -math.ceil(tx * hs) / hs, -math.ceil(ty * hs) / hs
 	return math3d.matrix{
 		sx,  0, 0, 0,
-			0, sy, 0, 0,
-			0,  0, 1, 0,
+		 0, sy, 0, 0,
+		 0,  0, 1, 0,
 		tx, ty, 0, 1
 	}
 end
@@ -101,7 +102,7 @@ local function create_csm_entity(index, vr, fbidx)
 				view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
 				clear_state = {
 					clear = "D",
-					depth = 0,
+					depth = CLEAR_DEPTH_VALUE,
 				},
 				fb_idx = fbidx,
 			},
@@ -394,7 +395,7 @@ local function create_depth_state(srcstate, dststate)
 	local s, d = bgfx.parse_state(srcstate), bgfx.parse_state(dststate)
 	d.PT = s.PT
 	local c = s.CULL or "NONE"
-	d.CULL = CULL_REVERSE[c]
+	d.CULL = s.CULL --"NONE"--CULL_REVERSE[c]
 	d.DEPTH_TEST = "GREATER"
 
 	return bgfx.make_state(d)

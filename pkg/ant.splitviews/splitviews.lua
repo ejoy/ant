@@ -11,8 +11,6 @@ local queuemgr  = ecs.require "ant.render|queue_mgr"
 
 local hwi       = import_package "ant.hwi"
 
-local INV_Z<const> = true
-local INF_F<const> = true
 local svs = ecs.system "splitviews_system"
 
 local orthoview
