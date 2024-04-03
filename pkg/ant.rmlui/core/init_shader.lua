@@ -30,7 +30,10 @@ for k, v in pairs(shaders) do
         progs[k] = shader.fx.prog
     end}
 end
-for _ in ltask.parallel(tasks) do
+for _, resp in ltask.parallel(tasks) do
+    if resp.error then
+        resp:rethrow()
+    end
 end
 progs.uniforms = uniforms
 return progs

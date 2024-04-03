@@ -391,10 +391,14 @@ function S.texture_create(name, type, block)
     if block then
         local block_token = blockWaitTexture(name)
         local load_token = asyncLoadTexture(c)
-        ltask.parallel {
+        for _, resp in ltask.parallel {
             { ltask.multi_wait, block_token },
             { ltask.multi_wait, load_token },
-        }
+        } do
+            if resp.error then
+                resp:rethrow()
+            end
+        end
     else
         ltask.multi_wait(asyncLoadTexture(c))
     end
