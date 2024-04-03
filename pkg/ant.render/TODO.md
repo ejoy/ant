@@ -80,7 +80,7 @@
 13. 资源编译生成inverse_bind_matrices这个属性下，理论上应该是在右手空间，但在ext_skinbin.lua里，会把它转成左手矩阵，最后在算蒙皮矩阵的时候，会和ozz内部的右手矩阵相乘，蒙皮矩阵最后会转到左手空间下，这个解决居然是对的。inverse_bind_matrices这个属性不应该是右手的；
 14. 优化cluster shading。用更紧凑的方法存放lighting indices的buffer；
 15. 用compute shader patch用于shadow/pre-depth的vertex/indices buffer。在compute shader中进行frustum cull（意味着每个mesh都要带上一个bounding sphere/aabb），进而生成用于render的indices buffer（vertex buffer可以不动？），用一次/多次draw替换整个scene的draw；
-16. 优化shadowmap depth精度。目前的aabb中的depth range依赖于PSR与PCR的交集后求得的aabb。当生成一次shadow map之后，通过多pass/dispatch能够找到depth的min/max值，从而将depth range设置得更紧凑；
+16. 优化shadowmap depth精度。目前的aabb中的depth range依赖于PSR与PCR的交集后求得的aabb。当绘制场景后（或者pre-depth后），通过从scene depth进行多pass/dispatch能够找到depth的min/max值，从而将depth range设置得更紧凑；
 
 ##### 暂缓进行
 1. 确认一下occlusion query是否在bgfx中被激活，参考https://developer.download.nvidia.cn/books/HTML/gpugems/gpugems_ch29.html，实现相应的遮挡剔除；(目前项目用不上，添加上后会有性能负担)；
