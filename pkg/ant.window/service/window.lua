@@ -119,7 +119,7 @@ function WindowEvent.suspend(m)
                 if #WindowQueue > 0 then
                     ltask.wakeup(WindowToken)
                 else
-                    thread.sleep(0.01)
+                    thread.sleep(10)
                 end
                 ltask.sleep(0)
             end

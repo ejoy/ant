@@ -424,7 +424,7 @@ local function listen_server(address, port)
 	local quit
 	while not quit do
 		quit = true
-		for _ in sel:wait(2) do
+		for _ in sel:wait(2000) do
 			local newfd, err = fd:accept()
 			if newfd == nil then
 				fd:close()
