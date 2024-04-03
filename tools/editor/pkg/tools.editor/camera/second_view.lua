@@ -9,8 +9,6 @@ local defaultcomp= import_package "ant.general".default
 
 local hwi       = import_package "ant.hwi"
 
-local INV_Z<const> = true
-local INF_F<const> = true
 local math3d    = require "math3d"
 
 local irq       = ecs.require "ant.render|renderqueue"

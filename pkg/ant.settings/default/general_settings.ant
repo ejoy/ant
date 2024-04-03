@@ -22,11 +22,11 @@ graphic:
     clear_depth: 1
     clear_stencil: 0
   shadow:
-    normal_offset: 1.0
+    normal_offset: 0
     size: 1024
     split_ratios:
       {0.0, 1.0}
     evsm:
       exponents: {40, 5}    #first element for positive exponent, second element for nagitive exponent, we will check exponent for different texture format
-      bias: 0.1
+      bias: 0.01
       bleeding: 0           #range from[0, 1]

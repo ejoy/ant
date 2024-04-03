@@ -8,6 +8,8 @@ local ENABLE_PRE_DEPTH<const>	= not setting:get "graphic/disable_pre_z"
 local ENABLE_FXAA<const> 		= setting:get "graphic/postprocess/fxaa/enable"
 local ENABLE_TAA<const>			= setting:get "graphic/postprocess/taa/enable"
 
+local INV_Z<const> = setting:get "graphic/inv_z"
+local CLEAR_DEPTH_VALUE<const>  = INV_Z and 0 or 1
 local bgfx 			= require "bgfx"
 local fbmgr			= require "framebuffer_mgr"
 local layoutmgr		= require "vertexlayout_mgr"
@@ -106,7 +108,7 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 				viewid = depth_viewid,
 				clear_state = {
 					clear = "SD",
-					depth = 0,
+					depth = CLEAR_DEPTH_VALUE,
 					stencil = 0
 				},
 				view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h, ratio=vr.ratio},
@@ -354,7 +356,7 @@ end
 function irender.create_depth_state(os)
     local s = irender.has_depth_test(os)
     if s and not s.BLEND then
-        s.DEPTH_TEST = "GREATER"
+        s.DEPTH_TEST = INV_Z and "GREATER" or "LESS"
 		s.WRITE_MASK = "Z"
         return bgfx.make_state(s)
     end
@@ -363,7 +365,7 @@ end
 function irender.create_write_state(os)
     local s = irender.has_depth_test(os)
     if s and not s.BLEND then
-        s.DEPTH_TEST = "GREATER"
+        s.DEPTH_TEST = INV_Z and "GREATER" or "LESS"
 		s.WRITE_MASK = "RGBAZ"
         return bgfx.make_state(s)
     end
