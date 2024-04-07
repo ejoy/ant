@@ -95,9 +95,7 @@ local function create_material_instance(e)
 end
 
 local function update_default_material_index(e)
-	w:extend(e, "material:in")
-	w:extend(e, "feature_set:in")
-	w:extend(e, "filter_material:in")
+	w:extend(e, "material:in feature_set:in filter_material:in")
 	local ro = e.render_object
 	local mi = create_material_instance(e)
 	local midx = queuemgr.default_material_index()
