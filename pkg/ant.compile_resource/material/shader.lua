@@ -55,22 +55,22 @@ local function run(setting, commands, input, output)
         "--depends",
     }
     print "shader compile:"
-    local ok, msg = subprocess.spawn_process(C)
-    if ok then
-        local INFO = msg:upper()
+    local success, errmsg = subprocess.spawn(C)
+    if success then
+        local INFO = errmsg:upper()
         for _, term in ipairs {
             "ERROR",
             "FAILED TO BUILD SHADER"
         } do
             local VARYING_ERROR<const> = ("Failed to parse varying def file"):upper()
             if INFO:find(term, 1, true) and not INFO:find(VARYING_ERROR, 1, true) then
-                ok = false
+                success = false
                 break
             end
         end
     end
-    if not ok then
-        return false, msg
+    if not success then
+        return false, errmsg
     end
     local deps = depends.new()
     depends.add_lpath(deps, input:string())

@@ -187,14 +187,14 @@ return function (output, setting, param)
 			return table.concat(t, " ")
 		end
 		buildcmd = to_command(commands)
-		local success, msg = subprocess.spawn_process(commands)
+		local success, errmsg = subprocess.spawn(commands)
 		if success then
-			if msg:upper():find("ERROR:", 1, true) then
+			if errmsg:upper():find("ERROR:", 1, true) then
 				success = false
 			end
 		end
 		if not success then
-			return false, msg
+			return false, errmsg
 		end
 		assert(lfs.exists(binfile))
 		local output_bin = output / "main.bin"

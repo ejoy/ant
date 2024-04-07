@@ -112,12 +112,12 @@ function toolset.compile(config)
 		local prerocessfile = lfs.path(config.output:string() .. ".prerocess")
 		local commands = gen_commands(config)
 		commands[#commands+1] = "--preprocess"
-		local ok, err = shader.run(config.setting, commands, config.input, prerocessfile)
-		if not ok then
-			return ok, err
+		local success, errmsg = shader.run(config.setting, commands, config.input, prerocessfile)
+		if not success then
+			return success, errmsg
 		end
-		local deps = err
-		ok, err = subprocess.spawn_process {
+		local deps = errmsg
+		success, errmsg = subprocess.spawn {
 			"--platform",	config.platform,
 			"--type",		stage_types[config.stage],
 			"-p",			get_shader_option(config.platform, config.renderer, config.stage),
@@ -125,8 +125,8 @@ function toolset.compile(config)
 			"-o", 			(config.output / "bin"):string(),
 			"--raw",
 		}
-		if not ok then
-			return ok, err
+		if not success then
+			return false, errmsg
 		end
 		return true, deps
 	end

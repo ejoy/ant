@@ -23,7 +23,7 @@ function blm_editor:data_changed()
         local p = msg[2]
 
         local notwait<const> = true
-        local _, prog, progmsg = subprocess.spawn_process({
+        local _, prog, progmsg = subprocess.spawn({
             cwd = lfs.current_path(),
             LUA,
             "tools/dump-prefab/main.lua",
@@ -47,7 +47,7 @@ function blm_editor:data_changed()
             log.info("[bake process]start to bake...")
             local notwait<const> = true
             local p = dump_process.prefablefile
-            local _, prog, progmsg = subprocess.spawn_process({
+            local _, prog, progmsg = subprocess.spawn({
                 cwd = lfs.current_path(),
                 LUA,
                 "tools/baker/main.lua",

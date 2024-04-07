@@ -4,14 +4,14 @@ local subprocess = require "bee.subprocess"
 local S = {}
 
 local progs = {}
-local output = {}
 
-local MaxSubprocess <const> = 8
+local MaxSubprocess <const> = 16
+local Outputs = {}
 local WaitQueue = {}
 local UpdateToken = {}
 
-function S.run(command)
-    while #progs > MaxSubprocess do
+function S.spawn(command)
+    while #progs >= MaxSubprocess do
         WaitQueue[#WaitQueue+1] = command
         ltask.wait(command)
     end
@@ -33,11 +33,11 @@ local function update_output(prog)
     local n = subprocess.peek(prog.stdout)
     if n and n > 0 then
         local data = prog.stdout:read(n)
-        local t = output[prog]
+        local t = Outputs[prog]
         if t then
             t[#t+1] = data
         else
-            output[prog] = {data}
+            Outputs[prog] = {data}
         end
     end
 end
@@ -47,11 +47,11 @@ local function finish_output(prog)
         return ""
     end
     local data = prog.stdout:read "a"
-    local t = output[prog]
+    local t = Outputs[prog]
     if not t then
         return data
     end
-    output[prog] = nil
+    Outputs[prog] = nil
     t[#t+1] = data
     return table.concat(t)
 end
@@ -73,10 +73,10 @@ local function update()
             i = i + 1
         else
             table.remove(progs, i)
-            local errmsg = finish_output(prog)
-            local errcode = prog:wait()
+            local output = finish_output(prog)
+            local exitcode = prog:wait()
             prog:detach()
-            ltask.wakeup(prog, errcode, errmsg)
+            ltask.wakeup(prog, exitcode, output)
         end
     end
     if #WaitQueue > 0 and #progs < MaxSubprocess then

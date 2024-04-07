@@ -11,7 +11,7 @@ return function (status)
     lfs.create_directories(folder)
     local cwd = lfs.current_path()
     print("animation compile:")
-    local success, msg = subprocess.spawn_process {
+    local success, errmsg = subprocess.spawn {
         GLTF2OZZ,
         "--file=" .. (cwd / input):string(),
         "--config_file=" .. (cwd / "pkg/ant.compile_resource/model/gltf2ozz.json"):string(),
@@ -19,7 +19,7 @@ return function (status)
     }
 
     if not success then
-        print(msg)
+        print(errmsg)
     end
     if not lfs.exists(folder / "skeleton.bin") then
         error("NO SKELETON export!")
