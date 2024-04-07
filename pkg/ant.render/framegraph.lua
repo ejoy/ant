@@ -1,17 +1,17 @@
 local fg = {}
 
-local pass_mt = {
-    compile = function (self)
-    end,
-    init = function (self)
-    end,
-    run = function (self)
-    end,
-    begin = function (self)
-    end,
-    finish = function (self)
-    end,
-}
+-- local pass_mt = {
+--     compile = function (self)
+--     end,
+--     init = function (self)
+--     end,
+--     run = function (self)
+--     end,
+--     begin = function (self)
+--     end,
+--     finish = function (self)
+--     end,
+-- }
 
 local PASSES = {}
 
@@ -29,29 +29,53 @@ function fg.register_pass(name, dependname, passinfo)
     PASSES[name] = passinfo
 end
 
-local function insert_depend(n, depends)
-    local p
-    for idx, d in ipairs(depends) do
+local function insert_where(n, depends)
+    for i, d in ipairs(depends) do
         if d == n then
-            p = idx
-            break
+            return i
         end
     end
+end
 
-    table.insert(depends, p, n)
-    return p+1
+local function check_insert_item(n, depends)
+    table.insert(depends, insert_where(n, depends), n)
+end
+
+local function insert_depend(n, p, depends, passes)
+    if p and p.depend then
+        insert_depend(p.depend, passes[p.depend], depends, passes)
+    end
+    
+    check_insert_item(n, depends)
 end
 
 local DEPEND_LISTS
+
+local function check_cycle_depend(d, marks, passes)
+    if d then
+        if marks[d] then
+            return true
+        end
+        marks[d] = true
+        local p = passes[d]
+        if p then
+            return check_cycle_depend(p.depend, marks, passes)
+        end
+    end
+end
+
+assert(check_cycle_depend("n1", {}, {
+    n1 = {depend = "n2"},
+    n2 = {depend = "n3"},
+    n3 = {depend = "n1"}
+}), "cycle depend")
 
 function fg.compile()
     DEPEND_LISTS = {}
     --solve depends
     for n, p in pairs(PASSES) do
-        local where = insert_depend(n, DEPEND_LISTS)
-        if p.depend then
-            table.insert(DEPEND_LISTS, where, p.depend)
-        end
+        assert(not check_cycle_depend(n, {}, PASSES), "detect cycle depend")
+        insert_depend(n, p, DEPEND_LISTS, PASSES)
     end
 
     for _, n in ipairs(DEPEND_LISTS) do
@@ -106,7 +130,7 @@ local bloom_sys = ecs.system "bloom_system"
 function bloom_sys:init_world()
     fg.register_pass("bloom", "scene", {
         init = function (self)
-            
+
         end,
     })
 end
