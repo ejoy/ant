@@ -116,30 +116,36 @@ local UV_map = {
     REPEAT          = "WRAP",
 }
 
+-- local ALPHA_MODE_STATES<const> = {
+--     OPAQUE  = {
+--         ALPHA_REF = 0,
+--         CULL = "CCW",
+--         DEPTH_TEST = INV_Z and "GREATER" or "LESS",
+--         MSAA = true,
+--         WRITE_MASK = "RGBAZ",
+--     },
+--     MASK    = {
+--         ALPHA_REF = 0,
+--         CULL = "CCW",
+--         DEPTH_TEST = "ALWAYS",
+--         MSAA = true,
+--         BLEND = "ALPHA",
+--         WRITE_MASK = "RGBA",
+--     },
+--     BLEND   = {
+--         ALPHA_REF = 0,
+--         CULL = "CCW",
+--         MSAA = true,
+--         DEPTH_TEST = INV_Z and "GREATER" or "LESS",
+--         WRITE_MASK = "RGBA",
+--         BLEND = "ALPHA",
+--     }
+-- }
+
 local ALPHA_MODE_STATES<const> = {
-    OPAQUE  = {
-        ALPHA_REF = 0,
-        CULL = "CCW",
-        DEPTH_TEST = INV_Z and "GREATER" or "LESS",
-        MSAA = true,
-        WRITE_MASK = "RGBAZ",
-    },
-    MASK    = {
-        ALPHA_REF = 0,
-        CULL = "CCW",
-        DEPTH_TEST = "ALWAYS",
-        MSAA = true,
-        BLEND = "ALPHA",
-        WRITE_MASK = "RGBA",
-    },
-    BLEND   = {
-        ALPHA_REF = 0,
-        CULL = "CCW",
-        MSAA = true,
-        DEPTH_TEST = INV_Z and "GREATER" or "LESS",
-        WRITE_MASK = "RGBA",
-        BLEND = "ALPHA",
-    }
+    OPAQUE  = "/pkg/ant.resources/materials/states/default.state",
+    MASK    = "/pkg/ant.resources/materials/states/translucent.state",
+    BLEND   = "/pkg/ant.resources/materials/states/blend_with_depth_test.state",
 }
 
 local STATE_FILES = {}
@@ -155,7 +161,7 @@ end
 local function get_state(alphamode, setting)
     alphamode = alphamode or "OPAQUE"
     local s = ALPHA_MODE_STATES[alphamode] or error(("Invalid alphamode: %s"):format(alphamode))
-    return s --read_state_file(setting, s)
+    return read_state_file(setting, s)
 end
 
 return function (status)
