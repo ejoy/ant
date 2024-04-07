@@ -260,11 +260,7 @@ function S.READ(fullpath)
 end
 
 function S.DIRECTORY(what)
-	if what == "external" then
-		return config.directory.external
-	elseif what == "internal" then
-		return config.directory.internal
-	end
+	return config.directory[what]
 end
 
 function S.RESOURCE_SETTING(setting)

@@ -31,7 +31,6 @@ do
 end
 
 local platform = require "bee.platform"
-local fs = require "bee.filesystem"
 
 local directory = dofile "/engine/firmware/directory.lua"
 
