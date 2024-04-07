@@ -329,10 +329,12 @@ local frame_control; do
         print_fps()
         print_time()
         if maxfps and fps > maxfps then
-            local waittime = 1/maxfps - delta / 1000.
+            local waittime = 1/maxfps * 1000 - delta
             if waittime > 0 then
-                if waittime < 0.01 then
-                    waittime = 0.01
+                if waittime < 10 then
+                    waittime = 10
+                else
+                    waittime = math.floor(waittime)
                 end
                 thread.sleep(waittime)
             end

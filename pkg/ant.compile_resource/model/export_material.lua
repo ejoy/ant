@@ -142,20 +142,17 @@ local ALPHA_MODE_STATES<const> = {
     }
 }
 
-local STATE_FILES = {}
-local function read_state_file(setting, statefile)
-    local s = STATE_FILES[statefile]
-    if s == nil then
-        s = datalist.parse(vfs_fastio.readall_f(setting.vfs, statefile))
+local function copy_state(s)
+    local t = {}
+    for k, v in pairs(s) do
+        t[k] = v
     end
-
-    return s
+    return t
 end
 
-local function get_state(alphamode, setting)
+local function get_state(alphamode)
     alphamode = alphamode or "OPAQUE"
-    local s = ALPHA_MODE_STATES[alphamode] or error(("Invalid alphamode: %s"):format(alphamode))
-    return s --read_state_file(setting, s)
+    return copy_state(ALPHA_MODE_STATES[alphamode] or error(("Invalid alphamode: %s"):format(alphamode)))
 end
 
 return function (status)
@@ -314,7 +311,7 @@ return function (status)
         local alphamode = mat.alphaMode or "OPAQUE"
         local material = {
             fx          = {shader_type = "PBR"},
-            state       = get_state(alphamode, setting),
+            state       = get_state(alphamode),
             properties  = {
                 s_basecolor          = handle_texture(pbr_mr.baseColorTexture, "basecolor", false, "sRGB"),
                 s_metallic_roughness = handle_texture(pbr_mr.metallicRoughnessTexture, "metallic_roughness", false, "linear"),

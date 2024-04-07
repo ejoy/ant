@@ -99,7 +99,7 @@ end
 function m.handle_event()
     local reading_queue = {}
     local output = {}
-    for fd, ev in selector:wait(0.001) do
+    for fd, ev in selector:wait(1) do
         if ev & SELECT_READ ~= 0 then
             local reading = fd:recv()
             if reading == nil then

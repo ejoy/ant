@@ -281,7 +281,7 @@ end
 function mgr.update()
     while not quit do
         if update_once() then
-            thread.sleep(0.01)
+            thread.sleep(10)
         end
     end
     local event = require 'backend.master.event'

@@ -1,7 +1,5 @@
 local platform = require "bee.platform"
 
-assert(__ANT_RUNTIME__)
-
 if platform.os == "ios" then
     local ios = require "ios"
     return {
@@ -18,9 +16,10 @@ else
     local function envpath(name)
         return os.getenv(name):gsub("/?$", "/")
     end
-    local app_path = (function ()
+    local data_path = (function ()
         if platform.os == "windows" then
-            return envpath "LOCALAPPDATA"
+            --TODO: use SHGetKnownFolderPath
+            return envpath "USERPROFILE".. "Saved Games/"
         elseif platform.os == "linux" then
             return envpath "XDG_DATA_HOME" or (envpath "HOME" .. ".local/share/")
         elseif platform.os == "macos" then
@@ -29,8 +28,12 @@ else
             error "unknown os"
         end
     end)()
+    local app_name = (function ()
+        local fs = require "bee.filesystem"
+        return fs.exe_path():stem():string():match "^([^_]+)"
+    end)()
     return {
-        internal = app_path .."ant/internal/",
-        external = app_path .."ant/external/",
+        internal = data_path .. app_name .. "/internal/",
+        external = data_path .. app_name .. "/external/",
     }
 end
