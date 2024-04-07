@@ -116,52 +116,43 @@ local UV_map = {
     REPEAT          = "WRAP",
 }
 
--- local ALPHA_MODE_STATES<const> = {
---     OPAQUE  = {
---         ALPHA_REF = 0,
---         CULL = "CCW",
---         DEPTH_TEST = INV_Z and "GREATER" or "LESS",
---         MSAA = true,
---         WRITE_MASK = "RGBAZ",
---     },
---     MASK    = {
---         ALPHA_REF = 0,
---         CULL = "CCW",
---         DEPTH_TEST = "ALWAYS",
---         MSAA = true,
---         BLEND = "ALPHA",
---         WRITE_MASK = "RGBA",
---     },
---     BLEND   = {
---         ALPHA_REF = 0,
---         CULL = "CCW",
---         MSAA = true,
---         DEPTH_TEST = INV_Z and "GREATER" or "LESS",
---         WRITE_MASK = "RGBA",
---         BLEND = "ALPHA",
---     }
--- }
-
 local ALPHA_MODE_STATES<const> = {
-    OPAQUE  = "/pkg/ant.resources/materials/states/default.state",
-    MASK    = "/pkg/ant.resources/materials/states/translucent.state",
-    BLEND   = "/pkg/ant.resources/materials/states/blend_with_depth_test.state",
+    OPAQUE  = {
+        ALPHA_REF = 0,
+        CULL = "CCW",
+        DEPTH_TEST = INV_Z and "GREATER" or "LESS",
+        MSAA = true,
+        WRITE_MASK = "RGBAZ",
+    },
+    MASK    = {
+        ALPHA_REF = 0,
+        CULL = "CCW",
+        DEPTH_TEST = "ALWAYS",
+        MSAA = true,
+        BLEND = "ALPHA",
+        WRITE_MASK = "RGBA",
+    },
+    BLEND   = {
+        ALPHA_REF = 0,
+        CULL = "CCW",
+        MSAA = true,
+        DEPTH_TEST = INV_Z and "GREATER" or "LESS",
+        WRITE_MASK = "RGBA",
+        BLEND = "ALPHA",
+    }
 }
 
-local STATE_FILES = {}
-local function read_state_file(setting, statefile)
-    local s = STATE_FILES[statefile]
-    if s == nil then
-        s = datalist.parse(vfs_fastio.readall_f(setting.vfs, statefile))
+local function copy_state(s)
+    local t = {}
+    for k, v in pairs(s) do
+        t[k] = v
     end
-
-    return s
+    return t
 end
 
-local function get_state(alphamode, setting)
+local function get_state(alphamode)
     alphamode = alphamode or "OPAQUE"
-    local s = ALPHA_MODE_STATES[alphamode] or error(("Invalid alphamode: %s"):format(alphamode))
-    return read_state_file(setting, s)
+    return copy_state(ALPHA_MODE_STATES[alphamode] or error(("Invalid alphamode: %s"):format(alphamode)))
 end
 
 return function (status)
@@ -320,7 +311,7 @@ return function (status)
         local alphamode = mat.alphaMode or "OPAQUE"
         local material = {
             fx          = {shader_type = "PBR"},
-            state       = get_state(alphamode, setting),
+            state       = get_state(alphamode),
             properties  = {
                 s_basecolor          = handle_texture(pbr_mr.baseColorTexture, "basecolor", false, "sRGB"),
                 s_metallic_roughness = handle_texture(pbr_mr.metallicRoughnessTexture, "metallic_roughness", false, "linear"),
