@@ -5,6 +5,7 @@ local w = world.w
 local icamera	= ecs.require "ant.camera|camera"
 local iviewport = ecs.require "ant.render|viewport.state"
 local fbmgr		= require "framebuffer_mgr"
+
 local fg		= ecs.require "ant.render|framegraph"
 
 local default	= import_package "ant.general".default
@@ -57,6 +58,17 @@ end
 
 local function create_predepth_queue(vr, cameraref)
 	local fbidx = fbmgr.create{rbidx = create_depth_rb(vr.w, vr.h)}
+	fg.register_pass("pre_depth", {
+		init = function (self)
+			self.input = nil
+			self.output = fbidx
+		end,
+		run = function (self)
+			--nothing todo in here, submit code in render.cpp
+		end,
+		begin = function (self) end,
+		finish = function (self) end,
+	})
 	local predepth_viewid<const> = hwi.viewid_get "pre_depth"
 	fbmgr.bind(predepth_viewid, fbidx)
 
@@ -110,6 +122,16 @@ end
 
 local function create_main_queue(vr, cameraref)
 	local fbidx = create_main_fb(vr)
+	fg.register_pass("main_view", {
+		init = function (self)
+			local pdp = fg.pass "pre_depth"
+			self.input = pdp.output
+			self.output = fbidx
+		end,
+		run = function (self)
+			--same with predepth
+		end,
+	})
 	world:create_entity {
 		policy = {
 			"ant.render|watch_screen_buffer",
