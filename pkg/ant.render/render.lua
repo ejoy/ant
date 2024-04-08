@@ -2,37 +2,21 @@ local ecs	= ...
 local world = ecs.world
 local w 	= world.w
 
-local default_comp 	= import_package "ant.general".default
-local setting		= import_package "ant.settings"
-local ENABLE_PRE_DEPTH<const>	= not setting:get "graphic/disable_pre_z"
-local ENABLE_FXAA<const> 		= setting:get "graphic/postprocess/fxaa/enable"
-local ENABLE_TAA<const>			= setting:get "graphic/postprocess/taa/enable"
-
-local INV_Z<const> = setting:get "graphic/inv_z"
-local CLEAR_DEPTH_VALUE<const>  = INV_Z and 0 or 1
 local bgfx 			= require "bgfx"
 local fbmgr			= require "framebuffer_mgr"
 local layoutmgr		= require "vertexlayout_mgr"
 
 local hwi			= import_package "ant.hwi"
 local sampler		= import_package "ant.render.core".sampler
+local setting		= import_package "ant.settings"
 local ED 			= world:clibs "entity.drawer"
 
 local ig			= ecs.require "ant.group|group"
 local ivm			= ecs.require "visible_mask"
 local queuemgr		= ecs.require "queue_mgr"
-
-local LAYER_NAMES<const> = {"foreground", "opacity", "background", "translucent", "decal_stage", "ui_stage"}
+local INV_Z<const>	= setting:get "graphic/inv_z"
 
 local irender		= {}
-
-function irender.use_pre_depth()
-	return ENABLE_PRE_DEPTH
-end
-
-function irender.layer_names()
-	return LAYER_NAMES
-end
 
 local STOP_DRAW = false
 function irender.stop_draw(stop)
@@ -40,141 +24,6 @@ function irender.stop_draw(stop)
 		return STOP_DRAW
 	end
 	STOP_DRAW = stop
-end
-
-function irender.create_material_from_template(template_material_obj, state, cache)
-	local mo = cache[template_material_obj]
-	if nil == mo then
-		mo = {}
-		cache[template_material_obj] = mo
-	end
-
-	local m = mo[state]
-	if nil == m then
-		m = template_material_obj:copy(state)
-		mo[state] = m
-	end
-
-	return m
-end
-
-function irender.get_main_view_rendertexture()
-	local mq = w:first "main_queue render_target:in"
-	return fbmgr.get_rb(mq.render_target.fb_idx, 1).handle
-end
-
-local default_clear_state = {
-	color = setting:get "graphic/render/clear_color" or 0x000000ff,
-	depth = 0.0,
-	clear = "SCD",
-	stencil = 0.0
-}
-
-if ENABLE_PRE_DEPTH then
-	default_clear_state.depth = nil
-	default_clear_state.clear = "C"
-end
-
-
-local function create_depth_rb(ww, hh)
-	return fbmgr.create_rb{
-		format = "D24S8",
-		w = ww, h = hh,
-		layers = 1,
-		flags = sampler {
-			RT = (ENABLE_FXAA or ENABLE_TAA) and "RT_ON" or "RT_MSAA4|RT_WRITE",
-			MIN="LINEAR",
-			MAG="LINEAR",
-			U="CLAMP",
-			V="CLAMP",
-		},
-	}
-end
-
-function irender.create_pre_depth_queue(vr, camera_ref)
-	local depth_viewid = hwi.viewid_get "pre_depth"
-	local fbidx = fbmgr.create{rbidx = create_depth_rb(vr.w, vr.h)}
-
-	fbmgr.bind(depth_viewid, fbidx)
-
-	world:create_entity {
-		policy = {
-			"ant.render|pre_depth_queue",
-			"ant.render|watch_screen_buffer",
-		},
-		data = {
-			camera_ref = camera_ref,
-			render_target = {
-				viewid = depth_viewid,
-				clear_state = {
-					clear = "SD",
-					depth = CLEAR_DEPTH_VALUE,
-					stencil = 0
-				},
-				view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h, ratio=vr.ratio},
-				fb_idx = fbidx,
-			},
-			queue_name 		= "pre_depth_queue",
-			visible 		= true,
-			pre_depth_queue = true,
-			submit_queue	= true,
-			watch_screen_buffer = true,
-		}
-	}
-end
-
-local function create_main_fb(fbsize)
-	local function get_depth_buffer()
-		if ENABLE_PRE_DEPTH then
-			local depth_viewid = hwi.viewid_get "pre_depth"
-			local depthfb = fbmgr.get_byviewid(depth_viewid)
-			return depthfb[#depthfb]
-		end
-		return {rbidx=create_depth_rb(fbsize.w, fbsize.h)}
-	end
-	return fbmgr.create({
-		rbidx=fbmgr.create_rb(
-		default_comp.render_buffer(
-			fbsize.w, fbsize.h, "RGBA16F", sampler {
-				RT= (ENABLE_FXAA or ENABLE_TAA) and "RT_ON" or "RT_MSAA4",
-				MIN="LINEAR",
-				MAG="LINEAR",
-				U="CLAMP",
-				V="CLAMP",
-			})
-	)}, get_depth_buffer())
-end
-
-function irender.create_main_queue(vr, camera_ref)
-	local fbidx = create_main_fb(vr)
-	world:create_entity {
-		policy = {
-			"ant.render|watch_screen_buffer",
-			"ant.render|main_queue",
-		},
-		data = {
-			camera_ref = camera_ref,
-			render_target = {
-				viewid = hwi.viewid_get "main_view",
-				view_mode = "d",
-				clear_state = default_clear_state,
-				view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h, ratio=vr.ratio},
-				fb_idx = fbidx,
-			},
-			visible = true,
-			main_queue = true,
-			submit_queue = true,
-			watch_screen_buffer = true,
-			queue_name = "main_queue",
-		}
-	}
-end
-
-function irender.set_view_frame_buffer(viewid, fbidx)
-	local fb = fbmgr.get(fbidx)
-	if fb then
-		bgfx.set_view_frame_buffer(viewid, fb.handle)
-	end
 end
 
 function irender.screen_capture(force_read)
