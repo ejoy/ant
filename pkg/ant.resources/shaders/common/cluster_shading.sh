@@ -43,6 +43,7 @@ uniform vec4 u_cluster_shading_param;
 #define u_slice_scale	u_cluster_shading_param.x
 #define u_slice_bias	u_cluster_shading_param.y
 #define u_tile_unit		u_cluster_shading_param.zw
+uniform mat4 u_normal_inv_proj;
 
 /**
 about the depth slice:
@@ -66,6 +67,10 @@ uint which_cluster(vec2 screenxy, float linearZ){
             u_cluster_size.x * cluster_coord.y +
             (u_cluster_size.x * u_cluster_size.y) * cluster_coord.z;
 
+}
+
+float which_z(uint depth_slice, uint num_slice, float near, float far){
+	return near*pow(far/near, depth_slice/float(num_slice));
 }
 
 float which_z(uint depth_slice, uint num_slice){

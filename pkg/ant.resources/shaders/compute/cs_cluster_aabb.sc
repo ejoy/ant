@@ -3,8 +3,14 @@
 #include "common/cluster_shading.sh"
 #include "common/camera.sh"
 
+uniform vec4 u_camera_frustum;
+#define u_camera_frustum_near u_camera_frustum.x
+#define u_camera_frustum_far u_camera_frustum.y
+#define u_camera_frustum_inv_near u_camera_frustum.z
+#define u_camera_frustum_inv_far u_camera_frustum.w
+
 vec3 line_zplane_intersection(vec3 A, vec3 B, float zDistance){
-    vec3 plane_normal = vec3(0.0, 0.0, 1.0);
+    vec3 plane_normal = vec3(0.0, 1.0, 0.0);
     vec3 ab =  B - A;
     //Computing the intersection length for the line and the plane
     float t = (zDistance - dot(plane_normal, A)) / dot(plane_normal, ab);
@@ -14,7 +20,7 @@ vec3 line_zplane_intersection(vec3 A, vec3 B, float zDistance){
 }
 
 vec3 screen2view(vec4 screen){
-    vec2 screen_ndc = (screen.xy / u_viewRect.xy);
+    vec2 screen_ndc = (screen.xy / u_viewRect.zw);
 #if !ORIGIN_BOTTOM_LEFT
     screen_ndc.y = 1.0 - screen_ndc.y;
 #endif //ORIGIN_BOTTOM_LEFT
@@ -22,7 +28,7 @@ vec3 screen2view(vec4 screen){
     screen_ndc = screen_ndc * 2.0 - 1.0;
 
     vec4 ndc = vec4(screen_ndc, screen.zw);
-    vec4 clip = mul(u_invProj, ndc);
+    vec4 clip = mul(u_normal_inv_proj, ndc);
     return clip.xyz / clip.w;
 }
 
@@ -65,8 +71,8 @@ void main(){
     vec3 bottomleft_vS  = screen2view(vec4(bottomleft,  near_sS, 1.0));
     vec3 bottomright_vS = screen2view(vec4(bottomright, near_sS, 1.0));
 
-    float nearZ = which_z(gl_WorkGroupID.z,     u_cluster_size.z);
-    float farZ  = which_z(gl_WorkGroupID.z+1,   u_cluster_size.z);
+    float nearZ = which_z(gl_WorkGroupID.z,     u_cluster_size.z, u_camera_frustum_near, u_camera_frustum_far);
+    float farZ  = which_z(gl_WorkGroupID.z+1,   u_cluster_size.z, u_camera_frustum_near, u_camera_frustum_far);
 
     vec3 eyepos_vS = vec3_splat(0.0);
     vec3 tln = line_zplane_intersection(eyepos_vS, topleft_vS    , nearZ);

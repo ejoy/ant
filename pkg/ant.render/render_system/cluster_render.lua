@@ -179,8 +179,15 @@ local function build_cluster_aabb_struct(viewid, ceid)
     local e <close> = world:entity(ceid, "camera:in")
     update_shading_param(e)
 
-    local e = w:first("cluster_build_aabb dispatch:in")
-    icompute.dispatch(viewid, e.dispatch)
+    local be = w:first "cluster_build_aabb dispatch:in"
+    local m = be.dispatch.material
+
+    m["u_normal_inv_proj"] = e.camera.projmat
+    local f = e.camera.frustum
+    local nn, ff = f.n, f.f
+    local inv_nn, inv_ff = 1.0/nn, 1.0/ff
+    m["u_camera_frustum"] = math3d.vector(nn, ff, inv_nn, inv_ff)
+    icompute.dispatch(viewid, be.dispatch)
 end
 
 local function create_buffer_property(bufferdesc, which_stage)
@@ -195,7 +202,7 @@ local function create_buffer_property(bufferdesc, which_stage)
 end
 
 function cfs:init_world()
-    local mq = w:first("main_queue camera_ref:in")
+    local mq = w:first "main_queue camera_ref:in"
     local ceid = mq.camera_ref
 
     cluster_buffers.light_info.handle = ilight.light_buffer()

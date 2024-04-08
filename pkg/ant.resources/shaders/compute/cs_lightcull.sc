@@ -33,7 +33,16 @@ void main(){
 
     //TODO: need fix!!! make a more compat b_light_index_lists buffer
     uint offset = cluster_idx * lightcount;
-    uint light_idx = has_directional_light() ? 1 : 0;
+    
+    const uint directional_light_idx = 0;
+    uint light_idx = directional_light_idx;
+    if (has_directional_light()){
+        light_idx = 1;
+        b_light_index_lists_write[offset+visible_light_count] = light_idx;
+        ++visible_light_count;
+        ++light_idx;
+    }
+
     for( ; light_idx<lightcount; ++light_idx){
         light_info l; load_light_info(b_light_info_for_cull, light_idx, l);
 
