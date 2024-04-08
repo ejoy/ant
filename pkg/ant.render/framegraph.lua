@@ -1,18 +1,5 @@
 local fg = {}
 
--- local pass_mt = {
---     compile = function (self)
---     end,
---     init = function (self)
---     end,
---     run = function (self)
---     end,
---     begin = function (self)
---     end,
---     finish = function (self)
---     end,
--- }
-
 local PASSES = {}
 
 function fg.register_pass(name, dependname, passinfo)
@@ -29,7 +16,11 @@ function fg.register_pass(name, dependname, passinfo)
     PASSES[name] = passinfo
 end
 
-local function insert_where(n, depends)
+function fg.get_pass(n)
+    return assert(PASSES[n])
+end
+
+local function find_depend(n, depends)
     for i, d in ipairs(depends) do
         if d == n then
             return i
@@ -37,16 +28,23 @@ local function insert_where(n, depends)
     end
 end
 
-local function check_insert_item(n, depends)
-    table.insert(depends, insert_where(n, depends), n)
+local function check_insert_item(n, depends, inserthit)
+    if not find_depend(n, depends) then
+        if inserthit then
+            return table.insert(depends, inserthit, n)
+        end
+        return table.insert(depends, n)
+    end
 end
 
 local function insert_depend(n, p, depends, passes)
-    if p and p.depend then
-        insert_depend(p.depend, passes[p.depend], depends, passes)
+    local inserthit
+    if p.depend then
+        local dp = passes[p.depend] or error(("Invalid depend:%s"):format(p.depend))
+        inserthit = insert_depend(p.depend, dp, depends, passes)
     end
     
-    check_insert_item(n, depends)
+    check_insert_item(n, depends, inserthit)
 end
 
 local DEPEND_LISTS
@@ -64,24 +62,24 @@ local function check_cycle_depend(d, marks, passes)
     end
 end
 
-assert(check_cycle_depend("n1", {}, {
-    n1 = {depend = "n2"},
-    n2 = {depend = "n3"},
-    n3 = {depend = "n1"}
-}), "cycle depend")
+local function solve_depends(passes)
+    local dependlist = {}
+    for n, p in pairs(passes) do
+        assert(not check_cycle_depend(n, {}, passes), "detect cycle depend")
+        insert_depend(n, p, dependlist, passes)
+    end
+    return dependlist
+end
+
+local function init_passes(list, passes)
+    for _, n in ipairs(list) do
+        passes[n]:init()
+    end
+end
 
 function fg.compile()
-    DEPEND_LISTS = {}
-    --solve depends
-    for n, p in pairs(PASSES) do
-        assert(not check_cycle_depend(n, {}, PASSES), "detect cycle depend")
-        insert_depend(n, p, DEPEND_LISTS, PASSES)
-    end
-
-    for _, n in ipairs(DEPEND_LISTS) do
-        local p = PASSES[n]
-        p:init()
-    end
+    DEPEND_LISTS = solve_depends()
+    init_passes(DEPEND_LISTS, PASSES)
 end
 
 function fg.run()
@@ -95,46 +93,38 @@ function fg.run()
     end
 end
 
---test
---[[
-
---in render_system.lua
-local render_sys = ecs.system "render_system"
-function render_sys:init()
-    local fg = ecs.require "ant.render|framegraph"
-    fg.register_pass("scene", nil, {
-        init = function (self)
-            self.input = nil
-            local mq = w:first "main_queue render_target:in"
-            local fb = fbmgr.get(mq.render_target.fb_idx)
-            self.output = fb.get_rb(fb, 1)
-        end,
-
-        begin = function (self)
-            fg.begin(self)
-        end,
-
-        finish = function (self)
-            fg.finish(self)
-        end,
-
-        run = function (self)
-            --do nothing, submit code in c
-        end,
-    })
-end
-
---in bloom.lua
-local bloom_sys = ecs.system "bloom_system"
-
-function bloom_sys:init_world()
-    fg.register_pass("bloom", "scene", {
-        init = function (self)
-
-        end,
-    })
-end
-
-]]
+-- if TEST_DEPEND then
+--     assert(check_cycle_depend("n1", {}, {
+--         n1 = {depend = "n2"},
+--         n2 = {depend = "n3"},
+--         n3 = {depend = "n1"}
+--     }), "cycle depend")
+    
+--     --[[
+--     in:
+--         n3
+--         |
+--         n2
+--        / \
+--       n1 n4
+--     out:
+--         n3 -> n2 -> n1/n4
+--     ]]
+    
+--     local l = solve_depends{
+--         n1 = {
+--             depend = "n2",
+--         },
+--         n2 = {
+--             depend = "n3",
+--         },
+--         n4 = {
+--             depend = "n2",
+--         },
+--         n3 = {}
+--     }
+    
+--     assert(l[1] == "n3" and l[2] == "n2" and ((l[3] == "n1" or l[3] == "n4") or (l[4] == "n1" or l[4] == "n4")))
+-- end
 
 return fg
