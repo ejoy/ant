@@ -31,16 +31,26 @@ local function Sponza_scene()
     local s = 0.5
     dx, dy, dz = dx*s, dy*s, dz*s
 
-    local colorscale = 3
-    for iz=1, nz do
-        local z = (iz-1)*dz
-        for iy=1, ny do
-            local y = (iy-1)*dy
-            for ix=1, nx do
-                local x = (ix-1)*dx
+    local c1, c2 = math3d.vector(0.3, 0.3, 0.3, 1.0), math3d.vector(0.85, 0.85, 0.85, 1.0)
+
+    local function get_color(x, y, z)
+        --lerp
+        local ssx, ssy, ssz = x/nx, y/ny, z/nz
+        local t = math3d.vector(ssx, ssy, ssz)
+        local nt = math3d.vector(1-ssx, 1-ssy, 1-ssz)
+        return math3d.add(math3d.mul(t, c1), math3d.mul(nt, c2))
+    end
+
+    local colorscale = 1
+    for iz=0, nz-1 do
+        local z = iz*dz
+        for iy=0, ny-1 do
+            local y = iy*dy
+            for ix=0, nx-1 do
+                local x = ix*dx
                 local p = math3d.vector(x, y, z, 1)
                 
-                local color = math3d.mul(colorscale, math3d.normalize(p))
+                local color = math3d.mul(colorscale, get_color(ix, iy, iz))
                 PC:create_instance{
                     prefab = "/pkg/ant.test.features/assets/entities/sphere_with_point_light.prefab",
                     on_ready = function(pl)
