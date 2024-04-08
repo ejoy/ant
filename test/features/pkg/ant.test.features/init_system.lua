@@ -9,7 +9,7 @@ local mathpkg       = import_package"ant.math"
 local mc            = mathpkg.constant
 
 local common = ecs.require "common"
-common.init_system = "shadow"
+common.init_system = "point_light"
 
 local create_instance = ecs.require "util".create_instance
 
