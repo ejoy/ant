@@ -164,11 +164,11 @@ local function profile_init(who, label)
 end
 local function profile_begin()
     profile_print()
-    local now = btime.counter()
+    local now = btime.monotonic()
     profile_time = now
 end
 local function profile_end(who)
-    local now = btime.counter()
+    local now = btime.monotonic()
     profile[who] = profile[who] + (now - profile_time)
 end
 
@@ -264,7 +264,7 @@ local frame_control; do
     local frame_last  = 0
     local frame_time = {}
     local frame_delta = {}
-    local lasttime = btime.counter()
+    local lasttime = btime.monotonic()
     local printtime = 0
     local printtext = ""
     local function clean(time)
@@ -320,7 +320,7 @@ local frame_control; do
         S.dbg_text_print(0, 1, 0x02, ("avg: %.02fms max:%.02fms min:%.02fms          "):format(avg, max, min))
     end
     function frame_control()
-        local time = btime.counter()
+        local time = btime.monotonic()
         local delta = time - lasttime
         clean(time - MaxTimeCachedFrame)
         frame_last = frame_last + 1
@@ -339,7 +339,7 @@ local frame_control; do
                 thread.sleep(waittime)
             end
         end
-        lasttime = btime.counter()
+        lasttime = btime.monotonic()
     end
 end
 
