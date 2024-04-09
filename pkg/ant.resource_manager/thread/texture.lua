@@ -1,9 +1,9 @@
 local ltask      = require "ltask"
 local bgfx       = require "bgfx"
-local datalist   = require "datalist"
 local textureman = require "textureman.server"
 local image      = require "image"
 local aio        = import_package "ant.io"
+local serialize  = import_package "ant.serialize"
 
 local ext_service = {}
 
@@ -63,9 +63,9 @@ local function loadExt(protocol, path, config, name)
 end
 
 local function loadAtlas(name)
-    local sc = datalist.parse(aio.readall(name))
+    local sc = serialize.load(name)
     local path = sc.atlas.path .. "/source.ant"
-    local pc = datalist.parse(aio.readall(path))
+    local pc = serialize.load(path)
     pc.info.atlas = sc.atlas
     pc.name = name
     return pc
@@ -80,7 +80,7 @@ local function loadTexture(name)
         return loadAtlas(name)
     end
     local path = name.."/source.ant"
-    local c = datalist.parse(aio.readall(path))
+    local c = serialize.load(path)
     c.name = name
     return c
 end

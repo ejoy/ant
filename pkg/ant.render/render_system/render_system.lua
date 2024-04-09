@@ -8,7 +8,7 @@ local ENABLE_PRE_DEPTH<const>	= not setting:get "graphic/disable_pre_z"
 
 local L			= import_package "ant.render.core".layout
 
-local aio		= import_package "ant.io"
+local serialize = import_package "ant.serialize"
 
 local bgfx 		= require "bgfx"
 local math3d 	= require "math3d"
@@ -165,8 +165,7 @@ local function read_mat_varyings(varyings)
 	if varyings then
 		if type(varyings) == "string" then
 			assert(varyings:sub(1, 1) == "/", "Only support full vfs path")
-			local datalist = require "datalist"
-			varyings = datalist.parse(aio.readall(varyings))
+			varyings = serialize.load(varyings)
 		end
 		return L.parse_varyings(varyings)
 	end

@@ -8,7 +8,6 @@ local ika       = ecs.require "ant.anim_ctrl|keyframe"
 local prefab_mgr= ecs.require "prefab_manager"
 local gizmo     = ecs.require "gizmo.gizmo"
 local assetmgr  = import_package "ant.asset"
-local aio       = import_package "ant.io"
 local ImGui     = require "imgui"
 local stringify = import_package "ant.serialize".stringify
 local serialize = import_package "ant.serialize"
@@ -1015,7 +1014,7 @@ function m.show()
                     if mtlpath then
                         mtlpath = mtlpath .. "/source.ant"
                         local desc = {}
-                        local mtl = serialize.parse(mtlpath, aio.readall(mtlpath))
+                        local mtl = serialize.load(mtlpath)
                         local keys = {}
                         for k, v in pairs(mtl.properties) do
                             if not v.stage then
@@ -1290,18 +1289,13 @@ function m.save(path)
     end
 end
 
-local datalist  = require "datalist"
-
 function m.load(path_str)
     if not gizmo.target_eid and not current_skeleton then
         return
     end
     m.clear(true)
     local path = lfs.path(path_str)
-    local f = assert(io.open(path:string()))
-    local data = f:read "a"
-    f:close()
-    local animlist = datalist.parse(data)
+    local animlist = serialize.load_lfs(path_str)
     for _, anim in ipairs(animlist) do
         local is_valid = true
         for _, subanim in ipairs(anim.target_anims) do

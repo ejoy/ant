@@ -1,5 +1,6 @@
 local lfs           = require "bee.filesystem"
 local ltask         = require "ltask"
+local datalist      = require "datalist"
 
 local toolset       = require "material.toolset"
 local fxsetting     = require "material.setting"
@@ -186,7 +187,7 @@ local function merge_cfg_setting(setting, fx)
     if fx.setting == nil then
         fx.setting = {}
     elseif type(fx.setting) == "string" then
-        fx.setting = serialize.parse(fx.setting, vfs_fastio.readall_f(setting.vfs, fx.setting))
+        fx.setting = datalist.parse(vfs_fastio.readall_f(setting.vfs, fx.setting))
     else
         assert(type(fx.setting) == "table")
     end

@@ -1,4 +1,4 @@
-local aio = import_package "ant.io"
+local serialize = import_package "ant.serialize"
 
 local utils = {}
 local function do_deep_copy(orig)
@@ -45,9 +45,8 @@ function utils.write_file(filename, data)
     f:close()
 end
 
-local datalist  = require "datalist"
 function utils.readtable(filename)
-    return datalist.parse(aio.readall(filename))
+    return serialize.load(filename)
 end
 
 function utils.class(classname, ...)

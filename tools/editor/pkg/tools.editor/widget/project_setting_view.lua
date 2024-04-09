@@ -1,17 +1,11 @@
 local ImGui         = require "imgui"
 local ImGuiWidgets  = require "imgui.widgets"
 local global_data   = require "common.global_data"
-local datalist      = require "datalist"
 local serialize     = import_package "ant.serialize"
 
 local ps = {
     id      = "ProjectSetting"
 }
-
-local function read_file(p)
-    local f <close> = assert(io.open(p))
-    return f:read "a"
-end
 
 local default_tr_flags = ImGui.TreeNodeFlags {}
 local default_win_flags= ImGui.WindowFlags {}
@@ -272,7 +266,7 @@ function ps.show(open_popup)
                     -- local p = "/pkg/ant.settings/default/graphic_settings.ant"
                     local s = project_settings[p]
                     if s == nil then
-                        s = datalist.parse(read_file(p))
+                        s = serialize.load_lfs(p)
                         project_settings[p] = s
                     end
                     setting_ui(s)

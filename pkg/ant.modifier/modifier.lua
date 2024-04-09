@@ -11,7 +11,6 @@ local iom       = ecs.require "ant.objcontroller|obj_motion"
 local ika       = ecs.require "ant.anim_ctrl|keyframe"
 local imaterial = ecs.require "ant.render|material"
 local mathpkg	= import_package "ant.math"
-local aio       = import_package "ant.io"
 local mc	    = mathpkg.constant
 local math3d    = require "math3d"
 
@@ -130,7 +129,7 @@ function imodifier.set_target(m, target)
             return
         end
         filename = filename .. "/source.ant"
-        local mtl = serialize.parse(filename, aio.readall(filename))
+        local mtl = serialize.load(filename)
         if not mtl.properties[mf.property] then
             return
         end
@@ -154,7 +153,7 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreup
     if target then
         local e <close> = world:entity(target, "material:in")
         local filename = e.material .. "/source.ant"
-        local mtl = serialize.parse(filename, aio.readall(filename))
+        local mtl = serialize.load(filename)
         assert(mtl.properties[property])
         init_value = math3d.ref(math3d.vector(mtl.properties[property]))
     end
@@ -282,7 +281,7 @@ end
 function imodifier.create_modifier_from_file(target, group_id, path, anim_name, keep, foreupdate)
     local key = path .. anim_name
     if not keyframes_cache[key] then
-        local anims = serialize.parse(path, aio.readall(path))
+        local anims = serialize.load(path)
         local raw_anim
         if anim_name then
             for _, value in ipairs(anims) do

@@ -1,6 +1,3 @@
-local ecs = require "ecs"
-local datalist = require "datalist"
-
 local M = {}
 
 local function get_keys(w, e)

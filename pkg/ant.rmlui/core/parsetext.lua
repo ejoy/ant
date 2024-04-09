@@ -1,9 +1,8 @@
 local m={}
 local ltask = require "ltask"
 local ServiceResource = ltask.queryservice "ant.resource_manager|resource"
-local datalist   = require "datalist"
 local fs = require "filesystem"
-local aio = import_package "ant.io"
+local serialize = import_package "ant.serialize"
 local config_table, path_table
  local texture_cfg_table = {
 } 
@@ -120,7 +119,7 @@ end
 
 for idx, info in pairs(texture_cfg_table) do
     if fs.exists(info.cfg_path) then
-        local cfg = datalist.parse(aio.readall(info.cfg_path))
+        local cfg = serialize.load(info.cfg_path)
         if cfg then
             if not config_table then
                 config_table = {}

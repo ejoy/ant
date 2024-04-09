@@ -3,15 +3,12 @@ local world     = ecs.world
 local w         = world.w
 
 local bgfx      = require "bgfx"
-local math3d    = require "math3d"
-local datalist  = require "datalist"
 
 local assetmgr  = import_package "ant.asset"
 local renderpkg = import_package "ant.render"
 local sampler   = renderpkg.sampler
 
 local hwi       = import_package "ant.hwi"
-local aio       = import_package "ant.io"
 local imaterial = ecs.require "ant.render|material"
 local icompute  = ecs.require "ant.render|compute.compute"
 local viewid<const> = hwi.viewid_get "csm_fb"

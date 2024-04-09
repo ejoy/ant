@@ -1,8 +1,6 @@
-local datalist = require "datalist"
-local fs = require "filesystem"
-local fastio = require "fastio"
+local serialize = import_package "ant.serialize"
 
-local component_desc = datalist.parse(fastio.readall_f(fs.path "/pkg/tools.editor/common/component_desc.txt":localpath():string(), "/pkg/tools.editor/common/component_desc.txt"))
+local component_desc = serialize.load "/pkg/tools.editor/common/component_desc.txt"
 local component_names = {}
 for k in pairs(component_desc) do
     component_names[#component_names+1] = k

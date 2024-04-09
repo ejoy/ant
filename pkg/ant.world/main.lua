@@ -1,6 +1,5 @@
 local luaecs = import_package "ant.luaecs"
 local serialize = import_package "ant.serialize"
-local aio = import_package "ant.io"
 local btime = require "bee.time"
 local inputmgr = require "inputmgr"
 local bgfx = require "bgfx"
@@ -185,7 +184,7 @@ local function create_template(w, filename)
     if not prefab then
         prefab = {}
         w._templates[filename] = prefab
-        local t = serialize.parse(filename, aio.readall(filename))
+        local t = serialize.load(filename)
         for _, v in ipairs(t) do
             if v.prefab then
                 prefab[#prefab+1] = {

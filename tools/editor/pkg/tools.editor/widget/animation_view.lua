@@ -24,6 +24,7 @@ local global_data   = require "common.global_data"
 
 local assetmgr      = import_package "ant.asset"
 local iaudio        = import_package "ant.audio"
+local serialize     = import_package "ant.serialize"
 
 local edit_timeline
 local timeline_eid
@@ -65,12 +66,11 @@ local function find_index(t, item)
     end
 end
 
-local datalist = require "datalist"
 local function get_action_list(asset_path)
     local al = {}
     local tl = {}
     if asset_path and asset_path ~= '' then
-        local animlist = datalist.parse(fastio.readall_f(global_data.project_root:string()..asset_path))
+        local animlist = serialize.load_lfs(global_data.project_root:string()..asset_path)
         for _, anim in ipairs(animlist) do
             al[#al + 1] = anim.name
             tl[anim.name] = anim.type

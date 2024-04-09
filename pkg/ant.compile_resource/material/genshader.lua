@@ -258,7 +258,7 @@ local function read_varyings_input(setting, inputfolder, fx)
                 error(("Invalid varyings path:%s, not in resource folder:%s"):format(varyings, inputfolder:string()))
             end
         end
-        varyings = datalist.parse(fastio.readall_s(varyings))
+        varyings = datalist.parse(fastio.readall_f(varyings))
     else
         assert(type(varyings) == "table")
     end

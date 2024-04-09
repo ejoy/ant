@@ -1,11 +1,8 @@
 local serialize = import_package "ant.serialize"
-local vfs       = require "vfs"
 local lfs       = require "bee.filesystem"
-local datalist  = require "datalist"
-local fastio    = require "fastio"
 
 local settingpath<const> = (lfs.current_path() / "tools/editor/pkg/tools.editor/editor.settings"):string()
-local editor_setting = lfs.exists(settingpath) and datalist.parse(fastio.readall_f(settingpath)) or {}
+local editor_setting = lfs.exists(settingpath) and serialize.load_lfs(settingpath) or {}
 
 local function save()
     local f <close> = assert(io.open(settingpath, "w"))

@@ -4,14 +4,13 @@ local w         = world.w
 
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
-local datalist  = require "datalist"
 
 local assetmgr  = import_package "ant.asset"
 local renderpkg = import_package "ant.render"
 local sampler   = renderpkg.sampler
 
 local hwi       = import_package "ant.hwi"
-local aio       = import_package "ant.io"
+local serialize = import_package "ant.serialize"
 
 local icompute  = ecs.require "ant.render|compute.compute"
 local iexposure = ecs.require "ant.camera|exposure"
@@ -197,7 +196,7 @@ function ibl_sys:render_preprocess()
 
     for e in w:select "irradianceSH_builder" do
         local function load_Eml()
-            local c = datalist.parse(aio.readall(source_tex.tex_name .. "/source.ant"))
+            local c = serialize.load(source_tex.tex_name .. "/source.ant")
 
             if nil == c.irradiance_SH then
                 error(("source texture:%s, did not build irradiance SH, 'build_irradiance_sh' should add to cubemap texture"):format(source_tex.tex_name))

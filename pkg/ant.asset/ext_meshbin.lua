@@ -1,9 +1,9 @@
 local bgfx      = require "bgfx"
-local datalist  = require "datalist"
 local fastio    = require "fastio"
 local setting   = import_package "ant.settings"
 local aio       = import_package "ant.io"
 local layoutmgr = import_package "ant.render".layoutmgr
+local serialize = import_package "ant.serialize"
 
 local USE_CS_SKINNING <const> = setting:get "graphic/skinning/use_cs"
 
@@ -120,7 +120,7 @@ local function load_mem(buf, meshfile)
 end
 
 local function loader(filename)
-    local mesh = datalist.parse(aio.readall(filename))
+    local mesh = serialize.load(filename)
 
     load_mem(mesh.vb, filename)
     load_mem(mesh.vb2, filename)

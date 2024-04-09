@@ -13,7 +13,6 @@ local imaterial = ecs.require "ant.render|material"
 
 local prefab_mgr  = ecs.require "prefab_manager"
 local serialize = import_package "ant.serialize"
-local aio       = import_package "ant.io"
 local assetmgr  = import_package "ant.asset"
 local uiutils   = require "widget.utils"
 local hierarchy = ecs.require "hierarchy_edit"
@@ -31,7 +30,7 @@ end
 
 local FILE_CACHES = setmetatable({}, {__index=function(t, fp)
     local vpath = is_virtual_path(fp) and fp or global_data:lpath_to_vpath(fp)
-    local c = serialize.parse(fp, aio.readall(vpath))
+    local c = serialize.load(vpath)
     t[vpath] = c
     return c
 end})
@@ -1024,7 +1023,6 @@ function MaterialView:_init()
     })
 end
 local sampler_info = {}
-local datalist   = require "datalist"
 local function split(str)
     local r = {}
     str:gsub('[^|]*', function (wd) r[#r+1] = wd end)

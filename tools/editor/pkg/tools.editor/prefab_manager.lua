@@ -432,7 +432,7 @@ end
 
 local function get_prefabs_and_patch_template(glbfilename)
     local localPatchfile = lfs.path(glbfilename):string() .. ".patch"
-    local patch_tpl = lfs.exists(lfs.path(localPatchfile)) and serialize.parse(localPatchfile, fastio.readall_s(localPatchfile)) or {}
+    local patch_tpl = lfs.exists(lfs.path(localPatchfile)) and serialize.load_lfs(localPatchfile) or {}
     local prefab_set = {}
     for _, patch in ipairs(patch_tpl) do
         local k = (patch.file ~= "mesh.prefab") and patch.file or ((patch.op == "copyfile") and patch.path or nil)
@@ -561,7 +561,7 @@ local function cook_prefab(prefab_filename)
     local current_compile_path = fs.path(pl[1]):localpath():string()
     -- utils.mount_memfs(pl[1])
     prefab_filename = prefab_filename:gsub("|", "/")
-    local prefab_template = serialize.parse(prefab_filename, aio.readall(prefab_filename))
+    local prefab_template = serialize.load(prefab_filename))
     for _, tpl in ipairs(prefab_template) do
         if tpl.prefab then
             cook_prefab(tpl.prefab)
@@ -589,7 +589,7 @@ function m:open(filename, prefab_name, patch_tpl)
         self.prefab_name = path_list[2]
         gd.virtual_glb_path = virtual_path
         virtual_path = virtual_path .. "/" .. self.prefab_name
-        self.prefab_template = serialize.parse(virtual_path, aio.readall(virtual_path))
+        self.prefab_template = serialize.load(virtual_path)
 
         self.origin_patch_template = patch_tpl or {}
         self.patch_template = {}
@@ -620,7 +620,7 @@ function m:open(filename, prefab_name, patch_tpl)
         end
         self.patch_start_index = #self.prefab_template - node_idx + 1
     else
-        self.prefab_template = serialize.parse(filename, fastio.readall_s(filename))
+        self.prefab_template = serialize.load_lfs(filename)
     end
 
     self.current_prefab = world:create_instance {
@@ -791,7 +791,7 @@ function m:add_prefab(path)
                     local child = children[1]
                     local e <close> = world:entity(child, "camera?in")
                     if e.camera then
-                        local tpl = serialize.parse(virtual_path, aio.readall(virtual_path))
+                        local tpl = serialize.load(virtual_path)
                         hierarchy:add(child, {template = tpl[1], editor = true, temporary = true}, v_root)
                     end
                 end
@@ -1325,7 +1325,7 @@ function m:do_material_patch(eid, path, v)
     if not self.materials_names then
         -- local ret = utils.split_ant_path(tpl.data.material)
         local fn = gd.virtual_glb_path .. "/materials_names.ant"
-        self.materials_names = serialize.parse(fn, aio.readall(fn))
+        self.materials_names = serialize.load(fn)
     end
     local origin = get_origin_material_name(self.materials_names, tostring(fs.path(tpl.data.material):stem()))
     if not origin then

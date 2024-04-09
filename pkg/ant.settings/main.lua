@@ -1,6 +1,5 @@
 local fs = require "filesystem"
-local datalist = require "datalist"
-local aio = import_package "ant.io"
+local serialize = import_package "ant.serialize"
 
 local function split(s)
 	local r = {}
@@ -39,7 +38,7 @@ local function create(paths)
 	local root = {}
 	for _, path in ipairs(paths) do
 		if fs.exists(path) then
-			merge(root, assert(datalist.parse(aio.readall(path))))
+			merge(root, assert(serialize.load(path)))
 		end
 	end
 	local obj = {}
