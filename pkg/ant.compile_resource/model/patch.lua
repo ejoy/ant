@@ -1,4 +1,4 @@
-local serialize = import_package "ant.serialize"
+local lua_patch = require "util.lua_patch"
 local lfs       = require "bee.filesystem"
 local datalist  = require "datalist"
 local fastio    = require "fastio"
@@ -46,7 +46,7 @@ function m.apply(status, path, data, retval)
     if not patch then
         return data
     end
-    local ok, res = serialize.patch.apply(data, patch, retval)
+    local ok, res = lua_patch.apply(data, patch, retval)
     assert(ok == true, res)
     return res
 end
