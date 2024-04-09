@@ -9,3 +9,4 @@ properties:
         stage: 0
         access: w
         buffer: "cluster_AABBs"
+    u_normal_inv_proj: {1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0}

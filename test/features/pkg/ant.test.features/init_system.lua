@@ -16,7 +16,7 @@ local create_instance = ecs.require "util".create_instance
 local init_loader_sys   = ecs.system 'init_system'
 
 function init_loader_sys:init()
-    create_instance "/pkg/ant.test.features/assets/entities/light_directional.prefab"
+    --create_instance "/pkg/ant.test.features/assets/entities/light_directional.prefab"
     create_instance "/pkg/ant.test.features/assets/entities/sky_with_ibl.prefab"
 end
 
@@ -31,11 +31,13 @@ end
 
 local function init_light()
     local dl = w:first "directional_light scene:update"
-    --iom.set_direction(dl, math3d.vector(0.0, -1.0, 0.0, 0.0))
-    --rotate x-axis pi/2, y-axis pi/2
-    --iom.set_rotation(dl, math3d.quaternion{math.pi*0.75, math.pi*0.25, 0.0})
-    iom.set_direction(dl, math3d.normalize(math3d.vector(-1.0, -1.0, -1.0, 0.0)))
-    w:submit(dl)
+    if dl then
+        --iom.set_direction(dl, math3d.vector(0.0, -1.0, 0.0, 0.0))
+        --rotate x-axis pi/2, y-axis pi/2
+        --iom.set_rotation(dl, math3d.quaternion{math.pi*0.75, math.pi*0.25, 0.0})
+        iom.set_direction(dl, math3d.normalize(math3d.vector(-1.0, -1.0, -1.0, 0.0)))
+        w:submit(dl)
+    end
 end
 
 function init_loader_sys:init_world()

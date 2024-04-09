@@ -3,14 +3,8 @@
 #include "common/cluster_shading.sh"
 #include "common/camera.sh"
 
-uniform vec4 u_camera_frustum;
-#define u_camera_frustum_near u_camera_frustum.x
-#define u_camera_frustum_far u_camera_frustum.y
-#define u_camera_frustum_inv_near u_camera_frustum.z
-#define u_camera_frustum_inv_far u_camera_frustum.w
-
 vec3 line_zplane_intersection(vec3 A, vec3 B, float zDistance){
-    vec3 plane_normal = vec3(0.0, 1.0, 0.0);
+    vec3 plane_normal = vec3(0.0, 0.0, 1.0);
     vec3 ab =  B - A;
     //Computing the intersection length for the line and the plane
     float t = (zDistance - dot(plane_normal, A)) / dot(plane_normal, ab);
@@ -71,8 +65,8 @@ void main(){
     vec3 bottomleft_vS  = screen2view(vec4(bottomleft,  near_sS, 1.0));
     vec3 bottomright_vS = screen2view(vec4(bottomright, near_sS, 1.0));
 
-    float nearZ = which_z(gl_WorkGroupID.z,     u_cluster_size.z, u_camera_frustum_near, u_camera_frustum_far);
-    float farZ  = which_z(gl_WorkGroupID.z+1,   u_cluster_size.z, u_camera_frustum_near, u_camera_frustum_far);
+    float nearZ = which_z(gl_WorkGroupID.z,     u_cluster_size.z);
+    float farZ  = which_z(gl_WorkGroupID.z+1,   u_cluster_size.z);
 
     vec3 eyepos_vS = vec3_splat(0.0);
     vec3 tln = line_zplane_intersection(eyepos_vS, topleft_vS    , nearZ);
@@ -90,5 +84,7 @@ void main(){
 
     vec3 maxv = max_vec(tln, max_vec(trn, max_vec(bln, brn)));
     maxv = max_vec(maxv, max_vec(tlf, max_vec(trf, max_vec(blf, brf))));
+
+    //TODO: make b_cluster_AABBs type as float not vec4, to remove minv.w and maxv.w
     store_cluster_aabb2(b_cluster_AABBs, cluster_idx, vec4(minv, 0.0), vec4(maxv, 0.0));
 }

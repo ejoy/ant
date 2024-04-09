@@ -47,30 +47,26 @@ uniform mat4 u_normal_inv_proj;
 
 /**
 about the depth slice:
-	depth_slice = f(linearZ) = floor(
-		log(linearZ) * num_slice/log(far/near) - log(near) * num_slice/log(far/near)
+	depth_slice = f(zVS) = floor(
+		log(zVS) * num_slice/log(far/near) - log(near) * num_slice/log(far/near)
 	)
 	we can see 'num_slice/log(far/near)' and 'log(near) * num_slice/log(far/near)' are const in shader
 	so, we can calculate them in cpu, and make them as 'scale' and 'bias'
 
 	see below: which_cluster()
 where inverse function is:
-	linezeZ = F(depth_slice) = near * pow(far/near, depth_slice/num_slice)
+	zVS = F(depth_slice) = near * pow(far/near, depth_slice/num_slice)
 	see below: which_z()
 */
 
-uint which_cluster(vec2 screenxy, float linearZ){
-	uint cluster_z     = uint(max(log2(linearZ) * u_slice_scale + u_slice_bias, 0.0));
+uint which_cluster(vec2 screenxy, float zVS){
+	uint cluster_z     = uint(max(log2(zVS) * u_slice_scale + u_slice_bias, 0.0));
 	vec2 xy = screenxy - u_viewRect.xy;
     uvec3 cluster_coord= uvec3(xy/u_tile_unit, cluster_z);
     return 	cluster_coord.x +
             u_cluster_size.x * cluster_coord.y +
             (u_cluster_size.x * u_cluster_size.y) * cluster_coord.z;
 
-}
-
-float which_z(uint depth_slice, uint num_slice, float near, float far){
-	return near*pow(far/near, depth_slice/float(num_slice));
 }
 
 float which_z(uint depth_slice, uint num_slice){

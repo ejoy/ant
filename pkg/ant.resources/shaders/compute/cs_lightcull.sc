@@ -21,10 +21,14 @@ bool interset_aabb(light_info l, AABB aabb){
 
 #define WORKGORUP_SIZE  (16 * 9 * 3)
 
+uint light_offset_idx()
+{
+    return u_all_light_count - u_culled_light_count;
+}
+
 NUM_THREADS(NUM_X, NUM_Y, NUM_Z)
 void main(){
-    const uint lightcount = u_culled_light_count;
-    if (lightcount == 0)
+    if (u_culled_light_count == 0)
         return ;
     uint cluster_idx = gl_LocalInvocationIndex + WORKGORUP_SIZE * gl_WorkGroupID.z;
     AABB aabb; load_cluster_aabb(b_cluster_AABBs, cluster_idx, aabb);
@@ -32,18 +36,8 @@ void main(){
     uint visible_light_count = 0;
 
     //TODO: need fix!!! make a more compat b_light_index_lists buffer
-    uint offset = cluster_idx * lightcount;
-    
-    const uint directional_light_idx = 0;
-    uint light_idx = directional_light_idx;
-    if (has_directional_light()){
-        light_idx = 1;
-        b_light_index_lists_write[offset+visible_light_count] = light_idx;
-        ++visible_light_count;
-        ++light_idx;
-    }
-
-    for( ; light_idx<lightcount; ++light_idx){
+    uint offset = cluster_idx * u_all_light_count;
+    for(uint light_idx = light_offset_idx(); light_idx<u_all_light_count; ++light_idx){
         light_info l; load_light_info(b_light_info_for_cull, light_idx, l);
 
         //TODO: need fix!!! b_light_index_lists update should use a barrier

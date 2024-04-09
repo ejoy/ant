@@ -2,6 +2,15 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
+local setting   = import_package "ant.settings"
+
+local cfs = ecs.system "cluster_forward_system"
+
+local ENABLE_CLUSTER_SHADERING<const> = setting:get "graphic/lighting/cluster_shading"
+if not ENABLE_CLUSTER_SHADERING then
+    return
+end
+
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 local layoutmgr = require "vertexlayout_mgr"
@@ -12,8 +21,7 @@ local assetmgr  = import_package "ant.asset"
 local ilight    = ecs.require "ant.render|light.light"
 local icompute  = ecs.require "ant.render|compute.compute"
 local imaterial = ecs.require "ant.render|material"
-
-local cfs = ecs.system "cluster_forward_system"
+local irq       = ecs.require "ant.render|renderqueue"
 
 local cluster_grid_x<const>, cluster_grid_y<const>, cluster_grid_z<const> = 16, 9, 24
 local cluster_cull_light_size<const> = 8
@@ -110,7 +118,7 @@ cluster_buffers.global_index_count.handle  = bgfx.create_dynamic_index_buffer(1,
 cluster_buffers.AABB.handle                = bgfx.create_dynamic_vertex_buffer(cluster_aabb_buffer_size, cluster_buffers.AABB.layout.handle, "rw")
 cluster_buffers.light_index_lists.handle   = bgfx.create_dynamic_index_buffer(1, "drw")
 
-local function check_light_index_list()
+local function rebuild_light_index_list()
     local numlights = ilight.count_visible_light()
     local lil_size = numlights * cluster_count
     local lil = cluster_buffers.light_index_lists
@@ -151,7 +159,7 @@ function cfs:init()
         {1, 1, cluster_cull_light_size}, mark_prog)
 end
 
-local function update_render_info()
+local function update_scene_render_param()
     -- we assume all the buffer will not change
     imaterial.system_attrib_update("b_light_grids",          assert(cluster_buffers.light_grids.handle))
     imaterial.system_attrib_update("b_light_index_lists",    assert(cluster_buffers.light_index_lists.handle))
@@ -160,34 +168,12 @@ local function update_render_info()
     imaterial.system_attrib_update("u_cluster_size",         math3d.vector(cluster_size))
 end
 
-local function update_shading_param(ce)
+local function update_build_param(ce, material)
+    material["u_normal_inv_proj"] = ce.camera.projmat
     local f = ce.camera.frustum
-    local near, far = f.n, f.f
-    local num_depth_slices = cluster_size[3]
-	local log_farnear = math.log(far/near, 2)
-	local log_near = math.log(near, 2)
-
-    local mq = w:first "main_queue render_target:in"
-    local vr = mq.render_target.view_rect
-
-	imaterial.system_attrib_update("u_cluster_shading_param", math3d.vector(
-		num_depth_slices / log_farnear, -num_depth_slices * log_near / log_farnear,
-		vr.w / cluster_size[1], vr.h/cluster_size[2]))
-end
-
-local function build_cluster_aabb_struct(viewid, ceid)
-    local e <close> = world:entity(ceid, "camera:in")
-    update_shading_param(e)
-
-    local be = w:first "cluster_build_aabb dispatch:in"
-    local m = be.dispatch.material
-
-    m["u_normal_inv_proj"] = e.camera.projmat
-    local f = e.camera.frustum
     local nn, ff = f.n, f.f
     local inv_nn, inv_ff = 1.0/nn, 1.0/ff
-    m["u_camera_frustum"] = math3d.vector(nn, ff, inv_nn, inv_ff)
-    icompute.dispatch(viewid, be.dispatch)
+    material["u_camera_frustum"] = math3d.vector(nn, ff, inv_nn, inv_ff)
 end
 
 local function create_buffer_property(bufferdesc, which_stage)
@@ -202,19 +188,14 @@ local function create_buffer_property(bufferdesc, which_stage)
 end
 
 function cfs:init_world()
-    local mq = w:first "main_queue camera_ref:in"
-    local ceid = mq.camera_ref
-
     cluster_buffers.light_info.handle = ilight.light_buffer()
-
-    update_render_info()
+    --render
+    update_scene_render_param()
 
     --build
     local be = w:first "cluster_build_aabb dispatch:in"
     local bmi = be.dispatch.material
     bmi.b_cluster_AABBs= create_buffer_property(cluster_buffers.AABB,       "build")
-
-    build_cluster_aabb_struct(main_viewid, ceid)
 
     --cull
     local ce = w:first "cluster_cull_light dispatch:in"
@@ -227,64 +208,65 @@ function cfs:init_world()
 end
 
 local function cull_lights(viewid)
-    local e = w:first("cluster_cull_light dispatch:in")
-    icompute.dispatch(viewid, e.dispatch)
+    if irq.main_camera_changed() then
+        local e = w:first "cluster_cull_light dispatch:in"
+        icompute.dispatch(viewid, e.dispatch)
+    end
 end
 
-local rebuild_light_index_list
+local need_rebuild_light_index_list
 
 function cfs:entity_init()
-    if not ilight.use_cluster_shading() then
-        return
-    end
-
     for _ in w:select "INIT light:in" do
-        rebuild_light_index_list = true
+        need_rebuild_light_index_list = true
     end
 end
 
 function cfs:entity_remove()
-    if not ilight.use_cluster_shading() then
-        return
-    end
-
     for _ in w:select "REMOVED light:in" do
-        rebuild_light_index_list = true
+        need_rebuild_light_index_list = true
     end
 end
 
-function cfs:data_changed()
-    if not ilight.use_cluster_shading() then
-        return
+local function check_rebuild_cluster_aabb()
+    local C
+    for _ in cr_camera_mb:each() do
+        C = irq.main_camera_entity()
     end
 
-    for msg in cr_camera_mb:each() do
-        local ceid = msg[3]
-        build_cluster_aabb_struct(main_viewid, ceid)
+    if not C then
+        C = irq.main_camera_changed()
     end
+    if C then
+        w:extend(C, "camera:in")
+        local f = C.camera.frustum
+        local near, far = f.n, f.f
+        local num_depth_slices = cluster_size[3]
+        local log_farnear   = math.log(far/near, 2)
+        local log_near      = math.log(near, 2)
+    
+        local mq = w:first "main_queue render_target:in"
+        local vr = mq.render_target.view_rect
+    
+        imaterial.system_attrib_update("u_cluster_shading_param", math3d.vector(
+            num_depth_slices / log_farnear, -num_depth_slices * log_near / log_farnear,
+            vr.w / cluster_size[1], vr.h/cluster_size[2]))
 
-    local mq = w:first "main_queue camera_ref:in"
-    local ce = world:entity(mq.camera_ref, "camera_changed?in")
-
-    if ce.camera_changed then
-        build_cluster_aabb_struct(main_viewid, mq.camera_ref)
+        local be = w:first "cluster_build_aabb dispatch:in"
+        --no invz, no infinite far
+        be.dispatch.material["u_normal_inv_proj"] = math3d.inverse(math3d.projmat(C.camera.frustum))
+        icompute.dispatch(main_viewid, be.dispatch)
     end
+end
 
-    if rebuild_light_index_list then
-        check_light_index_list()
-        rebuild_light_index_list = false
+function cfs:camera_usage()
+    if need_rebuild_light_index_list then
+        rebuild_light_index_list()
+        need_rebuild_light_index_list = false
     end
 end
 
 function cfs:render_preprocess()
-    if not ilight.use_cluster_shading() then
-        return
-    end
-
+    check_rebuild_cluster_aabb()
     cull_lights(main_viewid)
 end
-
-local ics = {}
-ics.build_cluster_aabbs     = build_cluster_aabb_struct
-ics.cull_lights             = cull_lights
-return ics
