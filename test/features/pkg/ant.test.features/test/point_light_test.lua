@@ -11,8 +11,25 @@ local ientity 	= ecs.require "ant.entity|entity"
 local imaterial = ecs.require "ant.render|material"
 local ilight    = ecs.require "ant.render|light.light"
 local math3d    = require "math3d"
+local mu        = import_package "ant.math".util
 
 local plt_sys = common.test_system "point_light"
+
+
+local function get_color(x, y, z, nx, ny, nz)
+    local c1, c2 = math3d.vector(0.3, 0.3, 0.3, 1.0), math3d.vector(0.85, 0.85, 0.85, 1.0)
+    --lerp
+    local ssx, ssy, ssz = x/nx, y/ny, z/nz
+    local t = math3d.vector(ssx, ssy, ssz)
+    local nt = math3d.vector(1-ssx, 1-ssy, 1-ssz)
+    return math3d.add(math3d.mul(t, c1), math3d.mul(nt, c2))
+end
+
+local function get_random_color(colorscale)
+    local rr, rg, rb = math.random(), math.random(), math.random()
+    local r, g, b = mu.lerp(0.15, 1.0, rr), mu.lerp(0.15, 1.0, rg), mu.lerp(0.15, 1.0, rb)
+    return math3d.mul(colorscale, math3d.vector(r, g, b, 1.0))
+end
 
 
 local function Sponza_scene()
@@ -30,18 +47,6 @@ local function Sponza_scene()
 
     local s = 0.5
     dx, dy, dz = dx*s, dy*s, dz*s
-
-    local c1, c2 = math3d.vector(0.3, 0.3, 0.3, 1.0), math3d.vector(0.85, 0.85, 0.85, 1.0)
-
-    local function get_color(x, y, z)
-        --lerp
-        local ssx, ssy, ssz = x/nx, y/ny, z/nz
-        local t = math3d.vector(ssx, ssy, ssz)
-        local nt = math3d.vector(1-ssx, 1-ssy, 1-ssz)
-        return math3d.add(math3d.mul(t, c1), math3d.mul(nt, c2))
-    end
-
-    local colorscale = 1
     for iz=0, nz-1 do
         local z = iz*dz
         for iy=0, ny-1 do
@@ -49,8 +54,7 @@ local function Sponza_scene()
             for ix=0, nx-1 do
                 local x = ix*dx
                 local p = math3d.vector(x, y, z, 1)
-                
-                local color = math3d.mul(colorscale, get_color(ix, iy, iz))
+
                 PC:create_instance{
                     prefab = "/pkg/ant.test.features/assets/entities/sphere_with_point_light.prefab",
                     on_ready = function(pl)
@@ -58,10 +62,15 @@ local function Sponza_scene()
                         iom.set_position(root, p)
         
                         local sphere<close> = world:entity(pl.tag['*'][4])
+                        local color = get_random_color(1)
+
                         imaterial.set_property(sphere, "u_basecolor_factor", color)
 
                         local point<close> = world:entity(pl.tag['*'][5], "light:in")
                         ilight.set_color(point, math3d.tovalue(color))
+
+                        local radius = math.random(5, 50)
+                        ilight.set_range(point, radius)
                     end
                 }
 
