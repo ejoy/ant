@@ -74,13 +74,17 @@ local function simple_scene()
     local pl_pos = {
         {  1, 1, 1},
         { -1, 1,-1},
-        
         {  1, 2, 1},
         { -1, 2,-1},
 
+        {  2, 1, 2},
+        { -2, 1, 2},
+        {  2, 2,-2},
+        {  2, 2,-2},
+
         {  3, 1, 3},
         { -3, 1, 3},
-        {  3, 1,-3},
+        {  3, 2,-3},
         {  3, 2,-3},
     }
 
@@ -121,8 +125,8 @@ local function simple_scene()
 end
 
 function plt_sys.init_world()
-    --Sponza_scene()
-    simple_scene()
+    Sponza_scene()
+    --simple_scene()
 end
 
 function plt_sys:exit()
