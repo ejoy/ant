@@ -49,10 +49,12 @@ end
 local function insert_depend(n, p, depends, passes)
     local inserthit
     if p.depend then
-        local dp = passes[p.depend] or error(("Invalid depend:%s"):format(p.depend))
-        inserthit = insert_depend(p.depend, dp, depends, passes)
+        for _, dp in ipairs(p.depend) do
+            local pp = passes[dp] or error(("Invalid depend:%s"):format(dp))
+            inserthit = insert_depend(dp, pp, depends, passes)
+            check_insert_item(n, depends, inserthit)
+        end
     end
-    
     check_insert_item(n, depends, inserthit)
 end
 
@@ -121,20 +123,42 @@ if true then
         n3 -> n2 -> n1/n4
     ]]
     
-    local l = solve_depends{
+--[[     local l = solve_depends{
         n1 = {
-            depend = "n2",
+            depend = {"n2"},
         },
         n2 = {
-            depend = "n3",
+            depend = {"n3"},
         },
         n4 = {
-            depend = "n2",
+            depend = {"n2"},
         },
         n3 = {}
     }
-    
     assert(l[1] == "n3" and l[2] == "n2" and ((l[3] == "n1" or l[3] == "n4") or (l[4] == "n1" or l[4] == "n4")))
+    ]]
+
+    local l = solve_depends{
+        n1 = {
+            depend = {"n2", "n4"},
+        },
+        n2 = {
+            depend = {"n3"},
+        },
+        n3 = {
+            depend = {"n6"},
+        },
+        n4 = {
+            depend = {"n6"},
+        },
+        n5 = {
+            depend = {"n2"},
+        },
+        n6 = {
+            depend = {}
+        }
+    }
+
 end
 
 return fg
