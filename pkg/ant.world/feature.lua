@@ -18,8 +18,7 @@ local function package_require(w, packname, file)
 	if p ~= nil then
 		return p
 	end
-	local env = pm.loadenv(packname)
-	local initfunc, err = env.loadfile(file)
+	local initfunc, err = pm.loadenv(packname).loadfile(file)
 	if not initfunc then
 		error(err)
 	end

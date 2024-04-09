@@ -25,7 +25,7 @@ end
 local fastio = require "fastio"
 local vfs = require "vfs"
 
-local function package_loadfile(packname, file, env)
+local function package_dofile(packname, file, env)
 	local path = "/pkg/"..packname.."/"..file
 	local mem, symbol = vfs.read(path)
 	if not mem then
@@ -35,7 +35,7 @@ local function package_loadfile(packname, file, env)
 	if not func then
 		error(("error loading file '%s':\n\t%s"):format(path, err))
 	end
-	return func
+	return func()
 end
 
 local import_feature
@@ -53,8 +53,7 @@ local function genenv(envs, decl, newdecl, packname)
 			return
 		end
 		LOADED[filename] = true
-		local func = package_loadfile(packname, filename, env)
-		func()
+		package_dofile(packname, filename, env)
 	end
 	function env.import_feature(fullname)
 		import_feature(envs, decl, newdecl, fullname)

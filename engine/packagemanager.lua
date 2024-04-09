@@ -7,29 +7,7 @@ local function sandbox_env(packagename)
     local env = {}
     local _LOADED = {}
     local _PRELOAD = package.preload
-    local PATH = "/pkg/"..packagename..'/?.lua'
-
-    local function searcher_preload(name)
-        local func = _PRELOAD[name]
-        if func then
-            return func
-        end
-        return ("no field package.preload['%s']"):format(name)
-    end
-
-    local function searcher_lua(name)
-        local filename = name:gsub('%.', '/')
-        local path = PATH:gsub('%?', filename)
-        local mem, symbol = vfs.read(path)
-        if mem then
-            local func, err = fastio.loadlua(mem, symbol, env)
-            if not func then
-                error(("error loading module '%s' from file '%s':\n\t%s"):format(name, path, err))
-            end
-            return func
-        end
-        return "no file '"..path.."'"
-    end
+    local PATH <const> = "/pkg/"..packagename..'/?.lua'
 
     function env.require(name)
         local _ = type(name) == "string" or error (("bad argument #1 to 'require' (string expected, got %s)"):format(type(name)))
@@ -37,26 +15,34 @@ local function sandbox_env(packagename)
         if p ~= nil then
             return p
         end
-        local initfunc = searcher_preload(name)
-        if type(initfunc) == "function" then
-            local r = initfunc()
-            if r == nil then
-                r = true
+        do
+            local func = _PRELOAD[name]
+            if func then
+                local r = func()
+                if r == nil then
+                    r = true
+                end
+                package.loaded[name] = r
+                return r
             end
-            package.loaded[name] = r
-            return r
-        end
-        initfunc = searcher_lua(name)
-        if type(initfunc) == "function" then
-            local r = initfunc()
-            if r == nil then
-                r = true
-            end
-            _LOADED[name] = r
-            return r
         end
         local filename = name:gsub('%.', '/')
         local path = PATH:gsub('%?', filename)
+        do
+            local mem, symbol = vfs.read(path)
+            if mem then
+                local func, err = fastio.loadlua(mem, symbol, env)
+                if not func then
+                    error(("error loading module '%s' from file '%s':\n\t%s"):format(name, path, err))
+                end
+                local r = func()
+                if r == nil then
+                    r = true
+                end
+                _LOADED[name] = r
+                return r
+            end
+        end
         error(("module '%s' not found:\n\tno field package.preload['%s']\n\tno file '%s'"):format(name, name, path))
     end
 
@@ -84,10 +70,6 @@ local function sandbox_env(packagename)
     env.package = {
         loaded = _LOADED,
         preload = _PRELOAD,
-        searchers = {
-            searcher_preload,
-            searcher_lua,
-        }
     }
     return setmetatable(env, {__index=_G})
 end
