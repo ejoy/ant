@@ -5,6 +5,7 @@ local material_compile  = require "material.compile"
 local L                 = import_package "ant.render.core".layout
 local depends           = require "depends"
 local gltfutil          = require "model.glTF.util"
+local parallel_task     = require "parallel_task"
 
 local function create_entity(t, prefabs)
     if t.parent then
@@ -154,7 +155,9 @@ local check_update_material_info; do
             }
 
             c[name] = cc
-            material_compile(status.tasks, status.post_tasks, status.depfiles, cc.material, status.input, status.output / cc.filename, status.setting)
+            parallel_task.add(status.tasks, function ()
+                material_compile(status.depfiles, cc.material, status.input, status.output / cc.filename, status.setting)
+            end)
         end
         return cc
     end

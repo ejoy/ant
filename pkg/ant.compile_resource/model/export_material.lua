@@ -1,7 +1,5 @@
 local lfs = require "bee.filesystem"
 local utility = require "model.utility"
-local datalist = require "datalist"
-local vfs_fastio = require "vfs_fastio"
 local texture_compile = require "texture.compile"
 local parallel_task = require "parallel_task"
 

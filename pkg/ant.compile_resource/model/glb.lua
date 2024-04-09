@@ -25,7 +25,6 @@ return function (input, output, setting, changed)
         setting = setting,
         tasks = parallel_task.new(),
         depfiles = depends.new(),
-        post_tasks = parallel_task.new(),
     }
     depends.add_lpath(status.depfiles, input)
     depends.add_vpath(status.depfiles, setting, "/pkg/ant.compile_resource/model/version.lua")
@@ -57,7 +56,6 @@ return function (input, output, setting, changed)
     export_material(status)
     export_prefab(status)
     parallel_task.wait(status.tasks)
-    parallel_task.wait(status.post_tasks)
     math3d_pool.free(status.math3d)
     return true, status.depfiles
 end

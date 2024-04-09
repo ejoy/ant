@@ -1,4 +1,5 @@
 local lfs           = require "bee.filesystem"
+local ltask         = require "ltask"
 
 local toolset       = require "material.toolset"
 local fxsetting     = require "material.setting"
@@ -9,7 +10,6 @@ local settings      = import_package "ant.settings"
 local serialize     = import_package "ant.serialize"
 local vfs_fastio    = require "vfs_fastio"
 local depends       = require "depends"
-local parallel_task = require "parallel_task"
 
 local matutil       = import_package "ant.material".util
 local sa            = import_package "ant.render.core".system_attribs
@@ -507,48 +507,46 @@ local function check_vs_inputs(setting, inputfolder, mat, inputs)
     end
 end
 
-local function create_shader_cfg(setting, post_tasks, inputfolder, output, mat, stages)
+local function create_shader_cfg(setting, inputfolder, output, mat, stages)
     local lighting<const>   = mat.fx.setting.lighting
     local properties<const> = mat.properties or {}
     local function attrib_obj()
         return {attribs={}, systems={}}
     end
 
-    parallel_task.add(post_tasks, function ()
-        local ao = attrib_obj()
-        if stages.cs then
-            assert(stages.vs == nil and stages.fs == nil and stages.depth == nil)
-            load_shader_uniforms(setting, output, "cs", ao)
-        else
-            if stages.vs then
-                local s = load_shader_uniforms(setting, output, "vs", ao)
-                check_vs_inputs(setting, inputfolder, mat, s.inputs)
-            end
-            if stages.fs then
-                load_shader_uniforms(setting, output, "fs", ao)
-            end
+    local ao = attrib_obj()
+    if stages.cs then
+        assert(stages.vs == nil and stages.fs == nil and stages.depth == nil)
+        load_shader_uniforms(setting, output, "cs", ao)
+    else
+        if stages.vs then
+            local s = load_shader_uniforms(setting, output, "vs", ao)
+            check_vs_inputs(setting, inputfolder, mat, s.inputs)
         end
-
-        add_lighting_sv(ao.systems, lighting)
-        check_material_properties(properties, ao.attribs)
-        if stages.depth then
-            ao.depth = attrib_obj()
-            load_shader_uniforms(setting, output, "depth", ao.depth)
-            check_material_properties(properties, ao.depth.attribs)
+        if stages.fs then
+            load_shader_uniforms(setting, output, "fs", ao)
         end
+    end
 
-        if stages.di then
-            ao.di = attrib_obj()
-            load_shader_uniforms(setting, output, "di", ao.di)
-            check_material_properties(properties, ao.di.attribs)
-        end
+    add_lighting_sv(ao.systems, lighting)
+    check_material_properties(properties, ao.attribs)
+    if stages.depth then
+        ao.depth = attrib_obj()
+        load_shader_uniforms(setting, output, "depth", ao.depth)
+        check_material_properties(properties, ao.depth.attribs)
+    end
 
-        local outfile = output / "attribute.ant"
-        writefile(outfile, ao)
-    end)
+    if stages.di then
+        ao.di = attrib_obj()
+        load_shader_uniforms(setting, output, "di", ao.di)
+        check_material_properties(properties, ao.di.attribs)
+    end
+
+    local outfile = output / "attribute.ant"
+    writefile(outfile, ao)
 end
 
-local function compile(tasks, post_tasks, deps, mat, input, output, setting)
+local function compile(deps, mat, input, output, setting)
     depends.add_vpath(deps, setting, "/pkg/ant.compile_resource/material/version.lua")
     depends.add_vpath(deps, setting, "/pkg/ant.settings/default/graphic_settings.ant")
     depends.add_vpath(deps, setting, "/graphic_settings.ant")
@@ -563,32 +561,41 @@ local function compile(tasks, post_tasks, deps, mat, input, output, setting)
 
     local stages = genshader.gen_fx(setting, input, output, mat)
     writefile(output / "source.ant",  mat)
+
     local function compile_shader(stage)
-        parallel_task.add(tasks, function ()
-            local ok, res = toolset.compile {
-                platform    = BgfxOS[setting.os] or setting.os,
-                renderer    = setting.renderer,
-                input       = find_stage_file(setting, fx, stage),
-                output      = output / (stage..".bin"),
-                includes    = shader_includes(inputfolder),
-                stage       = assert(STAGES[stage]),
-                varying_path= find_varying_path(setting, fx, stage),
-                macros      = get_macros(setting, mat, stage),
-                debug       = compile_debug_shader(setting.os, setting.renderer),
-                setting     = setting,
-            }
-            if not ok then
-                error("compile failed: " .. output:string() .. "\n" .. res)
-            end
-            depends.append(deps, res)
-        end)
+        local ok, res = toolset.compile {
+            platform    = BgfxOS[setting.os] or setting.os,
+            renderer    = setting.renderer,
+            input       = find_stage_file(setting, fx, stage),
+            output      = output / (stage..".bin"),
+            includes    = shader_includes(inputfolder),
+            stage       = assert(STAGES[stage]),
+            varying_path= find_varying_path(setting, fx, stage),
+            macros      = get_macros(setting, mat, stage),
+            debug       = compile_debug_shader(setting.os, setting.renderer),
+            setting     = setting,
+        }
+        if not ok then
+            error("compile failed: " .. output:string() .. "\n" .. res)
+        end
+        depends.append(deps, res)
     end
 
+    local t = {}
     for stage in pairs(stages) do
-        compile_shader(stage)
+        t[#t+1] = { compile_shader, stage }
     end
-
-    create_shader_cfg(setting, post_tasks, inputfolder, output, mat, stages)
+    if #t == 1 then
+        local stage = t[1][2]
+        compile_shader(stage)
+    else
+        for _, resp in ltask.parallel(t) do
+            if resp.error then
+                resp:rethrow()
+            end
+        end
+    end
+    create_shader_cfg(setting, inputfolder, output, mat, stages)
 end
 
 return compile
