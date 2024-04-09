@@ -6,8 +6,9 @@ local imaterial = ecs.require "ant.render|material"
 local assetmgr  = import_package "ant.asset"
 
 local viewrect2d_sys = ecs.system "viewrect2d_system"
+local ivr2d = {}
 
-local function create_viewrect2d_mesh(vr2d)
+function ivr2d.create_viewrect2d_mesh(vr2d)
     local x0, y0 = vr2d.x, vr2d.y
     local x1, y1 = x0+vr2d.w, y0+vr2d.h
 
@@ -45,7 +46,7 @@ function viewrect2d_sys:component_init()
     end
 
     for e in w:select "INIT viewrect2d:in mesh_result:out" do
-        e.mesh_result = create_viewrect2d_mesh(e.viewrect2d)
+        e.mesh_result = ivr2d.create_viewrect2d_mesh(e.viewrect2d)
     end
 end
 
@@ -55,3 +56,5 @@ function viewrect2d_sys:entity_ready()
         imaterial.set_property(e, "s_basecolor", tex.id)
     end
 end
+
+return ivr2d

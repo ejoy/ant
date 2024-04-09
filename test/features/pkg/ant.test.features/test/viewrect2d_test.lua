@@ -52,6 +52,11 @@ local key_mb = world:sub {"keyboard"}
 function viewrect2d_test_sys:data_changed()
     for _, key, press in key_mb:unpack() do
         if key == "A" and press == 0 then
+            -- update quad width/height
+            id2d.update_pixels(eid, nil, 32, 32
+            )
+        end
+        if key == "C" and press == 0 then
             id2d.update_pixels(eid,
                 {
                     {pos = {x=16, y=16}, value = {255, 0, 0, 255}},
@@ -59,7 +64,9 @@ function viewrect2d_test_sys:data_changed()
                     {pos = {x=1, y=32}, value = {255, 0, 0, 255}},
                     {pos = {x=32, y=1}, value = {255, 0, 0, 255}},
                     {pos = {x=32, y=32}, value = {255, 0, 0, 255}}
-                }
+                },
+                160,
+                160
             )
         end
     end
