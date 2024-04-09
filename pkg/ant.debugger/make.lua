@@ -21,7 +21,6 @@ lm:lua_source "debugger" {
     windows = {
         defines = {
             "_CRT_SECURE_NO_WARNINGS",
-            "_WIN32_WINNT=0x0601",
             "LUA_DLL_VERSION=lu54"
         },
         links = {
