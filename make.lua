@@ -28,7 +28,7 @@ lm:conf {
     msvc = {
         defines = {
             "_CRT_SECURE_NO_WARNINGS",
-            "_WIN32_WINNT=0x0601",
+            "_WIN32_WINNT=0x0602",
         },
         flags = {
             "/utf-8",
