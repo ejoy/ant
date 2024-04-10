@@ -37,9 +37,11 @@ lm:source_set "zlib-ng-x86-simd" {
     },
     sources = {
         ZLIBDIR.."/functable.c",
-        ZLIBDIR.."/cpu_features.c",
     },
-    defines = "X86_FEATURES",
+    defines = {
+        "DISABLE_RUNTIME_CPU_DETECTION",
+        "X86_FEATURES",
+    },
     msvc = {
         sources = {
             ZLIBDIR.."/arch/x86/*.c",
@@ -70,10 +72,12 @@ lm:source_set "zlib-ng-x86" {
     },
     sources = {
         ZLIBDIR.."/functable.c",
-        ZLIBDIR.."/cpu_features.c",
         ZLIBDIR.."/arch/x86/x86_features.c",
     },
-    defines =  "X86_FEATURES",
+    defines = {
+        "DISABLE_RUNTIME_CPU_DETECTION",
+        "X86_FEATURES",
+    },
     gcc = {
         defines = {
             "HAVE_ATTRIBUTE_ALIGNED",
@@ -94,10 +98,10 @@ lm:source_set "zlib-ng-arm" {
     },
     sources = {
         ZLIBDIR.."/functable.c",
-        ZLIBDIR.."/cpu_features.c",
         ZLIBDIR.."/arch/arm/*.c",
     },
     defines = {
+        "DISABLE_RUNTIME_CPU_DETECTION",
         "HAVE_ARM_ACLE_H",
         "ARM_FEATURES",
         "ARM_NEON",
@@ -133,6 +137,9 @@ lm:source_set "zlib-ng" {
         "!"..ZLIBDIR.."/gz*.c",
         "!"..ZLIBDIR.."/functable.c",
         "!"..ZLIBDIR.."/cpu_features.c",
+    },
+    defines = {
+        "DISABLE_RUNTIME_CPU_DETECTION",
     },
     linux = {
         deps = "zlib-ng-x86",
