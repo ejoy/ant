@@ -98,6 +98,7 @@ lm:source_set "zlib-ng-arm" {
         ZLIBDIR.."/arch/arm/*.c",
     },
     defines = {
+        "HAVE_ARM_ACLE_H",
         "ARM_FEATURES",
         "ARM_NEON",
         "ARM_NEON_HASLD4",
