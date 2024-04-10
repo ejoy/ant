@@ -48,13 +48,13 @@ lm:source_set "zlib-ng-x86-simd" {
         },
         defines = {
             "X86_AVX2",
-            "X86_AVX512VNNI",
-            "X86_AVX512",
             "X86_SSE42",
             "X86_SSSE3",
             "X86_SSE2",
             "X86_PCLMULQDQ_CRC",
-            "X86_VPCLMULQDQ_CRC",
+            --"X86_AVX512",
+            --"X86_AVX512VNNI",
+            --"X86_VPCLMULQDQ_CRC",
         }
     },
 }
