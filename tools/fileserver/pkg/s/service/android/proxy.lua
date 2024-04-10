@@ -19,7 +19,7 @@ end
 
 local function connectAndroid()
     while true do
-        local exitcode, msg = ltask.call(ServiceSubprocess, "run", {
+        local exitcode, msg = ltask.call(ServiceSubprocess, "spawn", {
             adb, "forward",  "tcp:"..port, "tcp:2018",
             stdout     = true,
             stderr     = "stdout",

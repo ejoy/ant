@@ -50,7 +50,7 @@ local function update_devices(msg)
 end
 
 local function wait_connect()
-    local exitcode, msg = ltask.call(ServiceSubprocess, "run", {
+    local exitcode, msg = ltask.call(ServiceSubprocess, "spawn", {
         adb, "wait-for-device", "devices",
         stdout     = true,
         stderr     = "stdout",
@@ -64,7 +64,7 @@ local function wait_connect()
 end
 
 local function wait_disconnect()
-    local exitcode, msg = ltask.call(ServiceSubprocess, "run", {
+    local exitcode, msg = ltask.call(ServiceSubprocess, "spawn", {
         adb, "wait-for-disconnect", "devices",
         stdout     = true,
         stderr     = "stdout",
