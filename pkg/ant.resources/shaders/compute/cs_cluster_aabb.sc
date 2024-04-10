@@ -44,10 +44,9 @@ vec3 max_vec(vec3 lhs, vec3 rhs)
     );
 }
 
-// dispatch as: [16, 9, 24]
-NUM_THREADS(1, 1, 1)
+NUM_THREADS(WORKGROUP_NUM_X, WORKGROUP_NUM_Y, WORKGROUP_NUM_Z)
 void main(){
-    uint cluster_idx = dot(gl_WorkGroupID, uvec3(1, u_cluster_size.x, u_cluster_size.x * u_cluster_size.y));
+    const uint cluster_idx = dot(gl_WorkGroupID, uvec3(1, u_cluster_size.x, u_cluster_size.x * u_cluster_size.y));
 
 #if HOMOGENEOUS_DEPTH
     float near_sS = -1.0;

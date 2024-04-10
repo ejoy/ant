@@ -127,7 +127,8 @@ animation:
       enable: true
 graphic:
   lighting:
-    cluster_shading: 1
+    cluster_shading:
+      enable: true
   render:
     clear_color: 0x000000ff
     clear_depth: 1

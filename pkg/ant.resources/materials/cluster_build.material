@@ -4,6 +4,7 @@ fx:
         "CLUSTER_BUILD_AABB=1"
     setting:
         lighting: off
+        workgroup: {1, 1, 1}
 properties:
     b_cluster_AABBs:
         stage: 0

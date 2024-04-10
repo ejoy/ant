@@ -69,7 +69,7 @@ local function Sponza_scene()
                         local point<close> = world:entity(pl.tag['*'][5], "light:in")
                         ilight.set_color(point, math3d.tovalue(color))
 
-                        local radius = math.random(5, 50)
+                        local radius = math.random(5, 10)
                         ilight.set_range(point, radius)
                     end
                 }

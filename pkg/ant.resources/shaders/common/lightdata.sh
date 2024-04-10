@@ -2,8 +2,10 @@
 #define _LIHGT_DATA_SH_
 
 uniform vec4 u_light_count;
-#define u_all_light_count		u_light_count.x
-#define u_culled_light_count	u_light_count.y
+#define u_all_light_count			u_light_count.x
+#define u_culled_light_count		u_light_count.y
+#define u_cluster_max_light_count	u_light_count.z
+
 #define ENABLE_MODULATE_INDIRECT_COLOR
 #ifdef ENABLE_MODULATE_INDIRECT_COLOR
 uniform vec4 u_indirect_modulate_color;

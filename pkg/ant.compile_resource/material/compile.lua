@@ -21,7 +21,7 @@ local IRRADIANCE_SH_BAND_NUM<const> = settings:get "graphic/ibl/irradiance_bandn
 local ENABLE_IBL_LUT<const>         = settings:get "graphic/ibl/enable_lut"
 local USE_CS_SKINNING<const>        = settings:get "graphic/skinning/use_cs"
 
-local ENABLE_CS<const>              = settings:get "graphic/lighting/cluster_shading"
+local ENABLE_CS<const>              = settings:get "graphic/lighting/cluster_shading/enable"
 local ENABLE_BLOOM<const>           = settings:get "graphic/postprocess/bloom/enable"
 local ENABLE_FXAA<const>            = settings:get "graphic/postprocess/fxaa/enable"
 local FXAA_USE_GREEN_AS_LUMA<const> = settings:get "graphic/postprocess/fxaa/use_green_as_luma"
@@ -105,6 +105,7 @@ do
         position_only   = true,
         no_predepth     = true,
         no_skinning     = true,
+        workgroup       = true,
     }
 
     function CHECK_SETTING(mat, macros)

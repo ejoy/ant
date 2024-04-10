@@ -10,7 +10,10 @@ graphic:
   inv_z: true
   inf_f: true
   lighting:
-    cluster_shading: 1
+    cluster_shading:
+      enable: true
+      size: {16, 9, 24}
+      max_light: 128
   postprocess:
     blur:
       enable: true

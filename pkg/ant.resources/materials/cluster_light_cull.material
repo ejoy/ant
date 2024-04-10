@@ -4,24 +4,26 @@ fx:
         "CLUSTER_LIGHT_CULL=1"
     setting:
         lighting: off
+        workgroup: {16, 9, 3}
 properties:
     b_cluster_AABBs:
         access: r
         stage: 0
         buffer: "cluster_AABBs"
-    b_global_index_count:
-        access: rw
-        stage: 1
-        buffer: "global_index_count"
     b_light_grids_write:
         access: w
-        stage: 2
+        stage: 1
         buffer: "light_grids"
     b_light_index_lists_write:
         access: w
-        stage: 3
+        stage: 2
         buffer: "light_index_lists"
     b_light_info_for_cull:
         access: r
-        stage: 4
+        stage: 3
         buffer: "b_light_info_for_cull"
+
+    # b_global_index_count:
+    #     access: rw
+    #     stage: 1
+    #     buffer: "global_index_count"

@@ -778,6 +778,12 @@ local function macros_from_setting(setting, m)
     if setting.uv_motion then
         m[#m+1] = "UV_MOTION=1"
     end
+
+    if setting.workgroup then
+        m[#m+1] = "WORKGROUP_NUM_X=" .. setting.workgroup[1]
+        m[#m+1] = "WORKGROUP_NUM_Y=" .. setting.workgroup[2]
+        m[#m+1] = "WORKGROUP_NUM_Z=" .. setting.workgroup[3]
+    end
 end
 
 local function build_fx_macros(mat, varyings)

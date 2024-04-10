@@ -5,10 +5,6 @@
 #include "common/lightdata.sh"
 #include "common/camera.sh"
 
-#ifndef CLUSTER_MAX_LIGHT_COUNT
-#define CLUSTER_MAX_LIGHT_COUNT 32
-#endif //CLUSTER_MAX_LIGHT_COUNT
-
 struct light_grid{
     uint offset;
     uint count;
@@ -25,10 +21,11 @@ struct AABB {
 BUFFER_RW(b_cluster_AABBs,				vec4,	0);
 #	else// defined CLUSTER_LIGHT_CULL
 BUFFER_RO(b_cluster_AABBs,				vec4,	0);
-BUFFER_RW(b_global_index_count,			uint,	1);
-BUFFER_RW(b_light_grids_write,			uint,	2);
-BUFFER_RW(b_light_index_lists_write,	uint,	3);
-BUFFER_RO(b_light_info_for_cull,		vec4,	4);
+
+BUFFER_RW(b_light_grids_write,			uint,	1);
+BUFFER_RW(b_light_index_lists_write,	uint,	2);
+BUFFER_RO(b_light_info_for_cull,		vec4,	3);
+//BUFFER_RW(b_global_index_count,			uint,	4);
 #	endif //defined(CLUSTER_BUILD_AABB)
 
 #else //!(defined(CLUSTER_BUILD_AABB) || defined(CLUSTER_LIGHT_CULL))

@@ -12,7 +12,8 @@ local iexposure = ecs.require "ant.camera|exposure"
 local imaterial = ecs.require "ant.render|material"
 
 local setting	= import_package "ant.settings"
-local ENABLE_CLUSTER_SHADERING<const> = setting:get "graphic/lighting/cluster_shading"
+local ENABLE_CLUSTER_SHADERING<const> = setting:get "graphic/lighting/cluster_shading/enable"
+local CLUSTER_MAX_LIGHT_COUNT<const> = setting:get "graphic/lighting/cluster_shading/max_light" or 0
 
 local DEFAULT_LIGHT<const> = {
 	directional = {
@@ -284,7 +285,7 @@ local function update_light_buffers()
 	if #lights ~= 0 then
 		bgfx.update(light_buffer, 0, bgfx.memory_buffer(table.concat(lights, "")))
 	end
-	imaterial.system_attrib_update("u_light_count", math3d.vector(#lights, culledlightcount, 0, 0))
+	imaterial.system_attrib_update("u_light_count", math3d.vector(#lights, culledlightcount, CLUSTER_MAX_LIGHT_COUNT, 0))
 end
 
 function ilight.light_buffer()

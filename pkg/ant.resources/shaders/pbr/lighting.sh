@@ -136,8 +136,7 @@ vec3 calc_direct_light(in material_info mi)
     {
         //TODO: other lights not check visibility right now
         light_grid g = get_light_grid(mi);
-        //const uint count = min(CLUSTER_MAX_LIGHT_COUNT, g.count);
-        const uint count = g.count; //see cs_lightcull.sc, limit g.count into CLUSTER_MAX_LIGHT_COUNT
+        const uint count = g.count; //see cs_lightcull.sc, limit g.count into u_cluster_max_light_count
         LOOP
         for (uint ii=g.offset; ii<g.offset + count; ++ii)
         {

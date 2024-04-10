@@ -10,8 +10,6 @@ graphic:
     bilateral_threshold : 0.5     # depth distance that constitute an edge for filtering
     min_horizon_angle   : 0.0     # min angle in radian to consider
   inv_z: true
-  lighting:
-    cluster_shading: true
   postprocess:
     bloom:
       inv_highlight:  0.2

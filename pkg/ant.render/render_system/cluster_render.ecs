@@ -4,6 +4,3 @@
 
 system "cluster_forward_system"
     .implement "render_system/cluster_render.lua"
-
-component "cluster_build_aabb"
-component "cluster_cull_light"
