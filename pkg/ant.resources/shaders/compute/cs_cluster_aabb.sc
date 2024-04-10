@@ -44,9 +44,9 @@ vec3 max_vec(vec3 lhs, vec3 rhs)
     );
 }
 
-NUM_THREADS(WORKGROUP_NUM_X, WORKGROUP_NUM_Y, WORKGROUP_NUM_Z)
+NUM_THREADS(THREAD_NUM_X, THREAD_NUM_Y, THREAD_NUM_Z)
 void main(){
-    const uint cluster_idx = dot(gl_WorkGroupID, uvec3(1, u_cluster_size.x, u_cluster_size.x * u_cluster_size.y));
+    const uint cluster_idx = cluster_index(gl_WorkGroupID, uvec3(THREAD_NUM_X, THREAD_NUM_Y, THREAD_NUM_Z), gl_LocalInvocationIndex);
 
 #if HOMOGENEOUS_DEPTH
     float near_sS = -1.0;

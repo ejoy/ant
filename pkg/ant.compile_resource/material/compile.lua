@@ -105,7 +105,7 @@ do
         position_only   = true,
         no_predepth     = true,
         no_skinning     = true,
-        workgroup       = true,
+        threadsize      = true,
     }
 
     function CHECK_SETTING(mat, macros)

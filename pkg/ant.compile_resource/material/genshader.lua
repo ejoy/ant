@@ -779,10 +779,10 @@ local function macros_from_setting(setting, m)
         m[#m+1] = "UV_MOTION=1"
     end
 
-    if setting.workgroup then
-        m[#m+1] = "WORKGROUP_NUM_X=" .. setting.workgroup[1]
-        m[#m+1] = "WORKGROUP_NUM_Y=" .. setting.workgroup[2]
-        m[#m+1] = "WORKGROUP_NUM_Z=" .. setting.workgroup[3]
+    if setting.threadsize then
+        m[#m+1] = "THREAD_NUM_X=" .. setting.threadsize[1]
+        m[#m+1] = "THREAD_NUM_Y=" .. setting.threadsize[2]
+        m[#m+1] = "THREAD_NUM_Z=" .. setting.threadsize[3]
     end
 end
 

@@ -4,7 +4,7 @@ fx:
         "CLUSTER_LIGHT_CULL=1"
     setting:
         lighting: off
-        workgroup: {16, 9, 3}
+        threadsize: {16, 9, 3}
 properties:
     b_cluster_AABBs:
         access: r

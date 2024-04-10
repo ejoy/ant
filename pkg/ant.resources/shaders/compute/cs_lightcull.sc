@@ -24,17 +24,13 @@ uint light_offset_idx()
 //it's a array<uint, num_clusters*u_cluster_max_light_count> buffer, so each cluster will occpy u_cluster_max_light_count uint buffer
 //I did not found any dynamic method to keep this buffer more compat
 
-NUM_THREADS(WORKGROUP_NUM_X, WORKGROUP_NUM_Y, WORKGROUP_NUM_Z)
+NUM_THREADS(THREAD_NUM_X, THREAD_NUM_Y, THREAD_NUM_Z)
 void main(){
     if (u_culled_light_count == 0)
         return ;
 
-    //const uint cluster_idx = dot(gl_WorkGroupID, uvec3(1, u_cluster_size.x, u_cluster_size.x * u_cluster_size.y));
-    const uint cluster_idx = gl_LocalInvocationIndex + WORKGROUP_NUM_X * WORKGROUP_NUM_Y * WORKGROUP_NUM_Z * gl_WorkGroupID.z;
+    const uint cluster_idx = cluster_index(gl_WorkGroupID, uvec3(THREAD_NUM_X, THREAD_NUM_Y, THREAD_NUM_Z), gl_LocalInvocationIndex);
 
-    const uint idx = dot(uvec3_splat(1), gl_WorkGroupID);
-    if (gl_LocalInvocationIndex == idx)
-        return ;
     AABB aabb; load_cluster_aabb(b_cluster_AABBs, cluster_idx, aabb);
 
     uint visible_light_count = 0;

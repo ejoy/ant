@@ -137,11 +137,11 @@ local function create_compute_entity(material)
                 assetmgr.material_mark(e.dispatch.fx.prog)
 
                 local m = assetmgr.resource(e.material)
-                local wg = assert(m.fx.setting.workgroup, "must define workgroup for compute shader")
+                local ts = assert(m.fx.setting.threadsize, "must define threadsize for compute shader")
                 local s = e.dispatch.size
 
                 for i=1, 3 do
-                    s[i] = CLUSTER_SIZE[i] // wg[i]
+                    s[i] = CLUSTER_SIZE[i] // ts[i]
                     assert(s[i] > 0)
                 end
             end
