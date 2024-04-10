@@ -76,7 +76,6 @@ lm:source_set "zlib-ng-x86" {
     defines =  "X86_FEATURES",
     gcc = {
         defines = {
-            "HAVE_THREAD_LOCAL",
             "HAVE_ATTRIBUTE_ALIGNED",
         },
     },
@@ -110,14 +109,12 @@ lm:source_set "zlib-ng-arm" {
     },
     gcc = {
         defines = {
-            "HAVE_THREAD_LOCAL",
             "HAVE_ATTRIBUTE_ALIGNED",
             "HAVE_BUILTIN_CTZLL",
         },
     },
     clang = {
         defines = {
-            "HAVE_THREAD_LOCAL",
             "HAVE_ATTRIBUTE_ALIGNED",
             "HAVE_BUILTIN_CTZLL",
         },
@@ -165,7 +162,6 @@ lm:source_set "zlib-ng" {
     },
     gcc = {
         defines = {
-            "HAVE_THREAD_LOCAL",
             "HAVE_ATTRIBUTE_ALIGNED",
             "HAVE_BUILTIN_CTZ",
             "HAVE_BUILTIN_CTZLL",
@@ -173,7 +169,6 @@ lm:source_set "zlib-ng" {
     },
     clang = {
         defines = {
-            "HAVE_THREAD_LOCAL",
             "HAVE_ATTRIBUTE_ALIGNED",
             "HAVE_BUILTIN_CTZ",
             "HAVE_BUILTIN_CTZLL",
