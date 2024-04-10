@@ -134,6 +134,7 @@ lm:source_set "zlib-ng" {
     },
     sources = {
         ZLIBDIR.."/*.c",
+        ZLIBDIR.."/arch/generic/*.c",
         "!"..ZLIBDIR.."/gz*.c",
         "!"..ZLIBDIR.."/functable.c",
         "!"..ZLIBDIR.."/cpu_features.c",
