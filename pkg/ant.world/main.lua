@@ -369,13 +369,14 @@ end
 
 local function cpustat_update(w, funcs, symbols)
     local ecs_world = w._ecs_world
+    local monotonic = btime.monotonic
     return function()
         local stat = w._cpu_stat
         for i = 1, #funcs do
-            local f = funcs[i]
-            local now = btime.monotonic()
-            f(ecs_world)
-            local time = btime.monotonic() - now
+            local func = funcs[i]
+            local now = monotonic()
+            func(ecs_world)
+            local time = monotonic() - now
             local name = symbols[i]
             if stat[name] then
                 stat[name] = stat[name] + time
