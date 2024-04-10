@@ -26,7 +26,6 @@ local utils         = require "common.utils"
 local math3d 		= require "math3d"
 local fs            = require "filesystem"
 local lfs           = require "bee.filesystem"
-local fastio        = require "fastio"
 local global_data   = require "common.global_data"
 local editor_setting = require "editor_setting"
 local ientity       = ecs.require "ant.entity|entity"
@@ -561,7 +560,7 @@ local function cook_prefab(prefab_filename)
     local current_compile_path = fs.path(pl[1]):localpath():string()
     -- utils.mount_memfs(pl[1])
     prefab_filename = prefab_filename:gsub("|", "/")
-    local prefab_template = serialize.load(prefab_filename))
+    local prefab_template = serialize.load(prefab_filename)
     for _, tpl in ipairs(prefab_template) do
         if tpl.prefab then
             cook_prefab(tpl.prefab)
@@ -1413,10 +1412,6 @@ function m:on_patch_tag(eid, ov, nv, origin_tag, update_tag)
     end
 end
 
-function m:on_patch_tranform(eid, n, v)
-    self:do_patch(eid, "/data/scene/"..n, v)
-end
-
 function m:on_patch_animation(eid, name, path)
     local anim_file_exists
     local remove_index
@@ -1460,19 +1455,41 @@ function m:can_create_empty()
     return self.glb_filename and self.prefab_name == "mesh.prefab"
 end
 
-local event_patch       = world:sub {"PatchEvent"}
+local function focus_aabb(ce, aabb)
+    local aabb_min, aabb_max= math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
+    local center = math3d.mul(0.5, math3d.add(aabb_min, aabb_max))
+    local dist = -2.0 * math3d.length(math3d.sub(aabb_max, center))
+	local viewdir = iom.get_direction(ce)
+    iom.lookto(ce, math3d.muladd(dist, viewdir, center), viewdir)
+end
+
+local event_patch       = world:sub {"Patch"}
 local event_showground  = world:sub {"ShowGround"}
 local event_showterrain = world:sub {"ShowTerrain"}
 local event_savehitch   = world:sub {"SaveHitch"}
 local event_create      = world:sub {"Create"}
 local event_light       = world:sub {"UpdateDefaultLight"}
 local event_open_file   = world:sub {"OpenFile"}
+local event_save_file   = world:sub {"SaveFile"}
+local event_reload_file = world:sub {"ReloadFile"}
 local event_add_prefab  = world:sub {"AddPrefabOrEffect"}
 local event_hierarchy   = world:sub {"HierarchyEvent"}
+local event_reset_prefab= world:sub {"ResetPrefab"}
+local event_look_at_target 	= world:sub {"LookAtTarget"}
+
 function m:handle_event()
-    for _, eid, path, value in event_patch:unpack() do
-        self:do_patch(eid, path, value)
+    for _, type, eid, path, value in event_patch:unpack() do
+        if type == "Material" then
+            self:do_material_patch(eid, path, value)
+        else
+            self:do_patch(eid, path, value)
+        end
     end
+
+    for _, _ in event_reset_prefab:unpack() do
+        self:reset_prefab()
+    end
+
     for _, enable in event_showground:unpack() do
         self:show_ground(enable)
     end
@@ -1487,6 +1504,13 @@ function m:handle_event()
     end
     for _, enable in event_light:unpack() do
         self:update_default_light(enable)
+    end
+    for _ in event_save_file:unpack() do
+        self:save()
+    end
+    for _ in event_reload_file:unpack() do
+        self:save()
+        self:reload()
     end
     for _, filename, isprefab in event_open_file:unpack() do
         if isprefab then
@@ -1513,6 +1537,23 @@ function m:handle_event()
             self:clone(target)
         end
     end
+
+	for _, tid, anim in event_look_at_target:unpack() do
+		local target = tid or gizmo.target_eid
+		if target then
+			local aabb = self:get_world_aabb(target)
+			if aabb then
+				if anim then
+					local aabb_min, aabb_max= math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
+					local center = math3d.tovalue(math3d.mul(0.5, math3d.add(aabb_min, aabb_max)))
+					world:pub {"SmoothLookAt", { center[1], center[2], center[3] }, 2.0 * math3d.length(math3d.sub(aabb_max, center))}
+				else
+					local ce <close> = world:entity(irq.main_camera())
+					focus_aabb(ce, aabb)
+				end
+			end
+		end
+	end
 end
 
 return m

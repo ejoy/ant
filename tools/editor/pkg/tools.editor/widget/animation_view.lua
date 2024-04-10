@@ -839,8 +839,7 @@ function m.show()
     end
     ImGui.End()
     if reload then
-        prefab_mgr:save()
-        prefab_mgr:reload()
+        world:pub {"ReloadFile"}
     end
 end
 

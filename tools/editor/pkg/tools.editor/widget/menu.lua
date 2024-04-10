@@ -1,6 +1,5 @@
 local ecs = ...
 local world = ecs.world
-local prefab_mgr        = ecs.require "prefab_manager"
 local projsetting_view  = require "widget.project_setting_view"
 local camerasetting_view= ecs.require "widget.camera_setting_view"
 local rhwi              = import_package "ant.hwi"
@@ -11,7 +10,7 @@ local lfs               = require "bee.filesystem"
 local global_data       = require "common.global_data"
 local fs                = require "filesystem"
 local uiutils           = require "widget.utils"
-local faicons            = require "common.fa_icons"
+local faicons           = require "common.fa_icons"
 
 local m = {}
 local function show_select_light_dialog()
@@ -53,7 +52,7 @@ function m.show()
     if ImGui.BeginMainMenuBar() then
         if ImGui.BeginMenu "File" then
             if ImGui.MenuItemEx(faicons.ICON_FA_FILE_PEN.." New", "Ctrl+N") then
-                prefab_mgr:reset_prefab()
+                world:pub {"ResetPrefab"}
             end
             if ImGui.MenuItemEx(faicons.ICON_FA_FOLDER_OPEN.." Open", "Ctrl+O") then
                 world:pub{"OpenProject"}
@@ -72,7 +71,7 @@ function m.show()
             end
             ImGui.Separator()
             if ImGui.MenuItemEx(faicons.ICON_FA_FLOPPY_DISK.." Save", "Ctrl+S") then
-                prefab_mgr:save()
+                world:pub {"SaveFile"}
             end
             
             -- if ImGui.MenuItem(faicons.ICON_FA_DOWNLOAD.." Save As..") then
@@ -92,12 +91,10 @@ function m.show()
             end
             ImGui.Separator()
             if ImGui.MenuItem(faicons.ICON_FA_FLOPPY_DISK.. " SaveUILayout") then
-                -- prefab_mgr:save_ui_layout()
                 world:pub{"UILayout", "save"}
             end
             ImGui.Separator()
             if ImGui.MenuItem(faicons.ICON_FA_ARROWS_ROTATE.. " ResetUILayout") then
-                -- prefab_mgr:reset_ui_layout()
                 world:pub{"UILayout", "reset"}
             end
             show_select_light_dialog()
@@ -111,7 +108,7 @@ function m.show()
         if ImGui.BeginMenu "Action" then
             if ImGui.BeginMenu "Lightmap..." then
                 if ImGui.MenuItem "Bake" then
-                    world:pub {"BakeLightmap", tostring(prefab_mgr.prefab)}
+                    -- world:pub {"BakeLightmap", tostring(prefab_mgr.prefab)}
                 end
                 ImGui.EndMenu()
             end

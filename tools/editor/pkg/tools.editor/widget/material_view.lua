@@ -479,7 +479,7 @@ local function build_properties_ui(mv)
                         set_factor("basecolor", value)
                         local e <close> = world:entity(mv.eid)
                         imaterial.set_property(e, "u_basecolor_factor", math3d.vector(value))
-                        prefab_mgr:do_material_patch(mv.eid, "/properties/u_basecolor_factor", value)
+                        world:pub {"Patch", "Material",mv.eid, "/properties/u_basecolor_factor", value}
                     end
                 })
             )
@@ -498,7 +498,7 @@ local function build_properties_ui(mv)
                             pbrfactor[1] = value
                             local e <close> = world:entity(mv.eid)
                             imaterial.set_property(e, "u_pbr_factor", math3d.vector(pbrfactor))
-                            prefab_mgr:do_material_patch(mv.eid, "/properties/u_pbr_factor", pbrfactor)
+                            world:pub {"Patch", "Material",mv.eid, "/properties/u_pbr_factor", pbrfactor}
                         end
                     }),
                     uiproperty.Float({label="roughness", min=0.0, max=1.0, speed=0.01}, {
@@ -511,7 +511,7 @@ local function build_properties_ui(mv)
                             pbrfactor[2] = value
                             local e <close> = world:entity(mv.eid)
                             imaterial.set_property(e, "u_pbr_factor", math3d.vector(pbrfactor))
-                            prefab_mgr:do_material_patch(mv.eid, "/properties/u_pbr_factor", pbrfactor)
+                            world:pub {"Patch", "Material",mv.eid, "/properties/u_pbr_factor", pbrfactor}
                         end,
                     })
                 })
@@ -534,7 +534,7 @@ local function build_properties_ui(mv)
                     set_factor("emissive", value)
                     local e <close> = world:entity(mv.eid)
                     imaterial.set_property(e, "u_emissive_factor", math3d.vector(value))
-                    prefab_mgr:do_material_patch(mv.eid, "/properties/u_emissive_factor", value)
+                    world:pub {"Patch", "Material",mv.eid, "/properties/u_emissive_factor", value}
                 end
             })
         ))
@@ -688,7 +688,7 @@ local function create_simple_state_ui(t, l, en, mv, def_value)
             s[en] = value
             mv.need_reload = true
             if en == "CULL" then
-                prefab_mgr:do_material_patch(mv.eid, "/state/CULL", value)
+                world:pub {"Patch", "Material",mv.eid, "/state/CULL", value}
             end
         end,
     })
@@ -914,8 +914,7 @@ end
 local function reload(e, mpath)
     local prefab = hierarchy:get_node_info(e)
     prefab.template.data.material = mpath:string()
-    prefab_mgr:save()
-    prefab_mgr:reload()
+    world:pub {"ReloadFile"}
 end
 
 local function check_disable_file_fetch_ui(matfile_ui)

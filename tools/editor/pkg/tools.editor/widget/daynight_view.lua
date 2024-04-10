@@ -41,17 +41,11 @@ local function save_prefab(eid, path)
     f:write(serialize.stringify(t))
 end
 
-local function reload()
-    prefab_mgr:save()
-    --prefab_mgr:reload()
-end
-
-
 function DaynightView:on_save()
     local filepath = fs.path(self.prefab)
     check_relative_path(filepath, prefab_mgr:get_current_filename())
     save_prefab(self.eid, filepath)
-    reload()
+    world:pub {"SaveFile"}
 end
 
 function DaynightView:_init()

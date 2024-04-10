@@ -24,8 +24,6 @@ local function set_ibl_value(eid, key, value)
     ibl[key].size = sz
     local e <close> = world:entity(eid, "ibl:in")
     e.ibl[key].size = sz
-    -- prefab_mgr:save_prefab()
-    -- prefab_mgr:reload()
 end
 local SkyboxView = {}
 function SkyboxView:_init()
@@ -43,8 +41,6 @@ function SkyboxView:_init()
                 template_data(self.eid, "skybox").facesize = value
                 local e <close> = world:entity(self.eid)
                 e.skybox.facesize = value
-                -- prefab_mgr:save_prefab()
-                -- prefab_mgr:reload()
             end
         })
     })
@@ -60,8 +56,6 @@ function SkyboxView:_init()
                 local e <close> = world:entity(self.eid, "ibl:in")
                 e.ibl.intensity = value
                 iibl.set_ibl_intensity(value)
-                -- prefab_mgr:save_prefab()
-                -- prefab_mgr:reload()
             end,
         }),
         uiproperty.Combo({label = "Irradiance", options = size_str},{

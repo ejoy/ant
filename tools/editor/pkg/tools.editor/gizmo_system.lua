@@ -11,7 +11,6 @@ local ilight 	= ecs.require "ant.render|light.light"
 local irq		= ecs.require "ant.render|renderqueue"
 local imaterial = ecs.require "ant.render|material"
 local imodifier = ecs.require "ant.modifier|modifier"
-local prefab_mgr= ecs.require "prefab_manager"
 local iviewport = ecs.require "ant.render|viewport.state"
 local irender	= ecs.require "ant.render|render"
 
@@ -21,6 +20,7 @@ local camera_mgr= ecs.require "camera.camera_manager"
 local gizmo 	= ecs.require "gizmo.gizmo"
 local light_gizmo = ecs.require "gizmo.light"
 local navigizmo = ecs.require "gizmo.navi_gizmo"
+local rectselect = ecs.require "gizmo.rect_select"
 local hierarchy = ecs.require "hierarchy_edit"
 local gizmo_const= require "gizmo.const"
 
@@ -100,7 +100,7 @@ function gizmo:set_scale(inscale)
 	iom.set_scale(e, inscale)
 	local info = hierarchy:get_node_info(self.target_eid)
 	info.template.data.scene.s = inscale
-	prefab_mgr:on_patch_tranform(self.target_eid, "s", inscale)
+	world:pub{"Patch", "", self.target_eid, "/data/scene/s", inscale}
 	world:pub {"UpdateAABB", self.target_eid}
 end
 
@@ -129,7 +129,7 @@ function gizmo:set_position(worldpos, gizmoonly)
 			local tp = (type(localpos) == "table") and localpos or math3d.tovalue(localpos)
 			local t = {tp[1], tp[2], tp[3]}
 			info.template.data.scene.t = t
-			prefab_mgr:on_patch_tranform(self.target_eid, "t", t)
+			world:pub{"Patch", "", self.target_eid, "/data/scene/t", t}
 		end
 	else
 		local wm = iom.worldmat(target)
@@ -159,7 +159,7 @@ function gizmo:set_rotation(inrot, gizmoonly)
 			local tv = math3d.tovalue(inrot)
 			local r = {tv[1], tv[2], tv[3], tv[4]}
 			info.template.data.scene.r = r
-			prefab_mgr:on_patch_tranform(self.target_eid, "r", r)
+			world:pub{"Patch", "", self.target_eid, "/data/scene/r", r}
 		end
 	else
 		newrot = iom.get_rotation(target)
@@ -460,6 +460,7 @@ local event_main_camera_changed = world:sub{"main_queue", "camera_changed"}
 
 function gizmo_sys:init_world()
 	navigizmo:create_navi_axis()
+	rectselect:init()
 end
 function gizmo_sys:entity_ready()
 	for _ in event_main_camera_changed:each() do
@@ -750,7 +751,7 @@ local function move_light_gizmo(x, y)
 		local value = 2.0 * math.atan(math3d.length(math3d.sub(curpos, circle_centre)), ilight.range(le))
 		ilight.set_outter_radian(le, value)
 		info.template.data.light.outter_radian = value
-		world:pub { "PatchEvent", light_gizmo.current_light, "/data/light/outter_radian", value }
+		world:pub { "Patch", "", light_gizmo.current_light, "/data/light/outter_radian", value }
 	elseif light_gizmo_mode == 5 then
 		local move_dir = math3d.sub(circle_centre, lightPos)
 		local ce <close> = world:entity(irq.main_camera(), "camera:in")
@@ -762,13 +763,13 @@ local function move_light_gizmo(x, y)
 		local value = last_spot_range + offset
 		ilight.set_range(le, value)
 		info.template.data.light.range = value
-		world:pub { "PatchEvent", light_gizmo.current_light, "/data/light/range", value }
+		world:pub { "Patch", "", light_gizmo.current_light, "/data/light/range", value }
 	else
 		local curpos = mouse_hit_plane({x, y}, {dir = gizmo_dir_to_world(click_dir_point_light), pos = math3d.totable(lightPos)})
 		local value = math3d.length(math3d.sub(curpos, lightPos))
 		ilight.set_range(le, value)
     	info.template.data.light.range = value
-		world:pub { "PatchEvent", light_gizmo.current_light, "/data/light/range", value }
+		world:pub { "Patch", "", light_gizmo.current_light, "/data/light/range", value }
 	end
 	light_gizmo.update_gizmo()
 	light_gizmo.highlight(true)
@@ -1065,14 +1066,6 @@ local function on_mouse_move()
 	end
 end
 
-local function focus_aabb(ce, aabb)
-    local aabb_min, aabb_max= math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
-    local center = math3d.mul(0.5, math3d.add(aabb_min, aabb_max))
-    local dist = -2.0 * math3d.length(math3d.sub(aabb_max, center))
-	local viewdir = iom.get_direction(ce)
-    iom.lookto(ce, math3d.muladd(dist, viewdir, center), viewdir)
-end
-
 function gizmo_sys:render_submit()
 	navigizmo:draw()
 end
@@ -1086,115 +1079,6 @@ local event_mouse_down	= world:sub {"mousedown"}
 local event_mouse_up	= world:sub {"mouseup"}
 local event_keypress	= world:sub {"keyboard"}
 local vr_mb 			= world:sub {"view_rect_changed", "main_queue"}
-
-local rect_select_bg_eid
-local rect_select_fg_eid
-local rect_select_active = false
-local rect_select_start_x = -1
-local rect_select_start_y = -1
-local rect_select_end_x = -1
-local rect_select_end_y = -1
-local frame_size = 2
-local to_remove_rect_select = {}
-local do_remove = false
-local function remove_rect_select()
-	-- if rect_select_bg_eid then
-	-- 	w:remove(rect_select_bg_eid)
-	-- 	rect_select_bg_eid = nil
-	-- end
-	-- if rect_select_fg_eid then
-	-- 	w:remove(rect_select_fg_eid)
-	-- 	rect_select_fg_eid = nil
-	-- end
-	if not rect_select_bg_eid then
-		return
-	end
-	to_remove_rect_select[#to_remove_rect_select+1] = rect_select_bg_eid
-	to_remove_rect_select[#to_remove_rect_select+1] = rect_select_fg_eid
-	-- local e <close> = world:entity(rect_select_bg_eid)
-	-- irender.set_visible(e, false)
-	-- local e2 <close> = world:entity(rect_select_fg_eid)
-	-- irender.set_visible(e2, false)
-	rect_select_bg_eid = nil
-	rect_select_fg_eid = nil
-end
-local function draw_rect()
-	remove_rect_select()
-	local width = math.abs(rect_select_end_x - rect_select_start_x)
-	local height = math.abs(rect_select_end_y - rect_select_start_y)
-	if width < 1 or height < 1 then
-		return
-	end
-	local pos_x = rect_select_start_x < rect_select_end_x and rect_select_start_x or rect_select_end_x
-	local pos_y = rect_select_start_y < rect_select_end_y and rect_select_start_y or rect_select_end_y
-	rect_select_bg_eid = world:create_entity {
-        policy = {
-            "ant.render|dynamic2d",
-        },
-        data = {
-            scene = {t={pos_x, pos_y, 0}},
-            material = "/pkg/ant.resources/materials/default2d_blend.material",
-            dynamicquad = {
-                texture = "/pkg/tools.editor/resource/textures/rect_select_bg.texture",
-                width = width,
-                height = height,
-                clear = {150, 180, 210, 125}
-            },
-			visible_masks   = "",
-            visible     = true
-        }
-    }
-	
-	local double_frame_size = 2 * frame_size
-	if (width - double_frame_size) < 1 or (height - double_frame_size) < 1 then
-		return
-	end
-	rect_select_fg_eid = world:create_entity {
-        policy = {
-            "ant.render|dynamic2d",
-        },
-        data = {
-            scene = {t={pos_x + frame_size, pos_y + frame_size, 0}},
-            material = "/pkg/ant.resources/materials/default2d_blend.material",
-            dynamicquad = {
-                texture = "/pkg/tools.editor/resource/textures/rect_select_fg.texture",
-                width = width - double_frame_size,
-                height = height - double_frame_size,
-                clear = {100, 100, 100, 125}
-            },
-			visible_masks   = "",
-            visible     = true
-        }
-    }
-end
-
-local function active_rect_select(active)
-	do
-		return
-	end
-	if rect_select_active ~= active then
-		rect_select_active = active
-		remove_rect_select()
-		if not active then
-			do_remove = true
-		end
-	end
-
-end
-
-local function on_rect_select(x, y)
-	do
-		return
-	end
-	if not rect_select_active then
-		active_rect_select(true)
-		rect_select_start_x = x
-		rect_select_start_y = y
-	end
-	rect_select_end_x = x
-	rect_select_end_y = y
-	draw_rect()
-end
 
 function gizmo_sys:handle_input()
 	for _, _, _ in vr_mb:unpack() do
@@ -1214,8 +1098,8 @@ function gizmo_sys:handle_input()
 
 	for _, what, x, y in event_mouse_up:unpack() do
 		x, y = cvt2scenept(x, y)
+		rectselect:active_rect_select(false)
 		if what == "LEFT" then
-			active_rect_select(false)
 			gizmo:reset_move_axis_color()
 			if gizmo.mode == gizmo_const.ROTATE then
 				if local_space then
@@ -1272,7 +1156,7 @@ function gizmo_sys:handle_input()
 			elseif gizmo.mode == gizmo_const.ROTATE and rotate_axis then
 				rotate_gizmo(x, y)
 			else
-				on_rect_select(x, y)
+				rectselect:on_rect_select(x, y)
 			end
 		end
 	end
@@ -1289,7 +1173,6 @@ end
 
 local event_camera 			= world:sub {"camera"}
 local event_gizmo_mode 		= world:sub {"GizmoMode"}
-local event_look_at_target 	= world:sub {"LookAtTarget"}
 function gizmo_sys:handle_event()
 	for _ in event_camera:unpack() do
 		gizmo:update_scale()
@@ -1333,30 +1216,7 @@ function gizmo_sys:handle_event()
 			end
 		end
 	end
-	for _, tid, anim in event_look_at_target:unpack() do
-		local target = tid or gizmo.target_eid
-		if target then
-			local aabb = prefab_mgr:get_world_aabb(target)
-			if aabb then
-				if anim then
-					local aabb_min, aabb_max= math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
-					local center = math3d.tovalue(math3d.mul(0.5, math3d.add(aabb_min, aabb_max)))
-					world:pub {"SmoothLookAt", { center[1], center[2], center[3] }, 2.0 * math3d.length(math3d.sub(aabb_max, center))}
-				else
-					local ce <close> = world:entity(irq.main_camera())
-					focus_aabb(ce, aabb)
-				end
-			end
-		end
-	end
 end
 
 function gizmo_sys:data_changed()
-	if #to_remove_rect_select == 0 then
-		return
-	end
-	for _, eid in ipairs(to_remove_rect_select) do
-		w:remove(eid)
-	end
-	to_remove_rect_select = {}
 end

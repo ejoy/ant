@@ -95,7 +95,7 @@ function EffectView:on_set_speed(value)
     info.template.data.efk.speed = value
     local e <close> = world:entity(self.eid, "efk:in")
     iefk.set_speed(e, value)
-    world:pub { "PatchEvent", self.eid, "/data/efk/speed", value }
+    world:pub { "Patch", "", self.eid, "/data/efk/speed", value }
 end
 
 function EffectView:on_get_fadeout()
@@ -117,7 +117,7 @@ function EffectView:on_set_auto_play(value)
     local info = hierarchy:get_node_info(self.eid)
     local visible = not (not value)    --yeah not not here
     info.template.data.visible = visible
-    world:pub { "PatchEvent", self.eid, "/data/visible", visible}
+    world:pub { "Patch", "", self.eid, "/data/visible", visible}
 end
 
 return function ()
