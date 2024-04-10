@@ -89,6 +89,7 @@ end
 
 ltask.fork(function()
     while true do
+        ltask.sleep(0)
         update()
     end
 end)
