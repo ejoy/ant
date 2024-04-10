@@ -103,11 +103,6 @@ lm:source_set "zlib-ng-arm" {
         "ARM_NEON",
         "ARM_NEON_HASLD4",
     },
-    macos = {
-        defines = {
-            "ARM_ACLE",
-        },
-    },
     gcc = {
         defines = {
             "HAVE_ATTRIBUTE_ALIGNED",
