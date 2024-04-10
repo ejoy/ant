@@ -56,7 +56,7 @@ local function stringify_basetype(v)
         if tonumber(v) then
             return datalist.quote(v)
         end
-        if v:match "[\0-\31\x80-\xFF#:=$-,%s\"\\{}%[%]]" then
+        if v:match "[\0-\31\x80-\xFF#:$-,%s\"\\{}%[%]]" then
             return datalist.quote(v)
         end
         return v

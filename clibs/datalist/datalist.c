@@ -113,7 +113,7 @@ is_hexnumber(struct lex_state *LS) {
 
 static void
 parse_atom(struct lex_state *LS) {
-	static const char * separator = " \t\r\n,{}[]$:=\"'";
+	static const char * separator = " \t\r\n,{}[]$:\"'";
 	const char * ptr = LS->source + LS->position;
 	const char * endptr = LS->source + LS->sz;
 	char head = *ptr;
@@ -234,7 +234,6 @@ next_token(struct lex_state *LS) {
 			}
 			return 1;
 		case ':':
-		case '=':
 			LS->n.type = TOKEN_MAP;
 			LS->n.from = LS->position;
 			LS->n.to = ++LS->position;
