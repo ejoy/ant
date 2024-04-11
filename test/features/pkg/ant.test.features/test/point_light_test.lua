@@ -81,20 +81,25 @@ end
 
 local function simple_scene()
     local pl_pos = {
-        {  1, 1, 1},
-        { -1, 1,-1},
-        {  1, 2, 1},
-        { -1, 2,-1},
+        { pos = {  1, 1, 1,}, radius = 15, intensity_scale = 1},
+        { pos = { -1, 1,-1,}, radius = 15, intensity_scale = 1},
+        { pos = {  1, 2, 1,}, radius = 15, intensity_scale = 1},
+        { pos = { -1, 2,-1,}, radius = 15, intensity_scale = 1},
 
-        {  2, 1, 2},
-        { -2, 1, 2},
-        {  2, 2,-2},
-        {  2, 2,-2},
+        { pos = {  2, 1, 2}, radius = 15, intensity_scale = 2},
+        { pos = { -2, 1, 2}, radius = 15, intensity_scale = 2},
+        { pos = {  2, 2,-2}, radius = 15, intensity_scale = 2},
+        { pos = {  2, 2,-2}, radius = 15, intensity_scale = 2},
 
-        {  3, 1, 3},
-        { -3, 1, 3},
-        {  3, 2,-3},
-        {  3, 2,-3},
+        { pos = { -3, 3, 3,}, radius = 15, intensity_scale = 5},
+        { pos = {  3, 3, 3,}, radius = 15, intensity_scale = 5},
+        { pos = { -3, 4,-3,}, radius = 15, intensity_scale = 5},
+        { pos = {  3, 4,-3,}, radius = 15, intensity_scale = 5},
+
+        { pos = {  4, 5, 4,}, radius = 15, intensity_scale = 3},
+        { pos = { -4, 6,-4,}, radius = 15, intensity_scale = 3},
+        { pos = {  4, 6, 4,}, radius = 15, intensity_scale = 3},
+        { pos = { -4, 6,-4,}, radius = 15, intensity_scale = 3},
     }
 
     for _, p in ipairs(pl_pos) do
@@ -102,10 +107,13 @@ local function simple_scene()
             prefab = "/pkg/ant.test.features/assets/entities/sphere_with_point_light.prefab",
             on_ready = function(pl)
                 local root<close> = world:entity(pl.tag['*'][1], "scene:update")
-                iom.set_position(root, p)
+                iom.set_position(root, p.pos)
 
                 local sphere<close> = world:entity(pl.tag['*'][4])
                 imaterial.set_property(sphere, "u_basecolor_factor", math3d.vector(1.0, 0.0, 0.0, 1.0))
+                local point<close> = world:entity(pl.tag['*'][5], "light:in")
+                ilight.set_range(point, p.radius)
+                ilight.set_intensity(point, ilight.intensity(point) * p.intensity_scale)
             end
         }
     end
@@ -134,8 +142,8 @@ local function simple_scene()
 end
 
 function plt_sys.init_world()
-    Sponza_scene()
-    --simple_scene()
+    --Sponza_scene()
+    simple_scene()
 end
 
 function plt_sys:exit()
