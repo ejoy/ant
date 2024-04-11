@@ -5,23 +5,12 @@
 #include <memory>
 #include "memfile.h"
 
-static std::wstring u2w(const std::string_view& str) {
-    if (str.empty()) {
-        return L"";
-    }
-    int wlen = ::MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), NULL, 0);
-    if (wlen <= 0)  {
-        return L"";
-    }
-    std::unique_ptr<wchar_t[]> result(new wchar_t[wlen]);
-    ::MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), result.get(), wlen);
-    return std::wstring(result.release(), wlen);
-}
+#include <bee/platform/win/wtf8.h>
 
 static std::wstring towstring(lua_State* L, int idx) {
     size_t len = 0;
     const char* str = luaL_checklstring(L, idx, &len);
-    return u2w(std::string_view(str, len));
+    return bee::wtf8::u2w(bee::zstring_view(str, len));
 }
 
 static int systemfont(lua_State* L) {

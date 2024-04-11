@@ -3,13 +3,29 @@
 #if defined (_WIN32)
 
 #include <Windows.h>
+#include <bee/platform/win/cwtf8.h>
 
-static unsigned long utf8_GetModuleFileNameA(void* module, char* filename, unsigned long size) {
+static unsigned long __stdcall utf8_GetModuleFileNameA(HMODULE module, char* filename, unsigned long size) {
     wchar_t* tmp = (wchar_t*)calloc(size, sizeof(wchar_t));
-    unsigned long tmplen = GetModuleFileNameW((HMODULE)module, tmp, size);
-    unsigned long ret = WideCharToMultiByte(CP_UTF8, 0, tmp, tmplen + 1, filename, size, NULL, NULL);
+    if (!tmp) {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
+    DWORD tmplen = GetModuleFileNameW(module, tmp, size);
+    if (tmplen == 0) {
+        free(tmp);
+        return 0;
+    }
+    size_t len = wtf8_from_utf16_length(tmp, tmplen);
+    if (len > size) {
+        free(tmp);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
+    wtf8_from_utf16(tmp, tmplen, filename, len);
     free(tmp);
-    return ret - 1;
+    filename[len] = '\0';
+    return (unsigned long)len;
 }
 
 void pushprogdir(lua_State *L) {

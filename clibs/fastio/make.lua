@@ -6,6 +6,7 @@ lm:lua_source "fastio_runtime" {
     },
     includes = {
         lm.AntDir .. "/clibs/foundation",
+        lm.AntDir .. "/3rd/bee.lua",
     },
     sources = {
         "fastio.cpp",
@@ -16,6 +17,7 @@ lm:lua_source "fastio_runtime" {
 lm:lua_source "fastio_editor" {
     includes = {
         lm.AntDir .. "/clibs/foundation",
+        lm.AntDir .. "/3rd/bee.lua",
     },
     sources = {
         "fastio.cpp",

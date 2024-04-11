@@ -249,6 +249,7 @@ lm:lua_source "zip-binding" {
     },
     includes = {
         lm.AntDir .. "/3rd/minizip-ng",
+        lm.AntDir .. "/3rd/bee.lua",
         lm.AntDir .. "/clibs/foundation",
         ZLIBDIR,
         "$builddir/gen-zlib",

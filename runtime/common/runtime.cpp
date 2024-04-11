@@ -3,28 +3,11 @@
 
 #if defined(_WIN32)
 #include <Windows.h>
+#include <bee/platform/win/wtf8.h>
 
 static const char* lua_pushutf8string(lua_State* L, const wchar_t* wstr) {
-    int usz = WideCharToMultiByte(CP_UTF8, 0, wstr, (int)-1, 0, 0, NULL, NULL);
-    if (usz <= 0) {
-        luaL_error(L, "convert to utf-8 string fail.");
-        return 0;
-    }
-    void *ud;
-    lua_Alloc allocf = lua_getallocf(L, &ud);
-    char* ustr = (char*)allocf(ud, NULL, 0, usz);
-    if (!ustr) {
-        luaL_error(L, "convert to utf-8 string fail.");
-        return 0;
-    }
-    int rusz = WideCharToMultiByte(CP_UTF8, 0, wstr, (int)-1, ustr, usz, NULL, NULL);
-    if (rusz <= 0) {
-        allocf(ud, ustr, usz, 0);
-        luaL_error(L, "convert to utf-8 string fail.");
-        return 0;
-    }
-    const char* r = lua_pushlstring(L, ustr, rusz-1);
-    allocf(ud, ustr, usz, 0);
+    auto str = bee::wtf8::w2u(wstr);
+    const char* r = lua_pushlstring(L, str.data(), str.size());
     return r;
 }
 #define PUSH_COMMAND lua_pushutf8string

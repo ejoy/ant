@@ -76,6 +76,7 @@ lm:lua_source "ant_common" {
         "common/progdir.cpp",
     },
     windows = {
+        includes = lm.AntDir .. "/3rd/bee.lua",
         sources = "windows/main.cpp",
     },
     linux = {

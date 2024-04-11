@@ -5,43 +5,14 @@
 #include <string_view>
 #include <memory>
 
+#include <bee/platform/win/wtf8.h>
+
 using Microsoft::WRL::ComPtr;
-
-static std::wstring u2w(const std::string_view& str) {
-    if (str.empty()) {
-        return L"";
-    }
-    int wlen = ::MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), NULL, 0);
-    if (wlen <= 0)  {
-        return L"";
-    }
-    std::unique_ptr<wchar_t[]> result(new wchar_t[wlen]);
-    ::MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), result.get(), wlen);
-    return std::wstring(result.release(), wlen);
-}
-
-static std::string w2u(const std::wstring_view& wstr) {
-    if (wstr.empty())  {
-        return "";
-    }
-    int len = ::WideCharToMultiByte(CP_UTF8, 0, wstr.data(), (int)wstr.size(), NULL, 0, 0, 0);
-    if (len <= 0) {
-        return "";
-    }
-    std::unique_ptr<char[]> result(new char[len]);
-    ::WideCharToMultiByte(CP_UTF8, 0, wstr.data(), (int)wstr.size(), result.get(), len, 0, 0);
-    return std::string(result.release(), len);
-}
 
 static std::wstring towstring(lua_State* L, int idx) {
     size_t len = 0;
     const char* str = luaL_checklstring(L, idx, &len);
-    return u2w(std::string_view(str, len));
-}
-
-static void pushwstring(lua_State* L, const std::wstring_view& wstr) {
-    auto str = w2u(wstr);
-    lua_pushlstring(L, str.data(), str.size());
+    return bee::wtf8::u2w(bee::zstring_view(str, len));
 }
 
 static void dlgSetTitle(lua_State* L, ComPtr<IFileDialog>& dialog, int idx) {
@@ -110,10 +81,13 @@ static HWND dlgGetOwnerWindow(lua_State* L, int idx) {
 static void dlgPushPathFromItem(lua_State* L, const ComPtr<IShellItem>& item) {
     wchar_t* name = nullptr;
     item->GetDisplayName(SIGDN_FILESYSPATH, &name);
-    if (name)
-        pushwstring(L, name);
-    else
+    if (name) {
+        auto str = bee::wtf8::w2u(name);
+        lua_pushlstring(L, str.data(), str.size());
+    }
+    else {
         lua_pushstring(L, "");
+    }
     ::CoTaskMemFree(name);
 }
 

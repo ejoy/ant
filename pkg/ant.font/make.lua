@@ -5,6 +5,7 @@ lm:lua_source "font-systemfont" {
         lm.AntDir .. "/clibs/foundation",
     },
     windows = {
+        includes = lm.AntDir .. "/3rd/bee.lua",
         sources = {
             "src/win32/systemfont.cpp",
         },

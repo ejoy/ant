@@ -11,6 +11,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <bee/platform/win/cwtf8.h>
+
 #define ZLIB_UTF8_FLAG (1<<11)
 #define FILECHUNK (4096 * 4)
 
@@ -83,17 +85,26 @@ unzip_open(lua_State *L, const char *filename) {
 
 #include <windows.h>
 
-struct filename_convert {
-	WCHAR tmp[4096];
-};
+static const wchar_t* u2w(const char* str) {
+	if (!str) {
+		return NULL;
+	}
+	size_t len  = strlen(str);
+	size_t wlen = wtf8_to_utf16_length(str, len);
+	if (wlen == (size_t)-1) {
+		return NULL;
+	}
+	wchar_t* wresult = (wchar_t*)calloc(wlen + 1, sizeof(wchar_t));
+	if (!wresult) {
+		return NULL;
+	}
+	wtf8_to_utf16(str, len, wresult, wlen);
+	return wresult;
+}
 
 static FILE *
-file_open(lua_State *L, const char *filename, const char *mode, struct filename_convert *tmp) {
-	if (MultiByteToWideChar(CP_UTF8, 0, filename, -1, tmp->tmp, sizeof(*tmp) / sizeof(tmp->tmp[0])) == 0) {
-		if (L == NULL)
-			return NULL;
-		luaL_error(L, "Can't convert %s to utf16", filename);
-	}
+file_open(lua_State *L, const char *filename, const char *mode) {
+	const wchar_t* wfilename = u2w(filename);
 	WCHAR m[32];
 	int i;
 	for (i=0; mode[i]; i++) {
@@ -105,7 +116,9 @@ file_open(lua_State *L, const char *filename, const char *mode, struct filename_
 		m[i] = mode[i];
 	}
 	m[i] = 0;
-	return _wfopen(tmp->tmp, m);
+	FILE* f = _wfopen(wfilename, m);
+	free((void*)wfilename);
+	return f;
 }
 
 #else
@@ -113,7 +126,7 @@ file_open(lua_State *L, const char *filename, const char *mode, struct filename_
 struct filename_convert {};
 
 static FILE *
-file_open(lua_State *L, const char *filename, const char *mode, struct filename_convert *tmp) {
+file_open(lua_State *L, const char *filename, const char *mode) {
 	return fopen(filename, mode);
 }
 
@@ -185,8 +198,7 @@ zipwrite_addfile(lua_State *L) {
 	int level = luaL_optinteger(L, 4, Z_DEFAULT_COMPRESSION);
 	zipFile zf = open_new(L, 2, NULL, level);
 	const char * addfile = luaL_checkstring(L, 3);
-	struct filename_convert tmp;
-	FILE *f = file_open(L, addfile, "rb", &tmp);
+	FILE *f = file_open(L, addfile, "rb");
 	if (f == NULL)
 		return luaL_error(L, "Can't open %s", addfile);
 	char buf[FILECHUNK];
@@ -436,8 +448,7 @@ zipread_extract(lua_State *L) {
 	if (zf == NULL)
 		return luaL_error(L, "Error: no file %s", lua_tostring(L, 2));
 	const char * filename = luaL_checkstring(L, 3);
-	struct filename_convert tmp;
-	FILE *f = file_open(L, filename, "wb", &tmp);
+	FILE *f = file_open(L, filename, "wb");
 	if (f == NULL) {
 		close_file(L, zf);
 		return luaL_error(L, "Error: open %s", filename);
