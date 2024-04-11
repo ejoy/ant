@@ -70,7 +70,7 @@ float which_z(uint depth_slice, uint num_slice){
 	return u_near*pow(u_far/u_near, depth_slice/float(num_slice));
 }
 
-float cluster_index(uvec3 workgroupid, uvec3 threadsize, uint localindex)
+uint cluster_index(uvec3 workgroupid, uvec3 threadsize, uint localindex)
 {
     const uvec3 wgsize = uvec3(u_cluster_size.xyz) / threadsize;
     const uint threadcount = threadsize.x * threadsize.y * threadsize.z;
