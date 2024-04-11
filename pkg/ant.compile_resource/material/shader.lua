@@ -27,7 +27,7 @@ local function wait_close(t)
 end
 local wait_closeable = {__close=wait_close}
 local function wait_start(pathkey)
-    if waiting[pathkey] then
+    while waiting[pathkey] do
         ltask.multi_wait(pathkey)
     end
     waiting[pathkey] = true
