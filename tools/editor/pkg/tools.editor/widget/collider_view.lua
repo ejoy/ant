@@ -30,7 +30,7 @@ function ColliderView:_init()
             local ce <close> = world:entity(self.eid)
             iom.set_scale(ce, r * 100)
             --prefab_mgr:update_current_aabb(self.e)
-            world:pub {"UpdateAABB", self.eid}
+            world:pub {"UpdateAABB", {self.eid}}
             anim_view.record_collision(self.eid)
         end
     })
@@ -49,7 +49,7 @@ function ColliderView:_init()
             local ce <close> = world:entity(self.eid)
             iom.set_scale(ce, {sz[1] * 200, sz[2] * 200, sz[3] * 200})
             --prefab_mgr:update_current_aabb(self.e)
-            world:pub {"UpdateAABB", self.eid}
+            world:pub {"UpdateAABB", {self.eid}}
             anim_view.record_collision(self.eid)
         end
     })

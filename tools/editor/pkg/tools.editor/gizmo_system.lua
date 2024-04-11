@@ -101,7 +101,7 @@ function gizmo:set_scale(inscale)
 	local info = hierarchy:get_node_info(self.target_eid)
 	info.template.data.scene.s = inscale
 	world:pub{"Patch", "", self.target_eid, "/data/scene/s", inscale}
-	world:pub {"UpdateAABB", self.target_eid}
+	world:pub {"UpdateAABB", {self.target_eid}}
 end
 
 function gizmo:set_position(worldpos, gizmoonly)
@@ -170,7 +170,7 @@ function gizmo:set_rotation(inrot, gizmoonly)
 	elseif self.mode == gizmo_const.MOVE or self.mode == gizmo_const.ROTATE then
 		iom.set_rotation(re, local_space and newrot or mc.IDENTITY_QUAT)
 	end
-	world:pub {"UpdateAABB", self.target_eid}
+	world:pub {"UpdateAABB", {self.target_eid}}
 end
 
 function gizmo:on_mode(mode)

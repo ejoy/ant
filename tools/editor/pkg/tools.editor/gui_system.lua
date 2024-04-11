@@ -59,11 +59,7 @@ function m:init_world()
 end
 
 local aabb_color_i <const> = 0x6060ffff
-local highlight_aabb = {
-    visible = false,
-    min = nil,
-    max = nil,
-}
+local highlight_aabb = {}
 
 local event_ui_layout = world:sub {"UILayout"}
 function m:data_changed()
@@ -94,32 +90,35 @@ function m:data_changed()
     local bgfxstat = bgfx.get_stats "sdcpnmtv"
     iRmlUi.sendMessage("stat", string.format("DC: %d\nTri: %d\nTex: %d\ncpu(ms): %.2f\ngpu(ms): %.2f\nfps: %d", 
                             bgfxstat.numDraw, bgfxstat.numTriList, bgfxstat.numTextures, bgfxstat.cpu, bgfxstat.gpu, bgfxstat.fps))
-    if highlight_aabb.visible and highlight_aabb.min and highlight_aabb.max then
-        iwd.draw_aabb_box(highlight_aabb, nil, aabb_color_i)
-        -- iwd.draw_lines({0.0,0.0,0.0,0.0,10.0,0.0}, nil, aabb_color_i)
+    for _, aabb in ipairs(highlight_aabb) do
+        iwd.draw_aabb_box(aabb, nil, aabb_color_i)
     end
 end
 
-local function update_highlight_aabb(eid)
-    local visible = false
-    if eid then
+local function update_highlight_aabb(eids)
+    highlight_aabb = {}
+    if #eids < 1 then
+        return
+    end
+    for _, eid in ipairs(eids) do
+        local min, max
         local e <close> = world:entity(eid, "bounding?in scene?in")
         local bounding = e.bounding
         if bounding and bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
             -- local wm = e.scene and iom.worldmat(e) or mc.IDENTITY_MAT
-            highlight_aabb.min = math3d.tovalue(math3d.array_index(bounding.scene_aabb, 1))--math3d.tovalue(math3d.transform(wm, math3d.array_index(bounding.scene_aabb, 1), 1))
-            highlight_aabb.max = math3d.tovalue(math3d.array_index(bounding.scene_aabb, 2))--math3d.tovalue(math3d.transform(wm, math3d.array_index(bounding.scene_aabb, 2), 1))
-            visible = true
+            min = math3d.tovalue(math3d.array_index(bounding.scene_aabb, 1))--math3d.tovalue(math3d.transform(wm, math3d.array_index(bounding.scene_aabb, 1), 1))
+            max = math3d.tovalue(math3d.array_index(bounding.scene_aabb, 2))--math3d.tovalue(math3d.transform(wm, math3d.array_index(bounding.scene_aabb, 2), 1))
         else
             local waabb = prefab_mgr:get_world_aabb(eid)
             if waabb then
-                highlight_aabb.min = math3d.tovalue(math3d.array_index(waabb, 1))
-                highlight_aabb.max = math3d.tovalue(math3d.array_index(waabb, 2))
-                visible = true
+                min = math3d.tovalue(math3d.array_index(waabb, 1))
+                max = math3d.tovalue(math3d.array_index(waabb, 2))
             end
         end
+        if min and max then
+            highlight_aabb[#highlight_aabb + 1] = {min = min, max = max}
+        end
     end
-    highlight_aabb.visible = visible
 end
 
 local function on_target(old, new)
@@ -132,11 +131,11 @@ local function on_target(old, new)
     light_gizmo.on_target(new)
     camera_mgr.on_target(new, true)
     anim_view.on_target(new)
-    world:pub {"UpdateAABB", new}
+    world:pub {"UpdateAABB", {new}}
 end
 
 local function on_update(eid)
-    world:pub {"UpdateAABB", eid}
+    world:pub {"UpdateAABB", {eid}}
     if not eid then return end
     local e <close> = world:entity(eid, "light?in")
     if e and e.light then
@@ -198,7 +197,7 @@ function m:handle_event()
         global_data.fileserver.handle_event()
     end
     for _, e in event_update_aabb:unpack() do
-        update_highlight_aabb(e)
+        update_highlight_aabb(e or {})
     end
     for _, action, value1, value2 in event_gizmo:unpack() do
         if action == "update" or action == "ontarget" then

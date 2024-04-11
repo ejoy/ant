@@ -1476,7 +1476,7 @@ local event_add_prefab  = world:sub {"AddPrefabOrEffect"}
 local event_hierarchy   = world:sub {"HierarchyEvent"}
 local event_reset_prefab= world:sub {"ResetPrefab"}
 local event_look_at_target 	= world:sub {"LookAtTarget"}
-
+local event_select_frustum = world:sub {"SelectFrustum"}
 function m:handle_event()
     for _, type, eid, path, value in event_patch:unpack() do
         if type == "Material" then
@@ -1554,6 +1554,24 @@ function m:handle_event()
 			end
 		end
 	end
+    for _, frustum in event_select_frustum:unpack() do
+        -- print("--------event_select_frustum--------:", frustum.l, frustum.r, frustum.t, frustum.b)
+        local ce <close> = world:entity(irq.main_camera(), "camera:in")
+        local vp = math3d.mul(math3d.projmat(frustum), math3d.lookto(iom.get_position(ce), math3d.todirection(iom.get_rotation(ce))))
+        -- local frustum_planes = math3d.frustum_planes(vp)
+        local frustum_planes = math3d.frustum_planes(ce.camera.viewprojmat)
+        local select_eids = {}
+        for _, eid in ipairs(self.entities) do
+            local e<close> = world:entity(eid, "render_object?in")
+            local aabb = self:get_world_aabb(eid)
+            if aabb and math3d.frustum_intersect_aabb(frustum_planes, aabb) >= 0 then
+                select_eids[#select_eids + 1] = eid
+                -- print("----selected----:", eid)
+            end
+        end
+        world:pub { "UpdateAABB", select_eids}
+        break
+    end
 end
 
 return m
