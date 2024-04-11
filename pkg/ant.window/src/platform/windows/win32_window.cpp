@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <vector>
 #include <memory>
-#include <bee/platform/win/unicode.h>
+#include <bee/platform/win/wtf8.h>
 #include <bee/nonstd/unreachable.h>
 #include "../../window.h"
 
@@ -601,7 +601,7 @@ void window_set_cursor(int cursor) {
 }
 
 void window_set_title(bee::zstring_view title) {
-    ::SetWindowTextW(G.hWnd, bee::win::u2w(title).c_str());
+    ::SetWindowTextW(G.hWnd, bee::wtf8::u2w(title).c_str());
 }
 
 void window_set_maxfps(float fps) {

@@ -3,7 +3,7 @@
 #include <lua.hpp>
 #include <bee/lua/binding.h>
 #include <bee/thread/simplethread.h>
-#include <bee/platform/win/unicode.h>
+#include <bee/platform/win/wtf8.h>
 #include <bee/error.h>
 #include <array>
 #include <charconv>
@@ -74,7 +74,7 @@ struct HttpcDownloadOutputFile: public HttpcDownloadOutput {
     std::wstring file;
     HANDLE tmpFile = INVALID_HANDLE_VALUE;
     HttpcDownloadOutputFile(bee::zstring_view file) noexcept
-        : file(bee::win::u2w(file))
+        : file(bee::wtf8::u2w(file))
     {}
     ~HttpcDownloadOutputFile() noexcept {
         if (tmpFile != INVALID_HANDLE_VALUE) {
@@ -138,12 +138,12 @@ struct HttpcTask {
     };
     HttpcTask(int64_t id, bee::zstring_view url, bee::zstring_view file) noexcept
         : id(id)
-        , url(bee::win::u2w(url))
+        , url(bee::wtf8::u2w(url))
         , output(new HttpcDownloadOutputFile(file))
     {}
     HttpcTask(int64_t id, bee::zstring_view url) noexcept
         : id(id)
-        , url(bee::win::u2w(url))
+        , url(bee::wtf8::u2w(url))
         , output(new HttpcDownloadOutputMemory())
     {}
     ~HttpcTask() noexcept {
