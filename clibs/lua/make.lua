@@ -5,10 +5,11 @@ if lm.mode == "debug" and lm.target == "x64" and lm.compiler == "msvc" then
         "/STACK:"..0x160000
     }
 end
-lm.rootdir = lm.AntDir .. "/3rd/bee.lua/3rd/lua/"
 
 lm:source_set "lua_source" {
-    sources = "onelua.c",
+    sources = {
+        lm.AntDir .. "/3rd/bee.lua/3rd/lua/onelua.c",
+    },
     defines = "MAKE_LIB",
     windows = {
         defines = "LUA_BUILD_AS_DLL",
@@ -27,14 +28,17 @@ lm:source_set "lua_source" {
         defines = "LUA_USE_LINUX",
     },
     msvc = {
-        sources = ("fast_setjmp_%s.s"):format(lm.arch)
+        sources = lm.AntDir .. ("/3rd/bee.lua/3rd/lua/fast_setjmp_%s.s"):format(lm.arch)
     }
 }
 
 if lm.os == "windows" then
     lm:source_set "lua_source" {
+        includes = {
+            lm.AntDir .. "/3rd/bee.lua/",
+        },
         sources = {
-            "utf8_crt.c",
+            lm.AntDir .. "/3rd/bee.lua/3rd/lua/utf8_crt.c",
         }
     }
 end
