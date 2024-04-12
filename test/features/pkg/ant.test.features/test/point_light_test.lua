@@ -32,6 +32,20 @@ local function get_random_color(colorscale)
 end
 
 
+local function update_light_prefab(lightprefab, lightinfo)
+    local entites = lightprefab.tag['*']
+    local root<close> = world:entity(entites[1], "scene:update")
+    iom.set_position(root, lightinfo.pos)
+
+    local sphere<close> = world:entity(entites[4])
+    local point<close> = world:entity(entites[5], "light:in")
+
+    imaterial.set_property(sphere, "u_basecolor_factor", lightinfo.color)
+    ilight.set_color(point, math3d.tovalue(lightinfo.color))
+    ilight.set_range(point, lightinfo.radius)
+    ilight.set_intensity(point, ilight.intensity(point) * lightinfo.intensity_scale)
+end
+
 local function Sponza_scene()
     PC:create_instance{
         prefab = "/pkg/ant.test.features/assets/sponza.glb/mesh.prefab",
@@ -53,24 +67,16 @@ local function Sponza_scene()
             local y = iy*dy
             for ix=0, nx-1 do
                 local x = ix*dx
-                local p = math3d.vector(x, y, z, 1)
 
                 PC:create_instance{
                     prefab = "/pkg/ant.test.features/assets/entities/sphere_with_point_light.prefab",
                     on_ready = function(pl)
-                        local root<close> = world:entity(pl.tag['*'][1], "scene:update")
-                        iom.set_position(root, p)
-        
-                        local sphere<close> = world:entity(pl.tag['*'][4])
-                        local color = get_random_color(1)
-
-                        imaterial.set_property(sphere, "u_basecolor_factor", color)
-
-                        local point<close> = world:entity(pl.tag['*'][5], "light:in")
-                        ilight.set_color(point, math3d.tovalue(color))
-
-                        local radius = math.random(5, 10)
-                        ilight.set_range(point, radius)
+                        update_light_prefab(pl, {
+                            color = get_random_color(1),
+                            pos = {x, y, z, 1},
+                            intensity_scale = 1.0,
+                            radius = math.random(3, 5),
+                        })
                     end
                 }
 
@@ -81,31 +87,27 @@ end
 
 local function simple_scene()
     local pl_pos = {
-        {  1, 1, 1},
-        { -1, 1,-1},
-        {  1, 2, 1},
-        { -1, 2,-1},
+        { pos = { 1, 1, 1,}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
+        { pos = {-1, 1,-1,}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
+        { pos = { 1, 2, 1,}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
+        { pos = {-1, 2,-1,}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
 
-        {  2, 1, 2},
-        { -2, 1, 2},
-        {  2, 2,-2},
-        {  2, 2,-2},
-
-        {  3, 1, 3},
-        { -3, 1, 3},
-        {  3, 2,-3},
-        {  3, 2,-3},
+        { pos = {  2, 1, 2}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
+        { pos = { -2, 1, 2}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
+        { pos = {  2, 2,-2}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
+        { pos = {  2, 2,-2}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
+        
+        -- { pos = {  3, 1, 3}, radius = 10, intensity_scale=1.0},
+        -- { pos = { -3, 1, 3}, radius = 10, intensity_scale=1.0},
+        -- { pos = {  3, 2,-3}, radius = 10, intensity_scale=1.0},
+        -- { pos = {  3, 2,-3}, radius = 10, intensity_scale=1.0},
     }
 
     for _, p in ipairs(pl_pos) do
         PC:create_instance{
             prefab = "/pkg/ant.test.features/assets/entities/sphere_with_point_light.prefab",
             on_ready = function(pl)
-                local root<close> = world:entity(pl.tag['*'][1], "scene:update")
-                iom.set_position(root, p)
-
-                local sphere<close> = world:entity(pl.tag['*'][4])
-                imaterial.set_property(sphere, "u_basecolor_factor", math3d.vector(1.0, 0.0, 0.0, 1.0))
+                update_light_prefab(pl, p)
             end
         }
     end
@@ -134,8 +136,38 @@ local function simple_scene()
 end
 
 function plt_sys.init_world()
-    Sponza_scene()
-    --simple_scene()
+    --Sponza_scene()
+    simple_scene()
+end
+
+local split_frustum = import_package "ant.camera".split_frustum
+
+function plt_sys:render_submit()
+    -- if nil == ONCE then
+    --     ONCE = true
+    
+    --     local clustersize = {2, 2, 2}
+    --     local mq = w:first "main_queue render_target:in"
+    --     local irq = ecs.require "ant.render|renderqueue"
+    --     local C = irq.main_camera_entity "camera:in"
+    --     local n, f = C.camera.frustum.n, C.camera.frustum.f
+    --     local vr = mq.render_target.view_rect
+    --     local screensize = {vr.w, vr.h}
+    --     local aabbs = {}
+    --     for iz=1, clustersize[3] do
+    --         for iy=1, clustersize[2] do
+    --             for ix=1, clustersize[1] do
+    --                 local id = {ix-1, iy-1, iz-1}
+                    
+    --                 local aabb = split_frustum.build(id, screensize, n, f, math3d.inverse(math3d.projmat(C.camera.frustum)), clustersize)
+    --                 aabbs[#aabbs+1] = aabb
+    --                 print(("id:[%d, %d, %d], aabb:%s"):format(ix, iy, iz, math3d.tostring(aabb)))
+    --             end
+    --         end
+    --     end
+
+    --     print ""
+    -- end
 end
 
 function plt_sys:exit()

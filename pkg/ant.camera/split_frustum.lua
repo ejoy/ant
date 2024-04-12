@@ -3,6 +3,8 @@ local math3d = require "math3d"
 local mathpkg = import_package "ant.math"
 local mu = mathpkg.util
 
+local u_cluster_size<const> = {16, 9, 24}
+
 local HOMOGENEOUS_DEPTH, ORIGIN_BOTTOM_LEFT = math3d.get_homogeneous_depth(), math3d.get_origin_bottom_left()
 
 local function line_zplane_intersection(A, B, zDistance)
@@ -27,10 +29,15 @@ local function screen2view(screen, screensize, invproj)
     return math3d.transformH(invproj, ndc, 1)
 end
 
-local u_cluster_size<const> = {16, 9, 24}
-
 local function which_z(u_nearZ, u_farZ, depth_slice, num_slice)
     return u_nearZ*((u_farZ/u_nearZ) ^ (depth_slice/num_slice))
+end
+
+local function cluster_index(workgroupid, threadsize, localindex)
+    local wgsize<const> = {u_cluster_size[1] / threadsize[1], u_cluster_size[2]/threadsize[2], u_cluster_size[3]/threadsize[3]}
+
+    local threadcount = threadsize[1] * threadsize[2] * threadsize[3]
+    return localindex + math3d.dot(math3d.vector(1, wgsize[1], wgsize[1]*wgsize[2]), math3d.vector(workgroupid)) * threadcount;
 end
 
 local function build_frustum_points(id, screensize, u_nearZ, u_farZ, invproj, clustersize)
@@ -50,14 +57,14 @@ local function build_frustum_points(id, screensize, u_nearZ, u_farZ, invproj, cl
 
     local eyepos = math3d.vector(0, 0, 0)
 
-    local depth         = which_z(u_nearZ, u_farZ, id[3],     clustersize[3]);
-    local depth_next    = which_z(u_nearZ, u_farZ, id[3]+1,   clustersize[3]);
+    local nearZ   = which_z(u_nearZ, u_farZ, id[3],     clustersize[3]);
+    local farZ    = which_z(u_nearZ, u_farZ, id[3]+1,   clustersize[3]);
 
     local points = {}
     for _, v in ipairs(corners_near_sS) do
         local v_vS = screen2view(v, screensize, invproj)
-        local p0 = line_zplane_intersection(eyepos, v_vS, depth)
-        local p1 = line_zplane_intersection(eyepos, v_vS, depth_next)
+        local p0 = line_zplane_intersection(eyepos, v_vS, nearZ)
+        local p1 = line_zplane_intersection(eyepos, v_vS, farZ)
 
         points[#points+1] = p0
         points[#points+1] = p1
@@ -67,14 +74,8 @@ local function build_frustum_points(id, screensize, u_nearZ, u_farZ, invproj, cl
 end
 
 -- dispatch as: [16, 9, 24]
-local function build_aabb(id, screensize, u_nearZ, u_farZ, invproj)
-    local points = build_frustum_points(id, screensize, u_nearZ, u_farZ, invproj, u_cluster_size)
-    local minv, maxv = math3d.minmax(points)
-
-    return {
-        minv = math3d.tovalue(minv),
-        maxv = math3d.tovalue(maxv),
-    }
+local function build_aabb(id, screensize, u_nearZ, u_farZ, invproj, clustersize)
+    return math3d.minmax(build_frustum_points(id, screensize, u_nearZ, u_farZ, invproj, clustersize))
 end
 
 local function linear_depth(nolinear_depth, u_nearZ, u_farZ)
@@ -112,12 +113,12 @@ local function which_cluster(fragcoord, screensize, u_nearZ, u_farZ, u_slice_sca
 end
 
 return {
-    which_cluster_Z = which_cluster_Z,
-    which_z = which_z,
-    which_cluster = which_cluster,
-    build = build_aabb,
-    build_frustum_points = build_frustum_points,
-    build_all = function (screensize, nearZ, farZ, invproj)
+    which_cluster_Z     = which_cluster_Z,
+    which_z             = which_z,
+    which_cluster       = which_cluster,
+    build               = build_aabb,
+    build_frustum_points= build_frustum_points,
+    build_all           = function (screensize, nearZ, farZ, invproj)
         local cluster_aabbs = {}
         for z=1, u_cluster_size[3] do
             for y=1, u_cluster_size[2] do
@@ -131,5 +132,7 @@ return {
         end
 
         return cluster_aabbs
-    end
+    end,
+
+    cluster_index       = cluster_index,
 }
