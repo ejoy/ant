@@ -18,12 +18,9 @@ static void errfunc(const char* msg) {
     lua_writestringerror("%s\n", msg);
 }
 
-int wmain(int argc, wchar_t** argv) {
+extern "C"
+int utf8_main(int argc, char** argv) {
     init_stdio();
     runtime_main(argc, argv, errfunc);
     return 0;
 }
-
-#if defined(__MINGW32__)
-#include "mingw_wmain.h"
-#endif

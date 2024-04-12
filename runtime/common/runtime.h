@@ -2,11 +2,4 @@
 
 #include <lua.hpp>
 
-#if defined(_WIN32)
-#include <wchar.h>
-#define RT_COMMAND wchar_t**
-#else
-#define RT_COMMAND char**
-#endif
-
-extern "C" void runtime_main(int argc, RT_COMMAND argv, void(*errfunc)(const char*));
+extern "C" void runtime_main(int argc, char** argv, void(*errfunc)(const char*));

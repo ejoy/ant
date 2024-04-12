@@ -71,13 +71,13 @@ lm:lua_source "ant_common" {
         "../3rd/bx/include",
         "common"
     },
-    sources = {
-        "common/runtime.cpp",
-        "common/progdir.cpp",
-    },
+    sources = "common/runtime.cpp",
     windows = {
         includes = lm.AntDir .. "/3rd/bee.lua",
-        sources = "windows/main.cpp",
+        sources = {
+            "windows/main.cpp",
+            "../3rd/bee.lua/3rd/lua/bee_utf8_main.c",
+        }
     },
     linux = {
         sources = "posix/main.cpp",

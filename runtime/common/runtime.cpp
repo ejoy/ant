@@ -1,18 +1,10 @@
 #include "runtime.h"
 #include <string.h>
+#include <bee/utility/path_helper.h>
+#include <bee/nonstd/unreachable.h>
 
 #if defined(_WIN32)
-#include <Windows.h>
 #include <bee/platform/win/wtf8.h>
-
-static const char* lua_pushutf8string(lua_State* L, const wchar_t* wstr) {
-    auto str = bee::wtf8::w2u(wstr);
-    const char* r = lua_pushlstring(L, str.data(), str.size());
-    return r;
-}
-#define PUSH_COMMAND lua_pushutf8string
-#else
-#define PUSH_COMMAND lua_pushstring
 #endif
 
 static int msghandler(lua_State *L) {
@@ -24,7 +16,20 @@ static int msghandler(lua_State *L) {
     return 1;
 }
 
-void pushprogdir(lua_State *L);
+static void pushprogdir(lua_State* L) {
+    auto exepath = bee::path_helper::exe_path();
+    if (!exepath) {
+        luaL_error(L, "unable to get progdir: %s\n", exepath.error().c_str());
+        std::unreachable();
+    }
+    auto progdir = exepath.value().remove_filename();
+#if defined(_WIN32)
+    auto str = bee::wtf8::w2u(progdir.generic_wstring());
+#else
+    auto str = progdir.generic_string();
+#endif
+    lua_pushlstring(L, str.data(), str.size());
+}
 
 static void dostring(lua_State* L, const char* str) {
     lua_pushcfunction(L, msghandler);
@@ -38,10 +43,10 @@ static void dostring(lua_State* L, const char* str) {
     lua_error(L);
 }
 
-static void createargtable(lua_State *L, int argc, RT_COMMAND argv) {
+static void createargtable(lua_State *L, int argc, char** argv) {
     lua_createtable(L, argc - 1, 0);
     for (int i = 1; i < argc; ++i) {
-        PUSH_COMMAND(L, argv[i]);
+        lua_pushstring(L, argv[i]);
         lua_rawseti(L, -2, i);
     }
     lua_setglobal(L, "arg");
@@ -49,7 +54,7 @@ static void createargtable(lua_State *L, int argc, RT_COMMAND argv) {
 
 static int pmain(lua_State *L) {
     int argc = (int)lua_tointeger(L, 1);
-    RT_COMMAND argv = (RT_COMMAND)lua_touserdata(L, 2);
+    char** argv = (char**)lua_touserdata(L, 2);
     luaL_checkversion(L);
     lua_pushboolean(L, 1);
     lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
@@ -71,7 +76,7 @@ end
     return 0;
 }
 
-void runtime_main(int argc, RT_COMMAND argv, void(*errfunc)(const char*)) {
+void runtime_main(int argc, char** argv, void(*errfunc)(const char*)) {
     lua_State* L = luaL_newstate();
     if (!L) {
         errfunc("cannot create state: not enough memory");
