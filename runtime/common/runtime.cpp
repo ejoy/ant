@@ -1,11 +1,4 @@
 #include "runtime.h"
-#include <string.h>
-#include <bee/utility/path_helper.h>
-#include <bee/nonstd/unreachable.h>
-
-#if defined(_WIN32)
-#include <bee/platform/win/wtf8.h>
-#endif
 
 static int msghandler(lua_State *L) {
     const char *msg = lua_tostring(L, 1);
@@ -16,27 +9,12 @@ static int msghandler(lua_State *L) {
     return 1;
 }
 
-static void pushprogdir(lua_State* L) {
-    auto exepath = bee::path_helper::exe_path();
-    if (!exepath) {
-        luaL_error(L, "unable to get progdir: %s\n", exepath.error().c_str());
-        std::unreachable();
-    }
-    auto progdir = exepath.value().remove_filename();
-#if defined(_WIN32)
-    auto str = bee::wtf8::w2u(progdir.generic_wstring());
-#else
-    auto str = progdir.generic_string();
-#endif
-    lua_pushlstring(L, str.data(), str.size());
-}
-
-static void dostring(lua_State* L, const char* str) {
+template <size_t size>
+static void dostring(lua_State* L, const char (&str)[size]) {
     lua_pushcfunction(L, msghandler);
     int err = lua_gettop(L);
-    if (LUA_OK == luaL_loadbuffer(L, str, strlen(str), "=(BOOTSTRAP)")) {
-        pushprogdir(L);
-        if (LUA_OK == lua_pcall(L, 1, 0, err)) {
+    if (LUA_OK == luaL_loadbuffer(L, str, size-1, "=(BOOTSTRAP)")) {
+        if (LUA_OK == lua_pcall(L, 0, 0, err)) {
             return;
         }
     }
@@ -64,13 +42,17 @@ static int pmain(lua_State *L) {
     dostring(L, R"=(
 local __ANT_RUNTIME__ = package.preload.firmware ~= nil
 if __ANT_RUNTIME__ then
-    assert(loadfile '/engine/firmware/bootstrap.lua')(...)
+    dofile "/engine/firmware/bootstrap.lua"
 else
-    local root = ...
-    local f = assert(io.open(root.."main.lua"))
-    local data = f:read "a"
-    f:close()
-    assert(load(data, "=(main.lua)"))()
+    local mainfunc; do
+        local fs = require "bee.filesystem"
+        local progdir = assert(fs.exe_path()):remove_filename():string()
+        local mainlua = progdir.."main.lua"
+        local f <close> = assert(io.open(mainlua, "rb"))
+        local data = f:read "a"
+        mainfunc = assert(load(data, "@"..mainlua))
+    end
+    mainfunc()
 end
 )=");
     return 0;
