@@ -67,16 +67,16 @@ lm:copy "copy_mainlua" {
 lm:lua_source "ant_common" {
     deps = "lua_source",
     includes = {
-        "../3rd/bgfx/include",
-        "../3rd/bx/include",
+        lm.AntDir .. "/3rd/bgfx/include",
+        lm.AntDir .. "/3rd/bx/include",
+        lm.AntDir .. "/3rd/bee.lua",
         "common"
     },
     sources = "common/runtime.cpp",
     windows = {
-        includes = lm.AntDir .. "/3rd/bee.lua",
         sources = {
             "windows/main.cpp",
-            "../3rd/bee.lua/3rd/lua/bee_utf8_main.c",
+            lm.AntDir .. "/3rd/bee.lua/3rd/lua/bee_utf8_main.c",
         }
     },
     linux = {
