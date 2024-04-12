@@ -24,6 +24,8 @@ uint light_offset_idx()
 //it's a array<uint, num_clusters*u_cluster_max_light_count> buffer, so each cluster will occpy u_cluster_max_light_count uint buffer
 //I did not found any dynamic method to keep this buffer more compat
 
+
+//TODO: use shared data to transform all the light pos from worldspace to viewspace, to save ALU time
 NUM_THREADS(THREAD_NUM_X, THREAD_NUM_Y, THREAD_NUM_Z)
 void main(){
     if (u_culled_light_count == 0)
