@@ -4,13 +4,13 @@ local platform = require "bee.platform"
 
 local RuntimeBacklist <const> = {
     filedialog = true,
-    window = platform.os == "android",
+    window = platform.os == "android" or platform.os == "linux",
     debugger = lm.luaversion == "lua55",
 }
 
 local EditorBacklist <const> = {
     firmware = true,
-    window = platform.os == "android",
+    window = platform.os == "android" or platform.os == "linux",
     debugger = lm.luaversion == "lua55",
 }
 
