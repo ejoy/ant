@@ -136,8 +136,8 @@ local function simple_scene()
 end
 
 function plt_sys.init_world()
-    --Sponza_scene()
-    simple_scene()
+    Sponza_scene()
+    --simple_scene()
 end
 
 local split_frustum = import_package "ant.camera".split_frustum

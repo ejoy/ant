@@ -139,7 +139,7 @@ local function update_scene_render_param()
     imaterial.system_attrib_update("b_light_index_lists",    assert(cluster_buffers.light_index_lists.handle))
     imaterial.system_attrib_update("b_light_info",           assert(cluster_buffers.light_info.handle))
 
-    imaterial.system_attrib_update("u_cluster_size",         math3d.vector(CLUSTER_SIZE))
+    imaterial.system_attrib_update("u_cluster_size",         math3d.vector(CLUSTER_SIZE[1], CLUSTER_SIZE[2], CLUSTER_SIZE[3], CLUSTER_SIZE[1] * CLUSTER_SIZE[2] * CLUSTER_SIZE[3]))
 end
 
 function cfs:init_world()

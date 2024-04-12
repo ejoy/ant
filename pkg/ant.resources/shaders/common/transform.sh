@@ -142,9 +142,9 @@ mat3 cotangent_frame(vec3 N, vec3 p, vec2 uv)
 
 void get_viewspace_depth(inout float distanceVS)
 {
-    #ifndef BGFX_SHADER_LANGUAGE_HLSL
+    #if !BGFX_SHADER_LANGUAGE_HLSL
         distanceVS = 1.0 / distanceVS;
-    #endif
+    #endif //BGFX_SHADER_LANGUAGE_HLSL
 }
 
 #endif //__SHADER_TRANSFORMS_SH__
