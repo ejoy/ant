@@ -112,6 +112,19 @@ local function which_cluster(fragcoord, screensize, u_nearZ, u_farZ, u_slice_sca
             (u_cluster_size[1] * u_cluster_size[2]) * cluster_coord[3], cluster_coord
 end
 
+local function sphere_closest_pt_to_aabb(center, aabb)
+    local minv, maxv = math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
+
+    local closest = math3d.max(minv, math3d.min(center, maxv))
+    local d = math3d.sub(closest, center)
+    return math3d.dot(d, d)
+end
+
+local function light_aabb_interset(light, aabb, viewmat)
+    local center = math3d.transform(viewmat, math3d.vector(light.pos), 1)
+    local sq_dist = sphere_closest_pt_to_aabb(center, aabb)
+    return sq_dist <= (light.range * light.range)
+end
 return {
     which_cluster_Z     = which_cluster_Z,
     which_z             = which_z,
@@ -135,4 +148,7 @@ return {
     end,
 
     cluster_index       = cluster_index,
+
+    --cull
+    light_aabb_interset = light_aabb_interset,
 }

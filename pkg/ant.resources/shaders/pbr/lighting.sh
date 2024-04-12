@@ -40,7 +40,13 @@ light_grid get_light_grid(in material_info mi)
 {
     light_grid g;
 #ifdef CLUSTER_SHADING
-	uint cluster_idx = which_cluster(mi.frag_coord.xy, mi.distanceVS);
+
+#if BGFX_SHADER_LANGUAGE_METAL
+    float zVS = lerp(u_near, u_far, mi.distanceVS);
+    uint cluster_idx = which_cluster(mi.frag_coord.xy, zVS);
+#else
+    uint cluster_idx = which_cluster(mi.frag_coord.xy, mi.distanceVS);
+#endif
 
     uint cluster_count = u_cluster_size.x * u_cluster_size.y * u_cluster_size.z;
     cluster_idx = clamp(cluster_idx, 0, cluster_count-1);

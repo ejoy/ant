@@ -87,15 +87,15 @@ end
 
 local function simple_scene()
     local pl_pos = {
-        { pos = { 1, 1, 1,}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
-        { pos = {-1, 1,-1,}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
-        { pos = { 1, 2, 1,}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
-        { pos = {-1, 2,-1,}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
+        { pos = {-5, 1, 5,}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
+        { pos = {-5, 1,-5,}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
+        { pos = { 5, 2, 5,}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
+        { pos = { 5, 2,-5,}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
 
-        { pos = {  2, 1, 2}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
-        { pos = { -2, 1, 2}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
-        { pos = {  2, 2,-2}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
-        { pos = {  2, 2,-2}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
+        { pos = {-10, 1, 10}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
+        { pos = {-10, 1,-10}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
+        { pos = { 10, 2, 10}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
+        { pos = { 10, 2,-10}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
         
         -- { pos = {  3, 1, 3}, radius = 10, intensity_scale=1.0},
         -- { pos = { -3, 1, 3}, radius = 10, intensity_scale=1.0},
@@ -142,33 +142,67 @@ end
 
 local split_frustum = import_package "ant.camera".split_frustum
 
-function plt_sys:render_submit()
-    -- if nil == ONCE then
-    --     ONCE = true
-    
-    --     local clustersize = {2, 2, 2}
-    --     local mq = w:first "main_queue render_target:in"
-    --     local irq = ecs.require "ant.render|renderqueue"
-    --     local C = irq.main_camera_entity "camera:in"
-    --     local n, f = C.camera.frustum.n, C.camera.frustum.f
-    --     local vr = mq.render_target.view_rect
-    --     local screensize = {vr.w, vr.h}
-    --     local aabbs = {}
-    --     for iz=1, clustersize[3] do
-    --         for iy=1, clustersize[2] do
-    --             for ix=1, clustersize[1] do
-    --                 local id = {ix-1, iy-1, iz-1}
-                    
-    --                 local aabb = split_frustum.build(id, screensize, n, f, math3d.inverse(math3d.projmat(C.camera.frustum)), clustersize)
-    --                 aabbs[#aabbs+1] = aabb
-    --                 print(("id:[%d, %d, %d], aabb:%s"):format(ix, iy, iz, math3d.tostring(aabb)))
-    --             end
-    --         end
-    --     end
+local setting = import_package "ant.settings"
+local CLUSTERSIZE<const> = setting:get "graphic/lighting/cluster_shading/size"
 
-    --     print ""
-    -- end
+local function test_cluster_aabb()
+    local mq = w:first "main_queue render_target:in"
+    local irq = ecs.require "ant.render|renderqueue"
+    local C = irq.main_camera_entity "camera:in"
+    local n, f = C.camera.frustum.n, C.camera.frustum.f
+    local vr = mq.render_target.view_rect
+    local screensize = {vr.w, vr.h}
+    local aabbs = {}
+    for iz=1, CLUSTERSIZE[3] do
+        for iy=1, CLUSTERSIZE[2] do
+            for ix=1, CLUSTERSIZE[1] do
+                local id = {ix-1, iy-1, iz-1}
+                
+                local aabb = split_frustum.build(id, screensize, n, f, math3d.inverse(math3d.projmat(C.camera.frustum)), CLUSTERSIZE)
+                aabbs[#aabbs+1] = aabb
+                print(("id:[%d, %d, %d], aabb:%s"):format(ix, iy, iz, math3d.tostring(aabb)))
+            end
+        end
+    end
+
+    return aabbs
 end
+
+local function test_cluster_light_cull()
+    local clustercount = CLUSTERSIZE[1] * CLUSTERSIZE[2] * CLUSTERSIZE[3]
+    local aabbs = test_cluster_aabb()
+    assert(#aabbs == clustercount)
+
+    local irq = ecs.require "ant.render|renderqueue"
+    local C = irq.main_camera_entity "camera:in"
+    local viewmat = C.camera.viewmat
+
+    local clusters = {}
+    for idx, aabb in ipairs(aabbs) do
+        local list = {}
+        for e in w:select "scene:in light:in eid:in" do
+            local l = {
+                pos = math3d.index(e.scene.worldmat, 4),
+                range = e.light.range,
+            }
+            if split_frustum.light_aabb_interset(l, aabb, viewmat) then
+                list[#list+1] = e.eid
+            end
+        end
+
+        clusters[idx] = list
+    end
+
+    print ""
+end
+
+-- function plt_sys:render_submit()
+--     if nil == ONCE then
+--         ONCE = true
+    
+--         test_cluster_light_cull()
+--     end
+-- end
 
 function plt_sys:exit()
     PC:clear()

@@ -84,6 +84,7 @@ void main(){
     vec3 maxv = max_vec(tln, max_vec(trn, max_vec(bln, brn)));
     maxv = max_vec(maxv, max_vec(tlf, max_vec(trf, max_vec(blf, brf))));
 
+    //store_cluster_aabb2(b_cluster_AABBs, cluster_idx, vec4(0.0, 0.0, 0.0, 0.0), vec4(2.0, 2.0, 2.0, 0.0));
     //TODO: make b_cluster_AABBs type as float not vec4, to remove minv.w and maxv.w
     store_cluster_aabb2(b_cluster_AABBs, cluster_idx, vec4(minv, 0.0), vec4(maxv, 0.0));
 }

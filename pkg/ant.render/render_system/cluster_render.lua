@@ -28,6 +28,7 @@ local irq       = ecs.require "ant.render|renderqueue"
 --cull defalut group size: 16 * 9 * 8, dispatch: (x=1, y=1, z=3)
 local CLUSTER_SIZE<const>               = CLUSTER_SHADING.size
 local CLUSTER_COUNT<const>              = CLUSTER_SIZE[1] * CLUSTER_SIZE[2] * CLUSTER_SIZE[3]
+local CLUSTER_MAX_LIGHT_COUNT<const>    = CLUSTER_SHADING.max_light
 
 --[[
     struct light_grids {
@@ -94,31 +95,9 @@ local cluster_buffers = {
 cluster_buffers.light_grids.handle         = bgfx.create_dynamic_index_buffer(LIGHT_GRID_BUFFER_SIZE, "drw")
 --cluster_buffers.global_index_count.handle  = bgfx.create_dynamic_index_buffer(1, "drw")
 cluster_buffers.AABB.handle                = bgfx.create_dynamic_vertex_buffer(CLUSTER_AABB_BUFFER_SIZE, cluster_buffers.AABB.layout.handle, "rw")
-cluster_buffers.light_index_lists.handle   = bgfx.create_dynamic_index_buffer(1, "drw")
+cluster_buffers.light_index_lists.handle   = bgfx.create_dynamic_index_buffer(CLUSTER_MAX_LIGHT_COUNT * CLUSTER_COUNT, "drw")
 
 local CLUSTER_BUILDAABB_EID, CLUSTER_LIGHTCULL_EID
-
-local function rebuild_light_index_list()
-    local numlights = ilight.count_visible_light()
-    local lil_size = numlights * CLUSTER_COUNT
-    local lil = cluster_buffers.light_index_lists
-    local oldhandle = lil.handle
-    if lil_size > lil.size then
-        if lil.handle then
-            bgfx.destroy(lil.handle)
-        end
-        lil.handle = bgfx.create_dynamic_index_buffer(lil_size, "drw")
-        lil.size = lil_size
-    end
-    if lil.handle ~= oldhandle then
-        assert(lil.handle)
-        local ce = world:entity(CLUSTER_LIGHTCULL_EID, "dispatch:in")
-        ce.dispatch.material.b_light_index_lists_write = lil.handle
-
-        imaterial.system_attrib_update("b_light_index_lists", lil.handle)
-    end
-    return true
-end
 
 local main_viewid<const> = hwi.viewid_get "main_view"
 
@@ -192,20 +171,6 @@ local function cull_lights(viewid)
     end
 end
 
-local need_rebuild_light_index_list
-
-function cfs:entity_init()
-    for _ in w:select "INIT light:in" do
-        need_rebuild_light_index_list = true
-    end
-end
-
-function cfs:entity_remove()
-    for _ in w:select "REMOVED light:in" do
-        need_rebuild_light_index_list = true
-    end
-end
-
 local function check_rebuild_cluster_aabb()
     local C
     for _ in cr_camera_mb:each() do
@@ -234,13 +199,6 @@ local function check_rebuild_cluster_aabb()
         --no invz, no infinite far, could not use C.camera.projmat
         be.dispatch.material["u_normal_inv_proj"] = math3d.inverse(math3d.projmat(C.camera.frustum))
         icompute.dispatch(main_viewid, be.dispatch)
-    end
-end
-
-function cfs:camera_usage()
-    if need_rebuild_light_index_list then
-        rebuild_light_index_list()
-        need_rebuild_light_index_list = false
     end
 end
 
