@@ -4,13 +4,13 @@ local platform = require "bee.platform"
 
 local RuntimeBacklist <const> = {
     filedialog = true,
-    window = platform.os == "android",
+    window = platform.os == "android" or platform.os == "linux",
     debugger = lm.luaversion == "lua55",
 }
 
 local EditorBacklist <const> = {
     firmware = true,
-    window = platform.os == "android",
+    window = platform.os == "android" or platform.os == "linux",
     debugger = lm.luaversion == "lua55",
 }
 
@@ -67,17 +67,17 @@ lm:copy "copy_mainlua" {
 lm:lua_source "ant_common" {
     deps = "lua_source",
     includes = {
-        "../3rd/bgfx/include",
-        "../3rd/bx/include",
+        lm.AntDir .. "/3rd/bgfx/include",
+        lm.AntDir .. "/3rd/bx/include",
+        lm.AntDir .. "/3rd/bee.lua",
         "common"
     },
-    sources = {
-        "common/runtime.cpp",
-        "common/progdir.cpp",
-    },
+    sources = "common/runtime.cpp",
     windows = {
-        includes = lm.AntDir .. "/3rd/bee.lua",
-        sources = "windows/main.cpp",
+        sources = {
+            "windows/main.cpp",
+            lm.AntDir .. "/3rd/bee.lua/3rd/lua/bee_utf8_main.c",
+        }
     },
     linux = {
         sources = "posix/main.cpp",

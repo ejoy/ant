@@ -32,6 +32,20 @@ local function get_random_color(colorscale)
 end
 
 
+local function update_light_prefab(lightprefab, lightinfo)
+    local entites = lightprefab.tag['*']
+    local root<close> = world:entity(entites[1], "scene:update")
+    iom.set_position(root, lightinfo.pos)
+
+    local sphere<close> = world:entity(entites[4])
+    local point<close> = world:entity(entites[5], "light:in")
+
+    imaterial.set_property(sphere, "u_basecolor_factor", lightinfo.color)
+    ilight.set_color(point, math3d.tovalue(lightinfo.color))
+    ilight.set_range(point, lightinfo.radius)
+    ilight.set_intensity(point, ilight.intensity(point) * lightinfo.intensity_scale)
+end
+
 local function Sponza_scene()
     PC:create_instance{
         prefab = "/pkg/ant.test.features/assets/sponza.glb/mesh.prefab",
@@ -53,24 +67,16 @@ local function Sponza_scene()
             local y = iy*dy
             for ix=0, nx-1 do
                 local x = ix*dx
-                local p = math3d.vector(x, y, z, 1)
 
                 PC:create_instance{
                     prefab = "/pkg/ant.test.features/assets/entities/sphere_with_point_light.prefab",
                     on_ready = function(pl)
-                        local root<close> = world:entity(pl.tag['*'][1], "scene:update")
-                        iom.set_position(root, p)
-        
-                        local sphere<close> = world:entity(pl.tag['*'][4])
-                        local color = get_random_color(1)
-
-                        imaterial.set_property(sphere, "u_basecolor_factor", color)
-
-                        local point<close> = world:entity(pl.tag['*'][5], "light:in")
-                        ilight.set_color(point, math3d.tovalue(color))
-
-                        local radius = math.random(5, 10)
-                        ilight.set_range(point, radius)
+                        update_light_prefab(pl, {
+                            color = get_random_color(1),
+                            pos = {x, y, z, 1},
+                            intensity_scale = 1.0,
+                            radius = math.random(3, 5),
+                        })
                     end
                 }
 
@@ -81,39 +87,27 @@ end
 
 local function simple_scene()
     local pl_pos = {
-        { pos = {  1, 1, 1,}, radius = 15, intensity_scale = 1},
-        { pos = { -1, 1,-1,}, radius = 15, intensity_scale = 1},
-        { pos = {  1, 2, 1,}, radius = 15, intensity_scale = 1},
-        { pos = { -1, 2,-1,}, radius = 15, intensity_scale = 1},
+        { pos = {-5, 1, 5,}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
+        { pos = {-5, 1,-5,}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
+        { pos = { 5, 2, 5,}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
+        { pos = { 5, 2,-5,}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
 
-        { pos = {  2, 1, 2}, radius = 15, intensity_scale = 2},
-        { pos = { -2, 1, 2}, radius = 15, intensity_scale = 2},
-        { pos = {  2, 2,-2}, radius = 15, intensity_scale = 2},
-        { pos = {  2, 2,-2}, radius = 15, intensity_scale = 2},
-
-        { pos = { -3, 3, 3,}, radius = 15, intensity_scale = 5},
-        { pos = {  3, 3, 3,}, radius = 15, intensity_scale = 5},
-        { pos = { -3, 4,-3,}, radius = 15, intensity_scale = 5},
-        { pos = {  3, 4,-3,}, radius = 15, intensity_scale = 5},
-
-        { pos = {  4, 5, 4,}, radius = 15, intensity_scale = 3},
-        { pos = { -4, 6,-4,}, radius = 15, intensity_scale = 3},
-        { pos = {  4, 6, 4,}, radius = 15, intensity_scale = 3},
-        { pos = { -4, 6,-4,}, radius = 15, intensity_scale = 3},
+        { pos = {-10, 1, 10}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
+        { pos = {-10, 1,-10}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
+        { pos = { 10, 2, 10}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
+        { pos = { 10, 2,-10}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
+        
+        -- { pos = {  3, 1, 3}, radius = 10, intensity_scale=1.0},
+        -- { pos = { -3, 1, 3}, radius = 10, intensity_scale=1.0},
+        -- { pos = {  3, 2,-3}, radius = 10, intensity_scale=1.0},
+        -- { pos = {  3, 2,-3}, radius = 10, intensity_scale=1.0},
     }
 
     for _, p in ipairs(pl_pos) do
         PC:create_instance{
             prefab = "/pkg/ant.test.features/assets/entities/sphere_with_point_light.prefab",
             on_ready = function(pl)
-                local root<close> = world:entity(pl.tag['*'][1], "scene:update")
-                iom.set_position(root, p.pos)
-
-                local sphere<close> = world:entity(pl.tag['*'][4])
-                imaterial.set_property(sphere, "u_basecolor_factor", math3d.vector(1.0, 0.0, 0.0, 1.0))
-                local point<close> = world:entity(pl.tag['*'][5], "light:in")
-                ilight.set_range(point, p.radius)
-                ilight.set_intensity(point, ilight.intensity(point) * p.intensity_scale)
+                update_light_prefab(pl, p)
             end
         }
     end
@@ -145,6 +139,70 @@ function plt_sys.init_world()
     --Sponza_scene()
     simple_scene()
 end
+
+local split_frustum = import_package "ant.camera".split_frustum
+
+local setting = import_package "ant.settings"
+local CLUSTERSIZE<const> = setting:get "graphic/lighting/cluster_shading/size"
+
+local function test_cluster_aabb()
+    local mq = w:first "main_queue render_target:in"
+    local irq = ecs.require "ant.render|renderqueue"
+    local C = irq.main_camera_entity "camera:in"
+    local n, f = C.camera.frustum.n, C.camera.frustum.f
+    local vr = mq.render_target.view_rect
+    local screensize = {vr.w, vr.h}
+    local aabbs = {}
+    for iz=1, CLUSTERSIZE[3] do
+        for iy=1, CLUSTERSIZE[2] do
+            for ix=1, CLUSTERSIZE[1] do
+                local id = {ix-1, iy-1, iz-1}
+                
+                local aabb = split_frustum.build(id, screensize, n, f, math3d.inverse(math3d.projmat(C.camera.frustum)), CLUSTERSIZE)
+                aabbs[#aabbs+1] = aabb
+                print(("id:[%d, %d, %d], aabb:%s"):format(ix, iy, iz, math3d.tostring(aabb)))
+            end
+        end
+    end
+
+    return aabbs
+end
+
+local function test_cluster_light_cull()
+    local clustercount = CLUSTERSIZE[1] * CLUSTERSIZE[2] * CLUSTERSIZE[3]
+    local aabbs = test_cluster_aabb()
+    assert(#aabbs == clustercount)
+
+    local irq = ecs.require "ant.render|renderqueue"
+    local C = irq.main_camera_entity "camera:in"
+    local viewmat = C.camera.viewmat
+
+    local clusters = {}
+    for idx, aabb in ipairs(aabbs) do
+        local list = {}
+        for e in w:select "scene:in light:in eid:in" do
+            local l = {
+                pos = math3d.index(e.scene.worldmat, 4),
+                range = e.light.range,
+            }
+            if split_frustum.light_aabb_interset(l, aabb, viewmat) then
+                list[#list+1] = e.eid
+            end
+        end
+
+        clusters[idx] = list
+    end
+
+    print ""
+end
+
+-- function plt_sys:render_submit()
+--     if nil == ONCE then
+--         ONCE = true
+    
+--         test_cluster_light_cull()
+--     end
+-- end
 
 function plt_sys:exit()
     PC:clear()

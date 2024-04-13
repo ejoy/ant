@@ -20,30 +20,33 @@ local function writefile(filename, data)
     f:write(data)
 end
 
-local waiting = {}
-local function wait_close(t)
-    waiting[t._] = nil
-    ltask.multi_wakeup(t._)
-end
-local wait_closeable = {__close=wait_close}
-local function wait_start(pathkey)
-    while waiting[pathkey] do
-        ltask.multi_wait(pathkey)
-    end
-    waiting[pathkey] = true
-    return setmetatable({_=pathkey}, wait_closeable)
+local compiling = {}
+
+local function compile_finish(key, ...)
+    ltask.multi_wakeup(compiling[key], ...)
+    compiling[key] = nil
+    return ...
 end
 
 local function run(setting, commands, input, output)
     local cmdstring = cmdtostr(commands)
     local path = setting.shaderpath / get_filename(cmdstring, input)
     local pathkey = path:string()
-    local _ <close> = wait_start(pathkey)
+
+    if compiling[pathkey] then
+        local ok, res = ltask.multi_wait(compiling[pathkey])
+        if ok then
+            clonefile(path / "bin", output)
+        end
+        return ok, res
+    end
+    compiling[pathkey] = {}
+
     if lfs.exists(path / "bin") then
         local deps = depends.read_if_not_dirty(setting.vfs, path / ".dep")
         if deps then
             clonefile(path / "bin", output)
-            return true, deps
+            return compile_finish(pathkey, true, deps)
         end
     end
     lfs.remove_all(path)
@@ -70,7 +73,7 @@ local function run(setting, commands, input, output)
         end
     end
     if not success then
-        return false, errmsg
+        return compile_finish(pathkey, false, errmsg)
     end
     local deps = depends.new()
     depends.add_lpath(deps, input:string())
@@ -88,7 +91,7 @@ local function run(setting, commands, input, output)
     depends.writefile(path / ".dep", deps)
     writefile(path / ".arguments", cmdstring)
     clonefile(path / "bin", output)
-    return true, deps
+    return compile_finish(pathkey, true, deps)
 end
 
 return {

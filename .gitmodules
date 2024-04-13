@@ -3,7 +3,7 @@
 	url = https://github.com/junjie020/bgfx.git
 [submodule "3rd/bx"]
 	path = 3rd/bx
-	url = https://github.com/bkaradzic/bx.git
+	url = https://github.com/actboy168/bx.git
 [submodule "3rd/bimg"]
 	path = 3rd/bimg
 	url = https://github.com/bkaradzic/bimg.git

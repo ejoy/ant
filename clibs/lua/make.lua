@@ -38,7 +38,7 @@ if lm.os == "windows" then
             lm.AntDir .. "/3rd/bee.lua/",
         },
         sources = {
-            lm.AntDir .. "/3rd/bee.lua/3rd/lua/utf8_crt.c",
+            lm.AntDir .. "/3rd/bee.lua/3rd/lua/bee_utf8_crt.cpp",
         }
     }
 end
