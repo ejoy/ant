@@ -34,7 +34,11 @@ local function run(setting, commands, input, output)
     local pathkey = path:string()
 
     if compiling[pathkey] then
-        return ltask.multi_wait(compiling[pathkey])
+        local ok, res = ltask.multi_wait(compiling[pathkey])
+        if ok then
+            clonefile(path / "bin", output)
+        end
+        return ok, res
     end
     compiling[pathkey] = {}
 
