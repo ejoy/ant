@@ -212,12 +212,9 @@ lm:exe "lua" {
         "ant_links",
         "copy_mainlua"
     },
-    msvc = {
+    windows = {
         sources = "windows/lua.rc",
     },
-    mingw = {
-        sources = "windows/lua.rc",
-    }
 }
 
 lm:exe "ant" {
@@ -228,12 +225,9 @@ lm:exe "ant" {
         "ant_links",
         "copy_mainlua"
     },
-    msvc = {
+    windows = {
         sources = "windows/lua.rc",
     },
-    mingw = {
-        sources = "windows/lua.rc",
-    }
 }
 
 lm:phony "editor" {
