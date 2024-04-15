@@ -46,14 +46,51 @@ local function update_light_prefab(lightprefab, lightinfo)
     ilight.set_intensity(point, ilight.intensity(point) * lightinfo.intensity_scale)
 end
 
-local function Sponza_scene()
-    PC:create_instance{
-        prefab = "/pkg/ant.test.features/assets/sponza.glb/mesh.prefab",
-        on_ready = function (p)
-            local root<close> = world:entity(p.tag['*'][1], "scene:update")
-            iom.set_scale(root, 10)
-        end,
+local function shadow_plane()
+    return PC:create_entity{
+		policy = {
+			"ant.render|simplerender",
+		},
+		data = {
+			scene 		= {
+                t = {0.0, -1.0, 0.0},
+				s = {100, 1, 100},
+            },
+			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
+			mesh_result	= imesh.init_mesh(ientity.plane_mesh()),
+            visible     = true,
+		}
+	}
+
+end
+
+local function inside_box()
+    return PC:create_entity{
+        policy = {
+            "ant.render|render",
+        },
+        data = {
+            scene = {
+                t = {0, 0, 0, 1},
+                s = 100,
+            },
+            material = "/pkg/ant.test.features/assets/test2.material",
+            mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb/meshes/Cube_P1.meshbin",
+            visible = true,
+        }
     }
+end
+
+local function Sponza_scene()
+    -- PC:create_instance{
+    --     prefab = "/pkg/ant.test.features/assets/sponza.glb/mesh.prefab",
+    --     on_ready = function (p)
+    --         local root<close> = world:entity(p.tag['*'][1], "scene:update")
+    --         iom.set_scale(root, 10)
+    --     end,
+    -- }
+
+    inside_box()
 
     local nx, ny, nz = 8, 8, 8
     local sx, sy, sz = 64, 64, 128
@@ -87,15 +124,15 @@ end
 
 local function simple_scene()
     local pl_pos = {
-        { pos = {-5, 1, 5,}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
-        { pos = {-5, 1,-5,}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
-        { pos = { 5, 2, 5,}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
-        { pos = { 5, 2,-5,}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
+        { pos = {-5, 1, 5,}, radius = 3, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
+        { pos = {-5, 1,-5,}, radius = 3, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
+        { pos = { 5, 2, 5,}, radius = 3, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
+        { pos = { 5, 2,-5,}, radius = 3, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
 
-        { pos = {-10, 1, 10}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
-        { pos = {-10, 1,-10}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
-        { pos = { 10, 2, 10}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
-        { pos = { 10, 2,-10}, radius = 10, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
+        { pos = {-10, 1, 10}, radius = 5, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
+        { pos = {-10, 1,-10}, radius = 5, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
+        { pos = { 10, 2, 10}, radius = 5, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
+        { pos = { 10, 2,-10}, radius = 5, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
         
         -- { pos = {  3, 1, 3}, radius = 10, intensity_scale=1.0},
         -- { pos = { -3, 1, 3}, radius = 10, intensity_scale=1.0},
@@ -112,19 +149,7 @@ local function simple_scene()
         }
     end
 
-    PC:create_entity{
-		policy = {
-			"ant.render|simplerender",
-		},
-		data = {
-			scene 		= {
-				s = {25, 1, 25},
-            },
-			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
-			mesh_result	= imesh.init_mesh(ientity.plane_mesh()),
-            visible     = true,
-		}
-	}
+    shadow_plane()
 
     PC:create_instance {
         prefab = "/pkg/ant.resources.binary/meshes/base/cube.glb/mesh.prefab",
