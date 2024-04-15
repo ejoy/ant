@@ -2,6 +2,7 @@
 
 #include <lua.hpp>
 #include <array>
+#include <concepts>
 #include <limits>
 #include <map>
 #include <string>
