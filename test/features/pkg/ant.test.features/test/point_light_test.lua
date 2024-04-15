@@ -65,6 +65,101 @@ local function shadow_plane()
 end
 
 local function inside_box()
+    local inside_vb = {
+        --front
+        0.5,-0.5,-0.5, 0.0, 0.0, 1.0,
+        0.5, 0.5,-0.5, 0.0, 0.0, 1.0,
+        -0.5, 0.5,-0.5, 0.0, 0.0, 1.0,
+        -0.5,-0.5,-0.5, 0.0, 0.0, 1.0,
+        --back
+        -0.5,-0.5, 0.5, 0.0, 0.0,-1.0,
+        -0.5, 0.5, 0.5, 0.0, 0.0,-1.0,
+        0.5, 0.5, 0.5, 0.0, 0.0,-1.0,
+        0.5,-0.5, 0.5, 0.0, 0.0,-1.0,
+        --left
+        -0.5,-0.5,-0.5, 1.0, 0.0, 0.0,
+        -0.5, 0.5,-0.5, 1.0, 0.0, 0.0,
+        -0.5, 0.5, 0.5, 1.0, 0.0, 0.0,
+        -0.5,-0.5, 0.5, 1.0, 0.0, 0.0,
+        --right
+        0.5,-0.5, 0.5,-1.0, 0.0, 0.0,
+        0.5, 0.5, 0.5,-1.0, 0.0, 0.0,
+        0.5, 0.5,-0.5,-1.0, 0.0, 0.0,
+        0.5,-0.5,-0.5,-1.0, 0.0, 0.0,
+        --bottom
+        -0.5,-0.5,-0.5, 0.0, 1.0, 0.0,
+        -0.5,-0.5, 0.5, 0.0, 1.0, 0.0,
+        0.5,-0.5, 0.5, 0.0, 1.0, 0.0,
+        0.5,-0.5,-0.5, 0.0, 1.0, 0.0,
+        --top
+        0.5, 0.5,-0.5, 0.0,-1.0, 0.0,
+        0.5, 0.5, 0.5, 0.0,-1.0, 0.0,
+        -0.5, 0.5, 0.5, 0.0,-1.0, 0.0,
+        -0.5, 0.5,-0.5, 0.0,-1.0, 0.0,
+    }
+
+    local outside_vb = {
+        --front
+        -0.5,-0.5, 0.5, 0.0, 0.0, 1.0,
+        -0.5, 0.5, 0.5, 0.0, 0.0, 1.0,
+        0.5, 0.5, 0.5, 0.0, 0.0, 1.0,
+        0.5,-0.5, 0.5, 0.0, 0.0, 1.0,
+
+        --back
+        0.5,-0.5,-0.5, 0.0, 0.0, -1.0,
+        0.5, 0.5,-0.5, 0.0, 0.0, -1.0,
+        -0.5, 0.5,-0.5, 0.0, 0.0, -1.0,
+        -0.5,-0.5,-0.5, 0.0, 0.0, -1.0,
+
+        --left
+        -0.5,-0.5,-0.5,-1.0, 0.0, 0.0,
+        -0.5, 0.5,-0.5,-1.0, 0.0, 0.0,
+        -0.5, 0.5, 0.5,-1.0, 0.0, 0.0,
+        -0.5,-0.5, 0.5,-1.0, 0.0, 0.0,
+
+        --right
+        0.5,-0.5, 0.5, 1.0, 0.0, 0.0,
+        0.5, 0.5, 0.5, 1.0, 0.0, 0.0,
+        0.5, 0.5,-0.5, 1.0, 0.0, 0.0,
+        0.5,-0.5,-0.5, 1.0, 0.0, 0.0,
+
+        --top
+        -0.5,-0.5,-0.5, 0.0,-1.0, 0.0,
+        -0.5,-0.5, 0.5, 0.0,-1.0, 0.0,
+         0.5,-0.5, 0.5, 0.0,-1.0, 0.0,
+         0.5,-0.5,-0.5, 0.0,-1.0, 0.0,
+        --bottom
+         0.5, 0.5,-0.5, 0.0, 1.0, 0.0,
+         0.5, 0.5, 0.5, 0.0, 1.0, 0.0,
+        -0.5, 0.5, 0.5, 0.0, 1.0, 0.0,
+        -0.5, 0.5,-0.5, 0.0, 1.0, 0.0,
+    }
+
+    local ib = {
+        0, 1, 2, 2, 3,  0,
+        4, 5, 6, 6, 7,  4,
+        8, 9, 10, 10, 11,  8,
+        12, 13, 14, 14, 15, 12,
+        16, 17, 18, 18, 19, 16,
+        20, 21, 22, 22, 23, 20,
+    }
+    return PC:create_entity{
+        policy = {
+            "ant.render|simplerender",
+        },
+        data = {
+            scene = {
+                t = {0, 0, 0, 1},
+                s = 30,
+            },
+            material    = "/pkg/ant.test.features/assets/test/testpbr.material",
+            mesh_result = ientity.create_mesh({"p3|n3", inside_vb,}, ib),
+            visible     = true,
+        }
+    }
+end
+
+local function inside_box2()
     return PC:create_entity{
         policy = {
             "ant.render|render",
@@ -72,26 +167,16 @@ local function inside_box()
         data = {
             scene = {
                 t = {0, 0, 0, 1},
-                s = 100,
+                s = 30,
             },
-            material = "/pkg/ant.test.features/assets/test2.material",
-            mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb/meshes/Cube_P1.meshbin",
-            visible = true,
+            material    = "/pkg/ant.test.features/assets/test/test2.material",
+            mesh        = "/pkg/ant.resources.binary/meshes/base/cube.glb/meshes/Cube_P1.meshbin",
+            visible     = true,
         }
     }
 end
 
-local function Sponza_scene()
-    -- PC:create_instance{
-    --     prefab = "/pkg/ant.test.features/assets/sponza.glb/mesh.prefab",
-    --     on_ready = function (p)
-    --         local root<close> = world:entity(p.tag['*'][1], "scene:update")
-    --         iom.set_scale(root, 10)
-    --     end,
-    -- }
-
-    inside_box()
-
+local function uniform_lights()
     local nx, ny, nz = 8, 8, 8
     local sx, sy, sz = 64, 64, 128
     local dx, dy, dz = sx/nx, sy/ny, sz/nz
@@ -120,6 +205,19 @@ local function Sponza_scene()
             end
         end
     end
+end
+
+local function Sponza_scene()
+    -- PC:create_instance{
+    --     prefab = "/pkg/ant.test.features/assets/sponza.glb/mesh.prefab",
+    --     on_ready = function (p)
+    --         local root<close> = world:entity(p.tag['*'][1], "scene:update")
+    --         iom.set_scale(root, 10)
+    --     end,
+    -- }
+
+    inside_box()
+    --uniform_lights()
 end
 
 local function simple_scene()

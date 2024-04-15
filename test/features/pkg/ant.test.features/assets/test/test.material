@@ -1,0 +1,20 @@
+fx:
+  vs: /pkg/ant.test.features/assets/test/vs_test.sc
+  fs: /pkg/ant.test.features/assets/test/fs_test.sc
+  setting:
+    lighting: on
+    cast_shadow: off
+    receive_shadow: off
+  varyings:
+    a_position: vec3
+    a_normal: vec3
+    v_normal: "vec3 TEXCOORD0"
+properties:
+    u_color: {1.0, 1.0, 1.0, 1.0}
+    u_lightdir: {0.5, 0.5, 0.5, 0.0}
+state:
+  ALPHA_REF: 0
+  CULL: NONE
+  DEPTH_TEST: GREATER
+  MSAA: true
+  WRITE_MASK: RGBAZ
