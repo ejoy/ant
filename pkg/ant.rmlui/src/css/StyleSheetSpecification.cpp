@@ -377,13 +377,13 @@ static constexpr auto PropertyDefinitions = MakeEnumArray<PropertyId, PropertyDe
 	}},
 
 	{ PropertyId::ColumnGap, {
-		PropertyParseNumber<PropertyParseNumberUnit::Length>,
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
 	}},
 	{ PropertyId::RowGap, {
-		PropertyParseNumber<PropertyParseNumberUnit::Length>,
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
 	}},
 	{ PropertyId::Gap, {
-		PropertyParseNumber<PropertyParseNumberUnit::Length>,
+		PropertyParseNumber<PropertyParseNumberUnit::LengthPercent>,
 	}},
 	
 	{ PropertyId::AlignContent, {
