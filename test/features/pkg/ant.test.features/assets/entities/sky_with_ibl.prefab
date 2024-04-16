@@ -3,7 +3,7 @@ data:
   ibl:
     LUT:
       size: 256
-    intensity: 8000
+    intensity: 4000
     irradiance:
       size: 32
     prefilter:
@@ -23,12 +23,3 @@ policy:
   ant.sky|skybox
   ant.render|simplerender
   ant.render|ibl
----
-data:
-  direct_specular:
-    sample_size:
-      dot: 512
-      roughness: 128
-    material: /pkg/ant.resources/materials/build_directspecular.material
-policy:
-  ant.render|direct_specular

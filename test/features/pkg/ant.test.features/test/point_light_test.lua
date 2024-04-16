@@ -372,7 +372,7 @@ end
 
 local function uniform_lights()
     local nx, ny, nz = 8, 8, 8
-    local sx, sy, sz = 64, 64, 128
+    local sx, sy, sz = 150, 150, 300
     local dx, dy, dz = sx/nx, sy/ny, sz/nz
 
     local s = 0.5
@@ -389,9 +389,9 @@ local function uniform_lights()
                     on_ready = function(pl)
                         update_light_prefab(pl, {
                             color = get_random_color(1),
-                            pos = {x, y, z, 1},
-                            intensity_scale = 1.0,
-                            radius = math.random(3, 5),
+                            pos = {x, y+1, z, 1},
+                            intensity_scale = math.random(7, 10),
+                            radius = math.random(15, 30),
                         })
                     end
                 }
