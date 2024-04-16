@@ -1,6 +1,6 @@
 fx:
   shader_type: PBR
-  vs_code: "vec4 CUSTOM_VS_POSITION(VSInput vsinput, inout Varyings varyings, out mat4 wm){ wm = (mat4)0; return vec4((vsinput.position / u_canvas_size.xy) * 2.0 - 1.0, 0.5, 1.0);}"
+  vs_code: "vec4 CUSTOM_VS_POSITION(VSInput vsinput, inout Varyings varyings, mat4 wm){ return vec4((vsinput.position / u_canvas_size.xy) * 2.0 - 1.0, 0.5, 1.0);}"
   fs_code: "void CUSTOM_FS(Varyings v, FSOutput o){o.color = u_color;}"
   setting:
     lighting: off

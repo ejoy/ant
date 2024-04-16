@@ -70,32 +70,28 @@ local CLUSTER_AABB_BUFFER_SIZE<const> = CLUSTER_COUNT * CLUSTER_AABB_SIZE_IN_VEC
 local cluster_buffers = {
     AABB = {
         name            = "CLUSTER_BUFFER_AABB_STAGE",
-        layout          = layoutmgr.get "t40",
+        handle          = bgfx.create_dynamic_vertex_buffer(CLUSTER_AABB_BUFFER_SIZE, layoutmgr.get "t40".handle, "rw"),
     },
     -- TODO: not use
     -- index buffer of 32bit, and only 1 element
-    global_index_count = {
-        name            = "CLUSTER_BUFFER_GLOBAL_INDEX_COUNT_STAGE",
-    },
+    -- global_index_count = {
+    --     name            = "CLUSTER_BUFFER_GLOBAL_INDEX_COUNT_STAGE",
+    -- },
     -- index buffer of 32bit
     light_grids = {
         name            = "CLUSTER_BUFFER_LIGHT_GRID_STAGE",
+        handle         = bgfx.create_dynamic_index_buffer(LIGHT_GRID_BUFFER_SIZE, "drw"),
     },
     -- index buffer of 32bit
     light_index_lists = {
-        size            = 0,
         name            = "CLUSTER_BUFFER_LIGHT_INDEX_LIST_STAGE",
+        handle          = bgfx.create_dynamic_index_buffer(CLUSTER_MAX_LIGHT_COUNT * CLUSTER_COUNT, "drw"),
     },
+    --handle from light.lua
     light_info = {
         name            = "CLUSTER_BUFFER_LIGHT_INFO_STAGE",
-        layout          = layoutmgr.get "t40",
     }
 }
-
-cluster_buffers.light_grids.handle         = bgfx.create_dynamic_index_buffer(LIGHT_GRID_BUFFER_SIZE, "drw")
---cluster_buffers.global_index_count.handle  = bgfx.create_dynamic_index_buffer(1, "drw")
-cluster_buffers.AABB.handle                = bgfx.create_dynamic_vertex_buffer(CLUSTER_AABB_BUFFER_SIZE, cluster_buffers.AABB.layout.handle, "rw")
-cluster_buffers.light_index_lists.handle   = bgfx.create_dynamic_index_buffer(CLUSTER_MAX_LIGHT_COUNT * CLUSTER_COUNT, "drw")
 
 local CLUSTER_BUILDAABB_EID, CLUSTER_LIGHTCULL_EID
 
@@ -165,7 +161,7 @@ function cfs:init_world()
 end
 
 local function cull_lights(viewid)
-    if irq.main_camera_changed() then
+    if true then --irq.main_camera_changed() then
         local e = world:entity(CLUSTER_LIGHTCULL_EID, "dispatch:in")
         icompute.dispatch(viewid, e.dispatch)
     end
@@ -180,7 +176,8 @@ local function check_rebuild_cluster_aabb()
     if not C then
         C = irq.main_camera_changed()
     end
-    if C then
+    if true then --C then
+        C = irq.main_camera_entity()
         w:extend(C, "camera:in")
         local f = C.camera.frustum
         local near, far = f.n, f.f

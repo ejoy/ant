@@ -412,9 +412,6 @@ local function build_input_var(varyingcontent)
         vac1 "vec3 posWS;"
     end
 
-    --TODO: maybe we need posCS value back after CUSTOM_VS_POSITION??
-    --vac1 "vec4 posCS;"
-
     iac0 "};"
     diac0 "};"
     vac0 "};"
@@ -434,28 +431,91 @@ local function build_input_var(varyingcontent)
     }
 end
 
-local function build_custom_vs_position_func(d, varyings, mat, isdi)
+local function readfile(f)
+    local ff<close> = io.open(f:string())
+    if ff then
+        return ff:read "a"
+    end
+end
+
+local INCLUDE_FILE_CACHES = {}
+
+local function search_file_content(searchpaths, filename)
+    for _, p in ipairs(searchpaths) do
+        local fullfile = p / filename
+        local sfullfile = fullfile:string()
+        local c = INCLUDE_FILE_CACHES[sfullfile]
+        if c then
+            return c
+        end
+
+        c = readfile(fullfile)
+        if c then
+            INCLUDE_FILE_CACHES[sfullfile] = c
+            return c
+        end
+    end
+    
+end
+local function check_func_defined(inputfolder, code, funcname)
+    if code then
+        if code:match(funcname) then
+            return true
+        end
+
+        local searchpaths = {inputfolder, LOCAL_SHADER_BASE}
+        --NOTE: we only search one depth
+        for fn in code:gmatch "#include [\"]([^\"]+)\"" do
+            local c = search_file_content(searchpaths, fn)
+            if c and c:match(funcname) then
+                return true
+            end
+        end
+    end
+    
+end
+
+local function build_custom_vs_worldmat_func(d, inputfolder, mat, varyings, isdi)
+    if check_func_defined(inputfolder, mat.fx.vs_code, "LOAD_WORLDMAT") then
+        return
+    end
+
     local ac0, ac1 = code_gen(d, 0, 1)
+
     ac0 "//code gen by genshader.lua"
-    ac0 "vec4 CUSTOM_VS_POSITION(VSInput vsinput, inout Varyings varyings, out mat4 worldmat){"
-    if (varyings.a_indices and varyings.a_weight) and (not mat.fx.setting.no_skinning) then
-        ac1 "worldmat = calc_bone_transform(vsinput.indices, vsinput.weight);"
-    else
-        ac1 "worldmat = u_model[0];"
-    end
+    ac0 "mat4 LOAD_WORLDMAT(VSInput vsinput){"
+    local isskinning = (varyings.a_indices and varyings.a_weight) and (not mat.fx.setting.no_skinning)
 
-    if isdi then
+    --TODO: gpu skinning with draw indirect is not support right
+    if isskinning then
+        ac1 "return calc_bone_transform(vsinput.indices, vsinput.weight);"
+    elseif isdi then
         ac1 "mat4 hitchmat = mat4(vsinput.data0, vsinput.data1, vsinput.data2, vec4(0.0, 0.0, 0.0, 1.0));"
-        ac1 "worldmat = mul(hitchmat, worldmat);"
+        ac1 "return mul(hitchmat, u_model[0]);"
+    else
+        ac1 "return u_model[0];"
     end
 
-    ac1 "vec4 posCS;"
-    ac1 "varyings.posWS = transform_worldpos(worldmat, vsinput.position, posCS);"
-    ac1 "return posCS;"
     ac0 "}"
 end
 
-local function build_custom_vs_func(d, varyings, mat)
+local function build_custom_vs_position_func(d, inputfolder, mat)
+    if check_func_defined(inputfolder, mat.fx.vs_code, "CUSTOM_VS_POSITION") then
+        return
+    end
+    local ac0, ac1 = code_gen(d, 0, 1)
+    ac0 "//code gen by genshader.lua"
+    ac0 "vec4 CUSTOM_VS_POSITION(VSInput vsinput, inout Varyings varyings, mat4 worldmat){"
+    ac1     "vec4 posCS;"
+    ac1     "varyings.posWS = transform_worldpos(worldmat, vsinput.position, posCS);"
+    ac1     "return posCS;"
+    ac0 "}"
+end
+
+local function build_custom_vs_func(d, inputfolder, mat, varyings)
+    if check_func_defined(inputfolder, mat.fx.vs_code, "CUSTOM_VS") then
+        return
+    end
     local ac0, ac1 = code_gen(d, 0, 1)
     ac0 "//code gen by genshader.lua"
     ac0 "void CUSTOM_VS(mat4 worldmat, VSInput vsinput, inout Varyings varyings) {"
@@ -536,23 +596,30 @@ local function build_custom_vs_func(d, varyings, mat)
     ac0 "}"
 end
 
-local function build_vs_code(mat, varyings, isdi)
+local function build_vs_code(inputfolder, mat, varyings, isdi)
     local d = {}
-    build_custom_vs_position_func(d, varyings, mat, isdi)
-    build_custom_vs_func(d, varyings, mat)
+    build_custom_vs_worldmat_func(d, inputfolder, mat, varyings, isdi)
+    build_custom_vs_position_func(d, inputfolder, mat)
+    build_custom_vs_func(d, inputfolder, mat, varyings)
 
+    if mat.fx.vs_code then
+        d[#d+1] = mat.fx.vs_code
+    end
     return table.concat(d, "\n")
 end
 
-local function build_fs_code(mat, varyings)
-    local fx, properties, state = mat.fx, mat.properties, mat.state
+local function build_fs_code(inputfolder, mat, varyings)
+    local fx = mat.fx
+    if check_func_defined(inputfolder, fx.fs_code, "CUSTOM_FS") then
+        return fx.fs_code
+    end
+    local properties, state = mat.properties, mat.state
+
     local d = {}
     local ac0, ac1, ac2 = code_gen(d, 0, 1, 2)
-    ac0 [[
-//code gen by genshader.lua
-void CUSTOM_FS(Varyings varyings, inout FSOutput fsoutput) {
-    material_info mi = (material_info)0;
-]]
+    ac0 "//code gen by genshader.lua"
+    ac0 "void CUSTOM_FS(Varyings varyings, inout FSOutput fsoutput) {"
+    ac1  "material_info mi = (material_info)0;"
 
     --basecolor
     assert(properties.u_basecolor_factor)
@@ -717,9 +784,7 @@ local function build_fs_assignments(mat, varyings, varying_assignments)
     return assignments
 end
 
-local function build_fx_content(mat, varyings, results)
-    local fx = mat.fx
-
+local function build_fx_content(inputfolder, mat, varyings, results)
     local inputdecl         = table.concat(results.input_decls, " ")
     local diinputdecl       = table.concat(results.di_input_decls, " ")
     local varyingdecl       = table.concat(results.varying_decls, " ")
@@ -730,7 +795,7 @@ local function build_fx_content(mat, varyings, results)
             ["@VSINPUT_VARYING_DEFINE"] = ("$input %s\n$output %s\n"):format(inputdecl, varyingdecl),
             ["@VSINPUTOUTPUT_STRUCT"]   = build_vsinputoutput(results.inputs, results.varyings),
             ["@VS_PROPERTY_DEFINE"]     = vs_properties_content,
-            ["@VS_FUNC_DEFINE"]         = fx.vs_code or build_vs_code(mat, varyings),
+            ["@VS_FUNC_DEFINE"]         = build_vs_code(inputfolder, mat, varyings),
             ["@VSINPUT_INIT"]           = table.concat(results.input_assignments, "\n"),
             ["@OUTPUT_VARYINGS"]        = table.concat(results.varying_assignments, "\n"),
         },
@@ -738,7 +803,7 @@ local function build_fx_content(mat, varyings, results)
             ["@VSINPUT_VARYING_DEFINE"] = ("$input %s\n$output %s\n"):format(diinputdecl, varyingdecl),
             ["@VSINPUTOUTPUT_STRUCT"]   = build_vsinputoutput(results.di_inputs, results.varyings),
             ["@VS_PROPERTY_DEFINE"]     = vs_properties_content,
-            ["@VS_FUNC_DEFINE"]         = fx.vs_code or build_vs_code(mat, varyings, true),
+            ["@VS_FUNC_DEFINE"]         = build_vs_code(inputfolder, mat, varyings, true),
             ["@VSINPUT_INIT"]           = table.concat(results.di_input_assignments, "\n"),
             ["@OUTPUT_VARYINGS"]        = table.concat(results.varying_assignments, "\n"),
         },
@@ -746,7 +811,7 @@ local function build_fx_content(mat, varyings, results)
             ["@FSINPUT_VARYINGS_DEFINE"]= "$input " .. varyingdecl,
             ["@FSINPUTOUTPUT_STRUCT"]   = build_fsinputoutput(results),
             ["@FS_PROPERTY_DEFINE"]     = fs_properties_content,
-            ["@FS_FUNC_DEFINE"]         = fx.fs_code or build_fs_code(mat, varyings),
+            ["@FS_FUNC_DEFINE"]         = build_fs_code(inputfolder, mat, varyings),
             ["@FSINPUT_FROM_VARYING"]   = table.concat(build_fs_assignments(mat, varyings, results.varying_assignments), "\n"),
         }
     }
@@ -910,7 +975,7 @@ local function gen_fx(setting, input, output, mat)
         if not varyings then
             error(("Material file:%s, shader_type == 'PBR' should define 'varyings' in material file"):format(input))
         end
-        local fxcontent = build_fx_content(mat, varyings, results)
+        local fxcontent = build_fx_content(inputfolder, mat, varyings, results)
         build_fx_macros(mat, varyings)
         for stage in pairs(stages) do
             gen_shader(setting, fx, stage, fxcontent)
