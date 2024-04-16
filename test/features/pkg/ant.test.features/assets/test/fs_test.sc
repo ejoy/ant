@@ -1,4 +1,4 @@
-$input v_normal
+$input v_bitangent v_normal v_posWS v_tangent v_texcoord0
 #include <bgfx_shader.sh>
 uniform vec4 u_color;
 uniform vec4 u_lightdir;

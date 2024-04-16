@@ -3,12 +3,18 @@ fx:
   fs: /pkg/ant.test.features/assets/test/fs_test.sc
   setting:
     lighting: on
-    cast_shadow: off
-    receive_shadow: off
+    cast_shadow: on
+    receive_shadow: on
+    #no_predepth: true
   varyings:
-    a_position: vec3
-    a_normal: vec3
-    v_normal: "vec3 TEXCOORD0"
+    a_position: "vec3 POSITION"
+    a_tangent: "vec4 TANGENT"
+    a_texcoord0: "vec2 TEXCOORD0"
+    v_texcoord0: "vec2 TEXCOORD0"
+    v_bitangent: "vec3 TEXCOORD1"
+    v_tangent: "vec3 TEXCOORD2"
+    v_normal: "vec3 TEXCOORD3"
+    v_posWS: "vec3 TEXCOORD4"
 properties:
     u_color: {1.0, 1.0, 1.0, 1.0}
     u_lightdir: {0.5, 0.5, 0.5, 0.0}
