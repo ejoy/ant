@@ -402,16 +402,15 @@ local function uniform_lights()
 end
 
 local function Sponza_scene()
-    -- PC:create_instance{
-    --     prefab = "/pkg/ant.test.features/assets/sponza.glb/mesh.prefab",
-    --     on_ready = function (p)
-    --         local root<close> = world:entity(p.tag['*'][1], "scene:update")
-    --         iom.set_scale(root, 10)
-    --     end,
-    -- }
+    PC:create_instance{
+        prefab = "/pkg/ant.test.features/assets/sponza.glb/mesh.prefab",
+        on_ready = function (p)
+            local root<close> = world:entity(p.tag['*'][1], "scene:update")
+            iom.set_scale(root, 10)
+        end,
+    }
 
-    inside_box2()
-    --uniform_lights()
+    uniform_lights()
 end
 
 local function simple_scene()
