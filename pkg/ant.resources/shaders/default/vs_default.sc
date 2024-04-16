@@ -18,11 +18,11 @@ void main()
 
 @VSINPUT_INIT
 
-    mat4 worldmat = (mat4)0;
-    gl_Position = CUSTOM_VS_POSITION(vsinput, varyings, worldmat);
+    mat4 worldmat = LOAD_WORLDMAT(vsinput);
 #ifndef POSITION_ONLY
     CUSTOM_VS(worldmat, vsinput, varyings);
 #endif //POSITION_ONLY
 
+    gl_Position = CUSTOM_VS_POSITION(vsinput, varyings, worldmat);
 @OUTPUT_VARYINGS
 }
