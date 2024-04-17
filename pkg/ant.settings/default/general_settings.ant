@@ -20,7 +20,7 @@ graphic:
     clear_depth: 1
     clear_stencil: 0
   shadow:
-    normal_offset: 1.0
+    normal_offset: 0.0
     size: 1024
     split_ratios:
       {0.0, 1.0}

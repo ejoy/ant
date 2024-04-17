@@ -388,7 +388,7 @@ end
 local CULL_REVERSE<const> = {
 	CCW		= "CW",
 	CW		= "CCW",
-	NONE	= "CCW",
+	NONE	= "CW",
 }
 
 local function create_shadow_state(srcstate, dststate)

@@ -34,7 +34,7 @@ float shadowEVSM(shadow_sampler_type shadowsampler, vec4 shadowcoord, int cascad
 #endif //
 
     //why need 1.0 - visibility, because we using inverse-z
-    return visibility;
+    return 1.0 - visibility;
 }
 #endif //SM_EVSM
 
