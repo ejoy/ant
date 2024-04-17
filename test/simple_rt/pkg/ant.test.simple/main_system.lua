@@ -109,7 +109,7 @@ local function create_scene(is_test)
 			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
 			visible     = true,
             visible_masks = is_test and "" or nil,
-			mesh_result	= imesh.init_mesh(ientity.plane_mesh(), true),
+			mesh_result	= ientity.plane_mesh(),
             owned_mesh_buffer = true,
 		}
 	}

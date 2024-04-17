@@ -57,7 +57,7 @@ local function shadow_plane()
 				s = {100, 1, 100},
             },
 			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
-			mesh_result	= imesh.init_mesh(ientity.plane_mesh()),
+			mesh_result	= ientity.plane_mesh(),
             visible     = true,
 		}
 	}
