@@ -99,15 +99,15 @@ function m.read_if_not_dirty(setting, path)
         if timestamp == 0 then
             local rp = setting.vfs.realpath(filename)
             if rp then
-                return rp
+                return nil, rp
             end
         elseif timestamp == 1 then
             if lfs.exists(filename) then
-                return filename
+                return nil, filename
             end
         else
             if not lfs.exists(filename) or timestamp ~= lfs.last_write_time(filename) then
-                return
+                return nil, filename
             end
         end
         i = i + 1
