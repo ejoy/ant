@@ -4,10 +4,10 @@
 #include "common/transform.sh"
 
 #ifdef WITH_POSITION_ATTRIB
-vec4 custom_vs_position(VSInput vsinput, inout Varyings varyings, out mat4 worldmat)
+vec4 custom_vs_position(VSInput vsinput, inout Varyings varyings, mat4 worldmat)
 {
-    worldmat = u_model[0];
-	vec4 posCS; varyings.posWS = transform_worldpos(worldmat, vsinput.position, posCS);
+	vec4 posCS;
+	varyings.posWS = transform_worldpos(worldmat, vsinput.position, posCS);
 	return posCS;
 }
 #endif //WITH_POSITION_ATTRIB

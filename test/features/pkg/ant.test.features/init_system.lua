@@ -23,7 +23,7 @@ end
 local function init_camera()
     local mq = w:first "main_queue camera_ref:in"
     local camera_ref<close> = world:entity(mq.camera_ref)
-    local eyepos = math3d.vector(0, 10, -10)
+    local eyepos = math3d.vector(1, 10, -10)
     iom.set_position(camera_ref, eyepos)
     local dir = math3d.normalize(math3d.sub(mc.ZERO_PT, eyepos))
     iom.set_direction(camera_ref, dir)

@@ -1,6 +1,6 @@
 fx:
   shader_type: PBR
-  vs_code: "#include \"default/utils.sh\"\nvec4 CUSTOM_VS_POSITION(VSInput i, inout Varyings v, out mat4 m){return custom_vs_position(i, v, m);}"
+  vs_code: ""
   fs_code: "void CUSTOM_FS(Varyings v, out FSOutput o){o.color = u_color;}"
   setting:
     lighting: off

@@ -1,0 +1,26 @@
+fx:
+  vs: /pkg/ant.test.features/assets/test/vs_test.sc
+  fs: /pkg/ant.test.features/assets/test/fs_test.sc
+  setting:
+    lighting: on
+    cast_shadow: on
+    receive_shadow: on
+    #no_predepth: true
+  varyings:
+    a_position: "vec3 POSITION"
+    a_tangent: "vec4 TANGENT"
+    a_texcoord0: "vec2 TEXCOORD0"
+    v_texcoord0: "vec2 TEXCOORD0"
+    v_bitangent: "vec3 TEXCOORD1"
+    v_tangent: "vec3 TEXCOORD2"
+    v_normal: "vec3 TEXCOORD3"
+    v_posWS: "vec3 TEXCOORD4"
+properties:
+    u_color: {1.0, 1.0, 1.0, 1.0}
+    u_lightdir: {0.5, 0.5, 0.5, 0.0}
+state:
+  ALPHA_REF: 0
+  CULL: NONE
+  DEPTH_TEST: GREATER
+  MSAA: true
+  WRITE_MASK: RGBAZ

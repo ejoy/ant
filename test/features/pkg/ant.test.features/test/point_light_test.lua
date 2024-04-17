@@ -64,34 +64,313 @@ local function shadow_plane()
 
 end
 
+local function calc_tangents(ib, vertices)
+	local tangents, bitangents = {}, {}
+
+	local function load_vertex(vidx)
+		local v = vertices[vidx]
+		return {
+			p = math3d.vector(v.p),
+            n = math3d.vector(v.n),
+			u = v.t[1], v = v.t[2],
+		}
+	end
+	--[[
+		tangent calculation:
+		we have 3 vertices: a, b, c, which have position and uv defined in triangle abc, we make:
+			tangent T and bitangent B:
+				b.p - a.p = (b.u-a.u)*T + (b.v-a.v)*B
+				c.p - a.p = (c.u-a.u)*T + (c.v-a.v)*B
+			make:
+				ba=b.p-a.p, bau=b.u-a.u, bav=b.v-a.v
+				ca=c.p-a.p, cau=c.u-a.u, cav=c.v-a.v
+
+				ba = bau*T + bav*B	==> ba.x = bau*T.x + bav*B.x | ba.y = bau*T.y + bav*B.y | ba.z = bau*T.z + bav*B.z
+				ca = cau*T + cav*B	==> ca.x = cau*T.x + cav*B.x | ca.y = cau*T.y + cav*B.y | ca.z = cau*T.z + cav*B.z
+
+				cav*ba = cav*bau*T + cav*bav*B
+				bav*ca = bav*cau*T + bav*cav*B
+
+				bav*ca - cav*ba = (bav*cau-cav*bau)*T	==> T = (bav*ca - cav*ba)/(bav*cau - cav*bau)
+
+				let det = (bav*cau-cav*bau), invdet = 1/(bav*cau-cav*bau)
+				T = (bav*ca - cav*ba) * invdet
+
+			we can solve T and B
+	]]
+
+	local function calc_tangent(vidx0, vidx1, vidx2)
+		local a, b, c = load_vertex(vidx0), load_vertex(vidx1), load_vertex(vidx2)
+
+		local ba = math3d.sub(b.p, a.p)
+		local ca = math3d.sub(c.p, a.p)
+		local bau, bav = b.u - a.u, b.v - a.v
+		local cau, cav = c.u - a.u, c.v - a.v
+
+		local det<const> = bau * cav - bav * cau
+		local t, bi
+		if math3d.ext_util.iszero(det) then
+			t, bi = math3d.ext_constant.XAXIS, math3d.ext_constant.ZAXIS
+		else
+			local invDet<const> = 1.0 / det
+
+			--(ba * cav - ca * bav) * invDet
+			--(ca * bau - ba * cau) * invDet
+			t, bi = math3d.mul(math3d.sub(math3d.mul(ba, cav), math3d.mul(ca, bav)), invDet),
+					math3d.mul(math3d.sub(math3d.mul(ca, bau), math3d.mul(ba, cau)), invDet)
+		end
+
+		-- we will merge tangent and bitangent value
+		tangents[vidx0]		= tangents[vidx0] and math3d.add(tangents[vidx0], t) or t
+		tangents[vidx1]		= tangents[vidx1] and math3d.add(tangents[vidx1], t) or t
+		tangents[vidx2]		= tangents[vidx2] and math3d.add(tangents[vidx2], t) or t
+
+		bitangents[vidx0]	= bitangents[vidx0] and math3d.add(bitangents[vidx0], bi) or bi
+		bitangents[vidx1]	= bitangents[vidx1] and math3d.add(bitangents[vidx1], bi) or bi
+		bitangents[vidx2]	= bitangents[vidx2] and math3d.add(bitangents[vidx2], bi) or bi
+	end
+
+    for i=1, #ib, 3 do
+        local vidx0, vidx1, vidx2 = ib[i]+1, ib[i+1]+1, ib[i+2]+1
+        calc_tangent(vidx0, vidx1, vidx2)
+    end
+
+	-- see: http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-13-normal-mapping/#tangent-and-bitangent
+	local function make_vector_perpendicular(srcvec, basevec)
+		local ndt	= math3d.dot(srcvec, basevec)
+		return math3d.sub(srcvec, math3d.mul(basevec, ndt))
+	end
+
+	for iv=1, #vertices do
+		local tanu 		= tangents[iv]
+		local tanv 		= bitangents[iv]
+		local normal 	= math3d.vector(vertices[iv].n)
+		local tangent	= make_vector_perpendicular(tanu, normal)
+		local bitangent	= make_vector_perpendicular(tanv, normal)
+
+		if math3d.ext_util.iszero_math3dvec(tangent) or math3d.ext_util.isnan_math3dvec(tangent) then
+			if math3d.ext_util.iszero_math3dvec(bitangent) or math3d.ext_util.isnan_math3dvec(bitangent) then
+				tangent = math3d.ext_constant.XAXIS
+			else
+				tangent = math3d.cross(bitangent, normal)
+			end
+		end
+
+		tangent	= math3d.normalize(tangent)
+
+		local nxt    	= math3d.cross(normal, tangent)
+		tangent	= math3d.set_index(tangent, 4, math3d.dot(nxt, bitangent) < 0 and 1.0 or -1.0)
+		vertices[iv].T = math3d.tovalue(tangent)
+	end
+end
+
+local function pack_tangent_vertices(ib)
+    local vertices = {
+        --front
+        {p = {-0.5,-0.5, 0.5,}, n = {0.0, 0.0, 1.0}, t = {0.0, 1.0}, },
+        {p = {-0.5, 0.5, 0.5,}, n = {0.0, 0.0, 1.0}, t = {0.0, 0.0}, },
+        {p = {0.5, 0.5, 0.5, }, n = {0.0, 0.0, 1.0}, t = {1.0, 0.0}, },
+        {p = {0.5,-0.5, 0.5, }, n = {0.0, 0.0, 1.0}, t = {1.0, 1.0}, },
+
+        --back
+        {p = {0.5,-0.5,-0.5, }, n = {0.0, 0.0, -1.0,}, t = {0.0, 1.0},},
+        {p = {0.5, 0.5,-0.5, }, n = {0.0, 0.0, -1.0,}, t = {0.0, 0.0},},
+        {p = {-0.5, 0.5,-0.5,}, n = {0.0, 0.0, -1.0,}, t = {1.0, 0.0},},
+        {p = {-0.5,-0.5,-0.5,}, n = {0.0, 0.0, -1.0,}, t = {1.0, 1.0},},
+
+        --left
+        {p={-0.5,-0.5,-0.5,}, n = {-1.0, 0.0, 0.0,}, t = {0.0, 1.0},},
+        {p={-0.5, 0.5,-0.5,}, n = {-1.0, 0.0, 0.0,}, t = {0.0, 0.0},},
+        {p={-0.5, 0.5, 0.5,}, n = {-1.0, 0.0, 0.0,}, t = {1.0, 0.0},},
+        {p={-0.5,-0.5, 0.5,}, n = {-1.0, 0.0, 0.0,}, t = {1.0, 1.0},},
+
+        --right
+        {p={0.5,-0.5, 0.5,}, n = {1.0, 0.0, 0.0,}, t = {0.0, 1.0},},
+        {p={0.5, 0.5, 0.5,}, n = {1.0, 0.0, 0.0,}, t = {0.0, 0.0},},
+        {p={0.5, 0.5,-0.5,}, n = {1.0, 0.0, 0.0,}, t = {1.0, 0.0},},
+        {p={0.5,-0.5,-0.5,}, n = {1.0, 0.0, 0.0,}, t = {1.0, 1.0},},
+
+        --top
+        {p={-0.5,-0.5,-0.5,}, n = { 0.0,-1.0, 0.0,}, t = {0.0, 1.0},},
+        {p={-0.5,-0.5, 0.5,}, n = { 0.0,-1.0, 0.0,}, t = {0.0, 0.0},},
+        {p={ 0.5,-0.5, 0.5,}, n = { 0.0,-1.0, 0.0,}, t = {1.0, 0.0},},
+        {p={ 0.5,-0.5,-0.5,}, n = { 0.0,-1.0, 0.0,}, t = {1.0, 1.0},},
+
+        --bottom
+        {p = { 0.5, 0.5,-0.5,}, n = {0.0, 1.0, 0.0,}, t = {0.0, 1.0},},
+        {p = { 0.5, 0.5, 0.5,}, n = {0.0, 1.0, 0.0,}, t = {0.0, 0.0},},
+        {p = {-0.5, 0.5, 0.5,}, n = {0.0, 1.0, 0.0,}, t = {1.0, 0.0},},
+        {p = {-0.5, 0.5,-0.5,}, n = {0.0, 1.0, 0.0,}, t = {1.0, 1.0},},
+    }
+
+    calc_tangents(ib, vertices)
+
+    local t = {}
+    for _, v in ipairs(vertices) do
+        local Q = math3d.tovalue(mu.pack_tangent_frame(math3d.vector(v.n), math3d.vector(v.T)))
+        t[#t+1] = v.p[1]
+        t[#t+1] = v.p[2]
+        t[#t+1] = v.p[3]
+
+        t[#t+1] = Q[1]
+        t[#t+1] = Q[2]
+        t[#t+1] = Q[3]
+        t[#t+1] = Q[4]
+
+        t[#t+1] = v.t[1]
+        t[#t+1] = v.t[2]
+    end
+
+    return t
+end
+
 local function inside_box()
+    local inside_vb = {
+        --front
+        0.5,-0.5,-0.5, 0.0, 0.0, 1.0,
+        0.5, 0.5,-0.5, 0.0, 0.0, 1.0,
+        -0.5, 0.5,-0.5, 0.0, 0.0, 1.0,
+        -0.5,-0.5,-0.5, 0.0, 0.0, 1.0,
+        --back
+        -0.5,-0.5, 0.5, 0.0, 0.0,-1.0,
+        -0.5, 0.5, 0.5, 0.0, 0.0,-1.0,
+        0.5, 0.5, 0.5, 0.0, 0.0,-1.0,
+        0.5,-0.5, 0.5, 0.0, 0.0,-1.0,
+        --left
+        -0.5,-0.5,-0.5, 1.0, 0.0, 0.0,
+        -0.5, 0.5,-0.5, 1.0, 0.0, 0.0,
+        -0.5, 0.5, 0.5, 1.0, 0.0, 0.0,
+        -0.5,-0.5, 0.5, 1.0, 0.0, 0.0,
+        --right
+        0.5,-0.5, 0.5,-1.0, 0.0, 0.0,
+        0.5, 0.5, 0.5,-1.0, 0.0, 0.0,
+        0.5, 0.5,-0.5,-1.0, 0.0, 0.0,
+        0.5,-0.5,-0.5,-1.0, 0.0, 0.0,
+        --bottom
+        -0.5,-0.5,-0.5, 0.0, 1.0, 0.0,
+        -0.5,-0.5, 0.5, 0.0, 1.0, 0.0,
+        0.5,-0.5, 0.5, 0.0, 1.0, 0.0,
+        0.5,-0.5,-0.5, 0.0, 1.0, 0.0,
+        --top
+        0.5, 0.5,-0.5, 0.0,-1.0, 0.0,
+        0.5, 0.5, 0.5, 0.0,-1.0, 0.0,
+        -0.5, 0.5, 0.5, 0.0,-1.0, 0.0,
+        -0.5, 0.5,-0.5, 0.0,-1.0, 0.0,
+    }
+
+    local outside_vb = {
+        --front
+        -0.5,-0.5, 0.5, 0.0, 0.0, 1.0,
+        -0.5, 0.5, 0.5, 0.0, 0.0, 1.0,
+        0.5, 0.5, 0.5, 0.0, 0.0, 1.0,
+        0.5,-0.5, 0.5, 0.0, 0.0, 1.0,
+
+        --back
+        0.5,-0.5,-0.5, 0.0, 0.0, -1.0,
+        0.5, 0.5,-0.5, 0.0, 0.0, -1.0,
+        -0.5, 0.5,-0.5, 0.0, 0.0, -1.0,
+        -0.5,-0.5,-0.5, 0.0, 0.0, -1.0,
+
+        --left
+        -0.5,-0.5,-0.5,-1.0, 0.0, 0.0,
+        -0.5, 0.5,-0.5,-1.0, 0.0, 0.0,
+        -0.5, 0.5, 0.5,-1.0, 0.0, 0.0,
+        -0.5,-0.5, 0.5,-1.0, 0.0, 0.0,
+
+        --right
+        0.5,-0.5, 0.5, 1.0, 0.0, 0.0,
+        0.5, 0.5, 0.5, 1.0, 0.0, 0.0,
+        0.5, 0.5,-0.5, 1.0, 0.0, 0.0,
+        0.5,-0.5,-0.5, 1.0, 0.0, 0.0,
+
+        --top
+        -0.5,-0.5,-0.5, 0.0,-1.0, 0.0,
+        -0.5,-0.5, 0.5, 0.0,-1.0, 0.0,
+         0.5,-0.5, 0.5, 0.0,-1.0, 0.0,
+         0.5,-0.5,-0.5, 0.0,-1.0, 0.0,
+        --bottom
+         0.5, 0.5,-0.5, 0.0, 1.0, 0.0,
+         0.5, 0.5, 0.5, 0.0, 1.0, 0.0,
+        -0.5, 0.5, 0.5, 0.0, 1.0, 0.0,
+        -0.5, 0.5,-0.5, 0.0, 1.0, 0.0,
+    }
+
+    local ib = {
+         0,  1,  2,  2,  3,  0,
+         4,  5,  6,  6,  7,  4,
+         8,  9, 10, 10, 11,  8,
+        12, 13, 14, 14, 15, 12,
+        16, 17, 18, 18, 19, 16,
+        20, 21, 22, 22, 23, 20,
+    }
+
+    local ppp = {
+        --front
+        0.5,-0.5,-0.5, 
+        0.5, 0.5,-0.5, 
+        -0.5, 0.5,-0.5,
+        -0.5,-0.5,-0.5,
+        --back
+        -0.5,-0.5, 0.5,
+        -0.5, 0.5, 0.5,
+        0.5, 0.5, 0.5, 
+        0.5,-0.5, 0.5, 
+        --left
+        -0.5,-0.5,-0.5, 
+        -0.5, 0.5,-0.5, 
+        -0.5, 0.5, 0.5, 
+        -0.5,-0.5, 0.5, 
+        --right
+        0.5,-0.5, 0.5,
+        0.5, 0.5, 0.5,
+        0.5, 0.5,-0.5,
+        0.5,-0.5,-0.5,
+        --bottom
+        -0.5,-0.5,-0.5,
+        -0.5,-0.5, 0.5,
+        0.5,-0.5, 0.5, 
+        0.5,-0.5,-0.5, 
+        --top
+        0.5, 0.5,-0.5, 
+        0.5, 0.5, 0.5, 
+        -0.5, 0.5, 0.5,
+        -0.5, 0.5,-0.5,
+    }
+
+    local pv = pack_tangent_vertices(ib)
+    return PC:create_entity{
+        policy = {
+            "ant.render|simplerender",
+        },
+        data = {
+            scene = {
+                t = {0, 0, 0, 1},
+                s = 30,
+            },
+            material    = "/pkg/ant.test.features/assets/test/test.material",
+            mesh_result = ientity.create_mesh({"p3|T4|t2", pv,}, ib),
+            visible     = true,
+        }
+    }
+end
+
+local function inside_box2()
     return PC:create_entity{
         policy = {
             "ant.render|render",
         },
         data = {
-            scene = {
-                t = {0, 0, 0, 1},
-                s = 100,
-            },
-            material = "/pkg/ant.test.features/assets/test2.material",
             mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb/meshes/Cube_P1.meshbin",
+            material = "/pkg/ant.test.features/assets/test/test2.material",
             visible = true,
-        }
+            scene = {
+                s = 30,
+            }
+        },
     }
 end
 
-local function Sponza_scene()
-    -- PC:create_instance{
-    --     prefab = "/pkg/ant.test.features/assets/sponza.glb/mesh.prefab",
-    --     on_ready = function (p)
-    --         local root<close> = world:entity(p.tag['*'][1], "scene:update")
-    --         iom.set_scale(root, 10)
-    --     end,
-    -- }
-
-    inside_box()
-
+local function uniform_lights()
     local nx, ny, nz = 8, 8, 8
     local sx, sy, sz = 64, 64, 128
     local dx, dy, dz = sx/nx, sy/ny, sz/nz
@@ -120,6 +399,18 @@ local function Sponza_scene()
             end
         end
     end
+end
+
+local function Sponza_scene()
+    PC:create_instance{
+        prefab = "/pkg/ant.test.features/assets/sponza.glb/mesh.prefab",
+        on_ready = function (p)
+            local root<close> = world:entity(p.tag['*'][1], "scene:update")
+            iom.set_scale(root, 10)
+        end,
+    }
+
+    uniform_lights()
 end
 
 local function simple_scene()

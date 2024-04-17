@@ -157,6 +157,9 @@ static void SetPercentProperty(YGNodeRef node, PropertyId id, float v) {
 	case PropertyId::PaddingTop:    YGNodeStyleSetPaddingPercent(node, YGEdgeTop, v); break;
 	case PropertyId::PaddingRight:  YGNodeStyleSetPaddingPercent(node, YGEdgeRight, v); break;
 	case PropertyId::PaddingBottom: YGNodeStyleSetPaddingPercent(node, YGEdgeBottom, v); break;
+	case PropertyId::ColumnGap:     YGNodeStyleSetGapPercent(node, YGGutterColumn, v); break;
+	case PropertyId::RowGap:        YGNodeStyleSetGapPercent(node, YGGutterRow, v); break;
+	case PropertyId::Gap:           YGNodeStyleSetGapPercent(node, YGGutterAll, v); break;
 	case PropertyId::Height:        YGNodeStyleSetHeightPercent(node, v); break;
 	case PropertyId::Width:         YGNodeStyleSetWidthPercent(node, v); break;
 	case PropertyId::MaxHeight:     YGNodeStyleSetMaxHeightPercent(node, v); break;
