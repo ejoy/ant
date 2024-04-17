@@ -64,7 +64,7 @@ function init_loader_sys:camera_usage()
     --     local ray = {o = p0, d = math3d.sub(p0, p1)}
     
     --     local plane = math3d.vector(0, 1, 0, 0)
-    --     local r = math3d.muladd(ray.d, math3d.plane_ray(ray.o, ray.d, plane), ray.o)
+    --     local t, p = math3d.plane_ray(ray.o, ray.d, plane, true)
         
     --     print("click:", x, y, math3d.tostring(r), "view_rect:", vr.x, vr.y, vr.w, vr.h)
     -- end
