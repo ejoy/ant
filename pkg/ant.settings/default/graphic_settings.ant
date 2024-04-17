@@ -40,4 +40,4 @@ graphic:
     evsm:
       sample_radius: 2      #[1/2/3] mean: sample [3/5/7] times in evsm texture blur horizonal/vericial
       filter_type: uniform  #mean: how to filter the reolved depth buffer. can be [gussian/uniform]
-      format: RGBA16F       #[RGBA16F/RGBA32F/RG16F/RG32F], use RGxxF format, mean it will degenerate to vsm
+      format: RGBA32F       #[RGBA16F/RGBA32F/RG16F/RG32F], use RGxxF format, mean it will degenerate to vsm
