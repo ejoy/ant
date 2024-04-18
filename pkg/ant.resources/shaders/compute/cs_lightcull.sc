@@ -80,7 +80,7 @@ void main(){
     uint visible_light_count = 0;
 
     for(uint light_idx = light_offset_idx(); light_idx<u_all_light_count; ++light_idx){
-        light_info l; load_light_info(b_light_info_for_cull, light_idx, l);
+        light_info l = (light_info)0; load_light_info(b_light_info_for_cull, light_idx, l);
         transform_light(l);
         if(check_light_interset_aabb(l, aabb)){
             b_light_index_lists_write[offset+visible_light_count++] = light_idx;
