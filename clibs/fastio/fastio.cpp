@@ -54,7 +54,7 @@ namespace fileutil {
 #if defined(_WIN32)
         return _wfopen(u2w(L, filename), L"rb");
 #else
-        return fopen(filename, L"r");
+        return fopen(filename.data(), "r");
 #endif
     }
     static size_t size(FILE* f) noexcept {
