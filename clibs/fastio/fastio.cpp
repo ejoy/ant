@@ -67,7 +67,9 @@ namespace fileutil {
         return fread(buf, sizeof(char), sz, f);
     }
     static void close(FILE* f) noexcept {
-        fclose(f);
+        int rc = fclose(f);
+        (void)rc;
+        assert(rc == 0);
     }
 }
 
