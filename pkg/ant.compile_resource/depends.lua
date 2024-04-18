@@ -89,9 +89,6 @@ function m.dirty(setting, path)
 end
 
 function m.read_if_not_dirty(setting, path)
-    if not lfs.exists(path) then
-        return
-    end
     local i = 0
     local deps = m.new()
     for _, dep in ipairs(readconfig(path)) do
