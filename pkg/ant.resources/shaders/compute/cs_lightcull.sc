@@ -44,8 +44,10 @@ bool check_light_valid(light_info l, AABB aabb){
     return (l.intensity * attenuation) > LIGHT_ATTENUATION_THRESHOLD;
 }
 
-bool check_light_interset_aabb(light_info l, AABB aabb){
-    if (check_light_valid(l, aabb)){
+bool check_light_interset_aabb(light_info l, AABB aabb, uint clusterlightcount){
+    //TODO: if cluster have enough lights, we should sort the lights, and remove light which intensity is lowest
+    const uint halfcount = uint(u_cluster_max_light_count * 0.3);
+    if (clusterlightcount < halfcount || check_light_valid(l, aabb)){
         const float sq_dist = sphere_closest_pt_to_aabb(l.pos, aabb);
         return sq_dist <= (l.range * l.range);
     }
@@ -82,7 +84,7 @@ void main(){
     for(uint light_idx = light_offset_idx(); light_idx<u_all_light_count; ++light_idx){
         light_info l = (light_info)0; load_light_info(b_light_info_for_cull, light_idx, l);
         transform_light(l);
-        if(check_light_interset_aabb(l, aabb)){
+        if(check_light_interset_aabb(l, aabb, visible_light_count)){
             b_light_index_lists_write[offset+visible_light_count++] = light_idx;
             if (visible_light_count == u_cluster_max_light_count)
                 break;
