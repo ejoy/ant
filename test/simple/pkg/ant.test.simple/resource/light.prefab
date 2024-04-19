@@ -9,7 +9,7 @@ data:
     ibl:
       LUT:
         size: 256
-      intensity: 30000
+      intensity: 10625
       prefilter:
         size: 128
       source:
