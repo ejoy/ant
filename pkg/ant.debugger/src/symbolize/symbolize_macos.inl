@@ -30,7 +30,7 @@ namespace luadebug {
         if (!pipe) {
             return std::nullopt;
         }
-        FILE* f = pipe.open_read();
+        FILE* f = pipe.rd.to_file(bee::file_handle::mode::read);
         if (!f) {
             return std::nullopt;
         }
