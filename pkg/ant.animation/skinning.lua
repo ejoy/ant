@@ -70,7 +70,7 @@ function api.create(filename, skeleton)
 		and #skin.jointsRemap
 		or skeleton:num_joints()
 	if count > 64 then
-		error(("skinning matrices are too large, max is 128, %d needed"):format(count))
+		error(("skinning matrices are too large, max is 64, %d needed"):format(count))
 	end
 	return {
 		inverseBindMatrices = skin.inverseBindMatrices,
@@ -90,7 +90,7 @@ function c.remove(v)
 	if ENABLE_TAA then
 		if v.prev_matrices_id ~= nil then
 			math3d.unmark(v.prev_matrices_id)
-			v.prev_matrices_id = nil
+			v.prev_matrices_id = mathpkg.constant.NULL
 		end
 	end
 	math3d.unmark(v.matrices_id)
