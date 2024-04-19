@@ -2,12 +2,28 @@ local m = {}
 local lfs               = require "bee.filesystem"
 m.editor_root = lfs.current_path() / "tools/editor"
 
+local INVALID_PKG_NAMES<const> = {
+    ".DS_Store", ".vscode", ".git"
+}
+
+local function is_valid_pkg_name(name)
+    for _, n in ipairs(INVALID_PKG_NAMES) do
+        if n:match(name) then
+            return 
+        end
+    end
+
+    return true
+end
+
 local function get_package(entry_path)
     local packages = {}
     local lpath = entry_path / 'pkg'
     for item in lfs.pairs(lpath) do
         local _, pkgname = item:string():match'(.*/)(.*)'
-        packages[#packages + 1] = {name = pkgname, path = item}
+        if is_valid_pkg_name(pkgname) then
+            packages[#packages + 1] = {name = pkgname, path = item}
+        end
     end
     return packages
 end
