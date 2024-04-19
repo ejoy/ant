@@ -11,16 +11,16 @@ local device_viewrect = {x=0, y=0,}
 
 local scene_ratio<const> = setting:get "scene/ratio"
 
-local function calc_scene_size()
-    assert(device_viewrect.h > 0)
-    assert(device_viewrect.w > device_viewrect.h)
-    local dr = device_viewrect.w / device_viewrect.h
+local function calc_scene_size(refw, refh)
+    assert(refh > 0)
+    assert(refw > refh)
+    local dr = refw / refh
 
     local h
     if scene_ratio then
-        h = math.floor(device_viewrect.h * scene_ratio+0.5)
+        h = math.floor(refh * scene_ratio+0.5)
     else
-        h = math.min(DEFAULT_RESOLUTION_HEIGHT, device_viewrect.h)
+        h = math.min(DEFAULT_RESOLUTION_HEIGHT, refh)
     end
 
     return math.floor(dr*h+0.5), h
@@ -40,7 +40,7 @@ end
 
 local function resize(w, h)
     device_viewrect.w, device_viewrect.h = w, h
-    scene_viewrect.w, scene_viewrect.h = calc_scene_size()
+    scene_viewrect.w, scene_viewrect.h = calc_scene_size(device_viewrect.w, device_viewrect.h)
 
     log_viewrect()
 end

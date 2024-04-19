@@ -24,6 +24,12 @@ local function in_view(x, y)
     return mu.pt2d_in_rect(x, y, irq.view_rect "main_queue")
 end
 
+local last_vr = {x=0, y=0, w=0, h=0}
+
+local function is_viewrect_different(lhs, rhs)
+    return lhs.x ~= rhs.x or lhs.x ~= rhs.y or lhs.w ~= rhs.w or lhs.h ~= rhs.h
+end
+
 function m.show()
     local viewport = ImGui.GetMainViewport()
     if not icons.scale then
@@ -75,21 +81,32 @@ function m.show()
             "PassthruCentralNode",
         })
         --NOTE: the coordinate reture from BuilderGetCentralRect function is relative to full viewport
-        local x, y, ww, hh = ImGuiInternal.DockBuilderGetCentralRect(node_id)
-        x, y = x - viewport.Pos.x, y - viewport.Pos.y
-        local vp = iviewport.device_viewrect
-        if x ~= vp.x or y ~= vp.y or ww ~= vp.w or hh ~= vp.h then
+        local dock_vr = {}
+        dock_vr.x, dock_vr.y, dock_vr.w, dock_vr.h = ImGuiInternal.DockBuilderGetCentralRect(node_id)
+
+        local function scale_with_dpi(vr, offset)
+            vr.x, vr.y = vr.x - offset.x, vr.y - offset.y
             if platform.os == "macos" then
-                vp.x = x * viewport.DpiScale
-                vp.y = y * viewport.DpiScale
-                vp.w = ww * viewport.DpiScale
-                vp.h = hh * viewport.DpiScale
-            else
-                vp.x, vp.y, vp.w, vp.h = x, y, ww, hh
+                return {
+                    x = vr.x * viewport.DpiScale,
+                    y = vr.y * viewport.DpiScale,
+                    w = vr.w * viewport.DpiScale,
+                    h = vr.h * viewport.DpiScale,
+                }
             end
+
+            return vr
+        end
+
+        dock_vr = scale_with_dpi(dock_vr, viewport.Pos)
+
+        if is_viewrect_different(dock_vr, last_vr) then
+            --copy it
+            last_vr.x, last_vr.y, last_vr.w, last_vr.h = dock_vr.x, dock_vr.y, dock_vr.w, dock_vr.h
+
             world:dispatch_message {
-                type = "set_viewport",
-                viewport = vp,
+                type        = "scene_viewrect",
+                viewrect    = dock_vr,
             }
         end
     end
