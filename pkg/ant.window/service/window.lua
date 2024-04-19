@@ -49,10 +49,8 @@ local function render(init, args, initialized)
     bgfx.encoder_begin()
     world = new_world(config)
     world:dispatch_message {
-        type = "set_viewport",
-        viewport = {
-            x = 0,
-            y = 0,
+        type = "window_init",
+        size = {
             w = config.width,
             h = config.height,
         },

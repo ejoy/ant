@@ -103,6 +103,7 @@ function m.handle_event()
         if ev & SELECT_READ ~= 0 then
             local reading = fd:recv()
             if reading == nil then
+                selector:event_del(fd)
                 fd:close()
                 break
             elseif reading == false then

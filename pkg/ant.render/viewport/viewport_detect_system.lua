@@ -92,7 +92,6 @@ local scene_viewrect_changed_mb = world:sub{"scene_viewrect_changed"}
 
 function vp_detect_sys:data_changed()
 	for _, vr in scene_viewrect_changed_mb:unpack() do
-		iviewport.viewrect = vr
 		if vr.w ~= 0 and vr.h ~= 0 then
 			update_render_target(vr)
 			break
