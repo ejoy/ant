@@ -1,5 +1,6 @@
-local ecs = ...
+local ecs   = ...
 local world = ecs.world
+local w     = world.w
 
 local ImGui = require "imgui"
 local ianimation    = ecs.require "ant.animation|animation"
@@ -51,6 +52,29 @@ function m.AnimationView(tags)
                 end
             end
         end
+
+        if ImGui.TreeNodeEx("light", ImGui.TreeNodeFlags{"DefaultOpen"}) then
+            local dl = w:first "directional_light light:in"
+            if dl and ImGui.TreeNode "directional" then
+
+                ImGui.TreePop()
+            end
+
+            local ible = w:first "ibl"
+            local iibl = ecs.require "ant.render|ibl.ibl"
+            if ible and ImGui.TreeNode "ibl" then
+
+                local value = {iibl.get_ibl().intensity}
+                if ImGui.SliderFloat("intensity", value, 1, 60000) then
+                    iibl.set_ibl_intensity(value[1])
+                end
+
+                ImGui.TreePop()
+            end
+
+            ImGui.TreePop()
+        end
+
         if animation_eid and ImGui.TreeNodeEx("animation", ImGui.TreeNodeFlags {"DefaultOpen"}) then
             local e <close> = world:entity(animation_eid, "animation:in")
             local animation = e.animation
