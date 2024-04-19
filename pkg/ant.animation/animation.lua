@@ -101,13 +101,17 @@ local function sampling(ani)
     ozz.LocalToModelJob(skeleton, locals, ani.models)
 end
 
+local function animation_sample(e)
+    local obj = e.animation
+    sampling(obj)
+    for _, skin in ipairs(obj.skins) do
+        skinning.build(obj.models, skin)
+    end
+end
+
 function m:animation_sample()
     for e in w:select "animation_changed animation:in" do
-        local obj = e.animation
-        sampling(obj)
-        for _, skin in ipairs(obj.skins) do
-            skinning.build(obj.models, skin)
-        end
+        animation_sample(e)
     end
 end
 
@@ -157,6 +161,8 @@ function api.reset(e)
         end
     end
 end
+
+api.sample = animation_sample
 
 function api.get_duration(e, name)
     w:extend(e, "animation:in")
