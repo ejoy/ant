@@ -26,5 +26,5 @@ graphic:
       {0.0, 1.0}
     evsm:
       exponents: {40, 5}    #first element for positive exponent, second element for nagitive exponent, we will check exponent for different texture format
-      bias: 0.01
-      bleeding: 0           #range from[0, 1]
+      bias: 0.5
+      bleeding: 0.15           #range from[0, 1]

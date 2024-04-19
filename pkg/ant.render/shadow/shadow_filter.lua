@@ -103,7 +103,7 @@ local function create_queue(name, viewid, fbidx)
             render_target = {
                 viewid = viewid,
                 view_rect = {x=0, y=0, w=SMSIZE, h=SMSIZE},
-                clear_state = {clear = "",},
+                clear_state = {clear = "", },
                 fb_idx = fbidx,
             },
             queue_name = name,
@@ -154,8 +154,8 @@ function S:init_world()
 			--LINEAR for pcf2x2 with shadow2DProj in shader
 			MIN="LINEAR",
 			MAG="LINEAR",
-			U="BORDER",
-			V="BORDER",
+			U="CLAMP",
+			V="CLAMP",
 		},
 	}
 
@@ -219,6 +219,7 @@ function S:render_submit()
             irender.draw(t.RENDER_ARG, t.drawereid)
         end
     end
+    
 end
 
 local isf = {}
