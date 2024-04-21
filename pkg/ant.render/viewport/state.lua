@@ -47,8 +47,19 @@ end
 
 resize(world.args.width, world.args.height)
 
+local function cvt2scenept(x, y)
+    return x - device_viewrect.x, y - device_viewrect.y
+end
+
+local function set_device_viewrect(dvr)
+    device_viewrect.x, device_viewrect.y = dvr.x, dvr.y
+    resize(dvr.w, dvr.h)
+end
+
 return {
-    viewrect        = scene_viewrect,
-    device_viewrect = device_viewrect,
-    resize          = resize,
+    viewrect            = scene_viewrect,
+    device_viewrect     = device_viewrect,
+    set_device_viewrect = set_device_viewrect,
+    cvt2scenept         = cvt2scenept,
+    resize              = resize,
 }

@@ -33,10 +33,6 @@ local rotate_axis
 local uniform_scale = false
 local local_space = false
 
-local function cvt2scenept(x, y)
-    return x - iviewport.device_viewrect.x, y - iviewport.device_viewrect.y
-end
-
 function gizmo_sys:init()
 	navigizmo:init()
 end
@@ -1042,7 +1038,7 @@ local last_mouse_pos_x = 0
 local last_mouse_pos_y = 0
 local function on_mouse_move()
 	local mp = world:get_mouse()
-	local x, y = cvt2scenept(mp.x, mp.y)
+	local x, y = iviewport.cvt2scenept(mp.x, mp.y)
 	if navigizmo:hit_test(x, y) then
 		return
 	end

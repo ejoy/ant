@@ -16,18 +16,15 @@ local drag_file
 
 local m = {}
 
-local function cvt2scenept(x, y)
-    return x - iviewport.device_viewrect.x, y - iviewport.device_viewrect.y
-end
-
+--x, y in scene view space
 local function in_view(x, y)
-    return mu.pt2d_in_rect(x, y, irq.view_rect "main_queue")
+    return mu.pt2d_in_rect(x, y, iviewport.viewrect)
 end
 
 local last_vr = {x=0, y=0, w=0, h=0}
 
 local function is_viewrect_different(lhs, rhs)
-    return lhs.x ~= rhs.x or lhs.x ~= rhs.y or lhs.w ~= rhs.w or lhs.h ~= rhs.h
+    return lhs.x ~= rhs.x or lhs.x ~= rhs.x or lhs.w ~= rhs.w or lhs.h ~= rhs.h
 end
 
 function m.show()
@@ -39,7 +36,7 @@ function m.show()
     if ImGui.IsMouseDragging(ImGui.MouseButton.Left) then
         local x, y = ImGui.GetMousePos()
         x, y = x - viewport.Pos.x, y - viewport.Pos.y
-        if in_view(cvt2scenept(x, y)) then
+        if in_view(iviewport.cvt2scenept(x, y)) then
             if not drag_file then
                 local dropdata = ImGui.GetDragDropPayload()
                 if dropdata and (string.sub(dropdata, -7) == ".prefab"
@@ -103,7 +100,7 @@ function m.show()
         if is_viewrect_different(dock_vr, last_vr) then
             --copy it
             last_vr.x, last_vr.y, last_vr.w, last_vr.h = dock_vr.x, dock_vr.y, dock_vr.w, dock_vr.h
-
+            iviewport.set_device_viewrect(last_vr)
             world:dispatch_message {
                 type        = "scene_viewrect",
                 viewrect    = dock_vr,
