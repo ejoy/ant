@@ -1,23 +1,22 @@
 local ecs   = ...
 local world = ecs.world
-local w     = world.w
-local platform     = require "bee.platform"
-local mathpkg   = import_package "ant.math"
-local mu        = mathpkg.util
 
-local uiconfig  = require "widget.config"
-local icons     = require "common.icons"
-local ImGui = require "imgui"
-local ImGuiInternal = require "imgui.internal"
-local irq   = ecs.require "ant.render|renderqueue"
+local platform      = require "bee.platform"
+local mathpkg       = import_package "ant.math"
+local mu            = mathpkg.util
+
 local iviewport = ecs.require "ant.render|viewport.state"
 
-local drag_file
+local uiconfig      = require "widget.config"
+local ImGui         = require "imgui"
+local ImGuiInternal = require "imgui.internal"
 
 local m = {}
 
 --x, y in scene view space
-local function in_view(x, y)
+local function is_mouse_in_view(viewport)
+    local x, y = ImGui.GetMousePos()
+    x, y = iviewport.cvt2scenept(x - viewport.Pos.x, y - viewport.Pos.y)
     return mu.pt2d_in_rect(x, y, iviewport.viewrect)
 end
 
@@ -27,33 +26,42 @@ local function is_viewrect_different(lhs, rhs)
     return lhs.x ~= rhs.x or lhs.x ~= rhs.x or lhs.w ~= rhs.w or lhs.h ~= rhs.h
 end
 
-function m.show()
-    local viewport = ImGui.GetMainViewport()
-    if not icons.scale then
-        icons.scale = viewport.DpiScale
-    end
-    --drag file to view
-    if ImGui.IsMouseDragging(ImGui.MouseButton.Left) then
-        local x, y = ImGui.GetMousePos()
-        x, y = x - viewport.Pos.x, y - viewport.Pos.y
-        if in_view(iviewport.cvt2scenept(x, y)) then
-            if not drag_file then
-                local dropdata = ImGui.GetDragDropPayload()
-                if dropdata and (string.sub(dropdata, -7) == ".prefab"
-                    or string.sub(dropdata, -4) == ".efk" or string.sub(dropdata, -4) == ".glb" or string.sub(dropdata, -5) == ".gltf") then
-                    drag_file = dropdata
-                end
-            end
-        else
-            drag_file = nil
-        end
-    else
-        if drag_file then
-            world:pub {"AddPrefabOrEffect", drag_file}
-            drag_file = nil
-        end
+local handle_drop_file; do
+    local VALID_DROPFILE_EXTENSIONS<const> = {
+        [".prefab"] = true,
+        [".glb"] = true,
+        [".gltf"] = true,
+        [".efk"] = true,
+    }
+    
+    local function is_valid_drop_file(df)
+        local ext = df:match "(%.[%w*?_%-]*)$"
+        return VALID_DROPFILE_EXTENSIONS[ext:lower()]
     end
 
+    local drag_file
+    function handle_drop_file(viewport)
+        if ImGui.IsMouseDragging(ImGui.MouseButton.Left) then
+            if is_mouse_in_view(viewport) then
+                if not drag_file then
+                    local dropdata = ImGui.GetDragDropPayload()
+                    if dropdata and is_valid_drop_file(dropdata) then
+                        drag_file = dropdata
+                    end
+                end
+            else
+                drag_file = nil
+            end
+        else
+            if drag_file then
+                world:pub {"AddPrefabOrEffect", drag_file}
+                drag_file = nil
+            end
+        end
+    end
+end
+
+local function handle_main_view(viewport)
     local posx, posy = viewport.WorkPos.x, viewport.WorkPos.y + uiconfig.ToolBarHeight
     local sizew, sizeh = viewport.WorkSize.x, viewport.WorkSize.y - uiconfig.ToolBarHeight
     ImGui.SetNextWindowPos(posx, posy)
@@ -109,6 +117,13 @@ function m.show()
     end
     ImGui.PopStyleVarEx(3)
     ImGui.End()
+end
+
+function m.show()
+    local viewport = ImGui.GetMainViewport()
+    --drag file to view
+    handle_drop_file(viewport)
+    handle_main_view(viewport)
 end
 
 return m

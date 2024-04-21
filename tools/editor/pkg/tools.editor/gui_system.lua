@@ -33,6 +33,7 @@ local log_widget        = require "widget.log"
 local console_widget    = require "widget.console"
 local global_data       = require "common.global_data"
 local new_project       = require "common.new_project"
+local icons             = require "common.icons"
 local gizmo_const       = require "gizmo.const"
 
 local bgfx              = require "bgfx"
@@ -62,6 +63,9 @@ local aabb_color_i <const> = 0x6060ffff
 local highlight_aabb = {}
 
 local event_ui_layout = world:sub {"UILayout"}
+function m:init()
+    icons.scale = ImGui.GetMainViewport().DpiScale
+end
 function m:data_changed()
     for _, action in event_ui_layout:unpack() do
         if action == "save" then
