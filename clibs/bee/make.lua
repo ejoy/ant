@@ -84,16 +84,11 @@ lm:lua_source "bee" {
             "binding/port/lua_windows.cpp",
         },
         links = {
-            "advapi32",
             "ws2_32",
             "ole32",
             "user32",
             "version",
-            "wbemuuid",
-            "oleAut32",
-            "shell32",
-            "ntdll",
-            "synchronization"
+            "synchronization",
         },
     },
     mingw = {

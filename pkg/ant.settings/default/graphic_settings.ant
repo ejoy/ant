@@ -32,7 +32,7 @@ graphic:
       enable: false
   shadow:
     enable: true
-    filter_mode: pcf
+    filter_mode: evsm
     pcf:
       type: fix4
       size: 4

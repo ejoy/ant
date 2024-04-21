@@ -71,7 +71,7 @@ local function plane_entity(srt)
 		},
 		data = {
 			scene 		= srt,
-            mesh_result = imesh.init_mesh(ientity.plane_mesh()),
+            mesh_result = ientity.plane_mesh(),
 			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
 			visible_masks = "main_view|cast_shadow",
 			cast_shadow = true,

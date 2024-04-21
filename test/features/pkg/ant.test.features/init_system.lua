@@ -9,24 +9,25 @@ local mathpkg       = import_package"ant.math"
 local mc            = mathpkg.constant
 
 local common = ecs.require "common"
-common.init_system = "point_light"
+common.init_system = "shadow"
 
 local create_instance = ecs.require "util".create_instance
 
 local init_loader_sys   = ecs.system 'init_system'
 
 function init_loader_sys:init()
-    --create_instance "/pkg/ant.test.features/assets/entities/light_directional.prefab"
+    create_instance "/pkg/ant.test.features/assets/entities/light_directional.prefab"
     create_instance "/pkg/ant.test.features/assets/entities/sky_with_ibl.prefab"
 end
 
 local function init_camera()
     local mq = w:first "main_queue camera_ref:in"
-    local camera_ref<close> = world:entity(mq.camera_ref)
-    local eyepos = math3d.vector(1, 10, -10)
-    iom.set_position(camera_ref, eyepos)
+    local ce<close> = world:entity(mq.camera_ref)
+    local eyepos = math3d.vector(0, 10, -10)
+    iom.set_position(ce, eyepos)
     local dir = math3d.normalize(math3d.sub(mc.ZERO_PT, eyepos))
-    iom.set_direction(camera_ref, dir)
+    --iom.set_direction(ce, mc.XAXIS)
+    iom.set_direction(ce, dir)
 end
 
 local function init_light()
@@ -63,7 +64,7 @@ function init_loader_sys:camera_usage()
     --     local ray = {o = p0, d = math3d.sub(p0, p1)}
     
     --     local plane = math3d.vector(0, 1, 0, 0)
-    --     local r = math3d.muladd(ray.d, math3d.plane_ray(ray.o, ray.d, plane), ray.o)
+    --     local t, p = math3d.plane_ray(ray.o, ray.d, plane, true)
         
     --     print("click:", x, y, math3d.tostring(r), "view_rect:", vr.x, vr.y, vr.w, vr.h)
     -- end

@@ -17,8 +17,7 @@ properties:
   u_basecolor_factor: {0.8, 0.8, 0.8, 1.0}
 state:
   ALPHA_REF: 0
-  CULL: NONE
+  CULL: CCW
   DEPTH_TEST: GREATER
   MSAA: true
-  PT: TRISTRIP
   WRITE_MASK: RGBAZ

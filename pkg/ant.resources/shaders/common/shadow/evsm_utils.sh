@@ -14,6 +14,7 @@ float warp_depth_positive(float depth, float exponent)
 vec2 warp_depth(float depth, vec2 exponents)
 {
     // Rescale depth into [-1, 1]
+    depth = 1.0 - depth;
     depth = 2.0 * depth - 1.0;
     float pos =  exp( exponents.x * depth);
     float neg = -exp(-exponents.y * depth);

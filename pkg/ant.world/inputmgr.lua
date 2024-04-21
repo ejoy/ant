@@ -40,41 +40,28 @@ local function create(world)
     function event.suspend(e)
         world:pub { e.type, e }
     end
-    local size
-    local viewport
-    local sizeChanged = false
-    local viewportChanged = false
-    function event.size(e)
-        size = e
-        sizeChanged = true
+
+    function event.window_init(o)
+        event.size(o.size)
     end
-    function event.set_viewport(e)
-        viewport = e.viewport
-        viewportChanged = true
+
+    function event.scene_viewrect(o)
+        local vr = o.viewrect
+        world:pub{"scene_viewrect_changed", vr}
+        rmlui_sendmsg("set_viewport", {
+            x=vr.x, y=vr.y,
+            w=vr.w, h=vr.h,
+        })
     end
-    function event.update()
-        if sizeChanged then
-            sizeChanged = false
-            if not viewportChanged then
-                rmlui_sendmsg("set_viewport", {
-                    x = 0,
-                    y = 0,
-                    w = size.w,
-                    h = size.h,
-                })
-            end
-            world:pub { "resize", size.w, size.h }
-        end
-        if viewportChanged then
-            viewportChanged = false
-            rmlui_sendmsg("set_viewport", {
-                x = viewport.x,
-                y = viewport.y,
-                w = viewport.w,
-                h = viewport.h,
-            })
-            world:pub{ "scene_viewrect_changed", viewport }
-        end
+
+    function event.size(s)
+        rmlui_sendmsg("set_viewport", {
+            x = 0,
+            y = 0,
+            w = s.w,
+            h = s.h,
+        })
+        world:pub{"resize", s.w, s.h}
     end
     if platform.os ~= "ios" and platform.os ~= "android" then
         local mg = require "mouse_gesture" (world)

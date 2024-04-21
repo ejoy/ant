@@ -16,7 +16,6 @@ float shadowEVSM(shadow_sampler_type shadowsampler, vec4 shadowcoord, int cascad
     vec2 wd = warp_depth(shadowcoord.z, u_shadow_filter_exponents);
 
 	vec4 occluder = texture2DArray(shadowsampler, vec3(shadowcoord.xy, cascadeidx));
-
     // Derivative of warping at depth
     vec2 depthscale = u_shadow_filter_depth_scale * u_shadow_filter_exponents * wd;
     vec2 variance = depthscale * depthscale;
