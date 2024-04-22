@@ -7,6 +7,7 @@ local assetmgr      = import_package "ant.asset"
 local serialize     = import_package "ant.serialize"
 local mathpkg       = import_package "ant.math"
 local mc            = mathpkg.constant
+local mu            = mathpkg.util
 local aio           = import_package "ant.io"
 local stringify     = import_package "ant.serialize".stringify
 
@@ -1089,7 +1090,7 @@ end
 function m:remove_entity(eid)
     self:do_remove_entity(eid)
     hierarchy:update_slot_list(world)
-    gizmo:set_target(nil)
+    gizmo:set_target()
     world:pub {"UpdateAABB"}
 end
 
@@ -1109,16 +1110,25 @@ function m:get_eid_by_name(name)
         end
     end
 end
+
 function m:get_world_aabb(eid)
+    -- local e <close> = world:entity(eid, "bounding?in scene?in")
+    -- local bounding = e.bounding
+    -- if bounding and bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
+    --     return math3d.aabb(math3d.array_index(bounding.scene_aabb, 1), math3d.array_index(bounding.scene_aabb, 2))
+    -- end
+
     local info = hierarchy:get_node_info(eid)
     local children
-    if info.filename then
+    if info and info.filename then
         children = hierarchy:get_select_adaptee(eid)
     else
         local node = hierarchy:get_node(eid)
         children = {}
-        for _, n in ipairs(node.children) do
-            children[#children + 1] = n.eid
+        if node then
+            for _, n in ipairs(node.children) do
+                children[#children + 1] = n.eid
+            end
         end
     end
     local waabb
@@ -1139,7 +1149,7 @@ function m:get_world_aabb(eid)
         end
     end
     -- TODO: if eid is scene root or meshskin, merge skinning node
-    if (info.template.tag and info.template.tag[1] == "Scene") then-- or e.meshskin then
+    if (info and info.template.tag and info.template.tag[1] == "Scene") then-- or e.meshskin then
         for key, _ in pairs(hierarchy.all_node) do
             local ea <close> = world:entity(key, "bounding?in")-- skinning?in")
             local bounding = ea.bounding
@@ -1463,6 +1473,21 @@ local function focus_aabb(ce, aabb)
     iom.lookto(ce, math3d.muladd(dist, viewdir, center), viewdir)
 end
 
+local function get_frustum_plane(frustum)
+    local ce <close> = world:entity(irq.main_camera(), "camera:in")
+    local viewprojmat = ce.camera.viewprojmat
+    local cam_pos = iom.get_position(ce)
+    local lt = math3d.sub(mu.ndc_to_world(viewprojmat, math3d.vector(frustum.l, frustum.t, 0)), mu.ndc_to_world(viewprojmat, math3d.vector(frustum.l, frustum.t, 1)))
+    local rt = math3d.sub(mu.ndc_to_world(viewprojmat, math3d.vector(frustum.r, frustum.t, 0)), mu.ndc_to_world(viewprojmat, math3d.vector(frustum.r, frustum.t, 1)))
+    local rb = math3d.sub(mu.ndc_to_world(viewprojmat, math3d.vector(frustum.r, frustum.b, 0)), mu.ndc_to_world(viewprojmat, math3d.vector(frustum.r, frustum.b, 1)))
+    local lb = math3d.sub(mu.ndc_to_world(viewprojmat, math3d.vector(frustum.l, frustum.b, 0)), mu.ndc_to_world(viewprojmat, math3d.vector(frustum.l, frustum.b, 1)))
+    return {
+        math3d.plane(math3d.cross(math3d.normalize(math3d.sub(lt, cam_pos)), math3d.normalize(math3d.sub(lb, cam_pos))), cam_pos),
+        math3d.plane(math3d.cross(math3d.normalize(math3d.sub(rt, cam_pos)), math3d.normalize(math3d.sub(lt, cam_pos))), cam_pos),
+        math3d.plane(math3d.cross(math3d.normalize(math3d.sub(rb, cam_pos)), math3d.normalize(math3d.sub(rt, cam_pos))), cam_pos),
+        math3d.plane(math3d.cross(math3d.normalize(math3d.sub(lb, cam_pos)), math3d.normalize(math3d.sub(rb, cam_pos))), cam_pos),
+    }
+end
 local event_patch       = world:sub {"Patch"}
 local event_showground  = world:sub {"ShowGround"}
 local event_showterrain = world:sub {"ShowTerrain"}
@@ -1477,6 +1502,7 @@ local event_hierarchy   = world:sub {"HierarchyEvent"}
 local event_reset_prefab= world:sub {"ResetPrefab"}
 local event_look_at_target 	= world:sub {"LookAtTarget"}
 local event_select_frustum = world:sub {"SelectFrustum"}
+local iwd               = ecs.require "ant.widget|widget"
 function m:handle_event()
     for _, type, eid, path, value in event_patch:unpack() do
         if type == "Material" then
@@ -1555,21 +1581,44 @@ function m:handle_event()
 		end
 	end
     for _, frustum in event_select_frustum:unpack() do
-        -- print("--------event_select_frustum--------:", frustum.l, frustum.r, frustum.t, frustum.b)
-        local ce <close> = world:entity(irq.main_camera(), "camera:in")
-        local vp = math3d.mul(math3d.projmat(frustum), math3d.lookto(iom.get_position(ce), math3d.todirection(iom.get_rotation(ce))))
+        local planes = get_frustum_plane(frustum)
+        -- local testplane = math3d.plane(math3d.vector(0,1,0), math3d.vector(0,1,0))
+        -- print("dist: ", math3d.point2plane(math3d.vector(0, 0, 0), testplane))
+        --
+        -- local sx, sy = 0.5 * (frustum.l + frustum.r), 0.5 * (frustum.t + frustum.b)
+        -- local npc_f = mu.ndc_to_world(viewprojmat, math3d.vector(sx, sy, 0))
+        -- local ndc_n = mu.ndc_to_world(viewprojmat, math3d.vector(sx, sy, 1))
+        -- local center_dir = math3d.sub(npc_f, ndc_n)
+        -- local dirvalue = math3d.tovalue(center_dir)
+        -- print("center_dir:", dirvalue[1], dirvalue[2], dirvalue[3])
+        -- print("camera:", cam_pos[1],cam_pos[2],cam_pos[3])
+        -- local vp = math3d.mul(math3d.projmat(frustum), math3d.lookto(iom.get_position(ce), math3d.normalize(center_dir), math3d.vector(0,1,0)))
         -- local frustum_planes = math3d.frustum_planes(vp)
-        local frustum_planes = math3d.frustum_planes(ce.camera.viewprojmat)
+        -- local frustum_points = math3d.frustum_points(vp)
+	    -- print("full frustum:", math3d.tostring(frustum_points))
+        -- iwd.draw_lines({origin[1], origin[2], origin[3], lb_dirvalue[1], lb_dirvalue[2], lb_dirvalue[3]}, nil, 0xff0000ff)
         local select_eids = {}
+        local merged = math3d.aabb(math3d.vector(-0.1, -0.1, -0.1), math3d.vector(0.1, 0.1, 0.1))
         for _, eid in ipairs(self.entities) do
-            local e<close> = world:entity(eid, "render_object?in")
-            local aabb = self:get_world_aabb(eid)
-            if aabb and math3d.frustum_intersect_aabb(frustum_planes, aabb) >= 0 then
-                select_eids[#select_eids + 1] = eid
-                -- print("----selected----:", eid)
+            local e <close> = world:entity(eid, "render_object?in")
+            if e.render_object then
+                local aabb = self:get_world_aabb(eid)
+                -- local intersect = math3d.frustum_intersect_aabb(frustum_planes, aabb)
+                local intersect = 0
+                for _, plane in ipairs(planes) do
+                    intersect = math3d.aabb_intersect_plane(aabb, plane)
+                    if intersect < 0 then
+                        break
+                    end
+                end
+                if aabb and intersect >= 0 then
+                    select_eids[#select_eids + 1] = eid
+                    merged = math3d.aabb_merge(merged, aabb)
+                end
             end
         end
-        world:pub { "UpdateAABB", select_eids}
+        gizmo:set_target(select_eids, (#select_eids > 1) and math3d.mul(math3d.add(math3d.array_index(merged, 1), math3d.array_index(merged, 2)), 0.5) or nil)
+        -- world:pub {"UpdateAABB", select_eids}
         break
     end
 end

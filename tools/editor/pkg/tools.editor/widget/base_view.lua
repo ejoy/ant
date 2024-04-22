@@ -88,12 +88,14 @@ function BaseView:set_eid(eid)
         self.base.aabbmax:set_visible(false)
         self.base.create_aabb:set_visible(false)
         self.base.delete_aabb:set_visible(false)
-        if info.template and info.template.data.bounding then
-            self.base.aabbmin:set_visible(true)
-            self.base.aabbmax:set_visible(true)
-            self.base.delete_aabb:set_visible(true)
-        else
-            self.base.create_aabb:set_visible(true)
+        if info then
+            if info.template and info.template.data.bounding then
+                self.base.aabbmin:set_visible(true)
+                self.base.aabbmax:set_visible(true)
+                self.base.delete_aabb:set_visible(true)
+            else
+                self.base.create_aabb:set_visible(true)
+            end
         end
     end
     self.general_property:set_subproperty(property)
@@ -119,6 +121,9 @@ end
 
 function BaseView:on_set_tag(value)
     local info = hierarchy:get_node_info(self.eid)
+    if not info or not info.template then
+        return
+    end
     local tags = {}
     value:gsub('[^|]*', function (w) tags[#tags+1] = w end)
     local oldtags = info.template.tag
@@ -128,7 +133,9 @@ end
 
 function BaseView:on_get_tag()
     local info = hierarchy:get_node_info(self.eid)
-    if not info or not info.template then return "" end
+    if not info or not info.template then
+        return ""
+    end
     local tags = info.template.tag
     return tags and table.concat(tags, "|") or ""
 end
@@ -136,7 +143,7 @@ end
 function BaseView:on_set_position(value)
     local info = hierarchy:get_node_info(self.eid)
     local t = {value[1], value[2], value[3]}
-    if info.template then
+    if info and info.template then
         world:pub {"EntityEvent", "move", self.eid, info.template.data.scene.t or {0,0,0}, t}
         info.template.data.scene.t = t
     else
@@ -147,7 +154,7 @@ end
 
 function BaseView:on_get_position()
     local info = hierarchy:get_node_info(self.eid)
-    if info.template then
+    if info and info.template then
         return info.template.data.scene.t or {0,0,0}
     else
         local e <close> = world:entity(self.eid)
@@ -158,7 +165,7 @@ end
 function BaseView:on_set_rotate(value)
     local info = hierarchy:get_node_info(self.eid)
     world:pub {"EntityEvent", "rotate", self.eid, { math.rad(value[1]), math.rad(value[2]), math.rad(value[3]) }, {value[1], value[2], value[3]}}
-    if info.template then
+    if info and info.template then
         info.template.data.scene.r = math3d.tovalue(math3d.quaternion{math.rad(value[1]), math.rad(value[2]), math.rad(value[3])})
     end
 end
@@ -166,7 +173,7 @@ end
 function BaseView:on_get_rotate()
     local info = hierarchy:get_node_info(self.eid)
     local r
-    if info.template then
+    if info and info.template then
         r = info.template.data.scene.r or {0,0,0,1}
     else
         local e <close> = world:entity(self.eid)
@@ -180,7 +187,7 @@ end
 function BaseView:on_set_scale(value)
     local info = hierarchy:get_node_info(self.eid)
     local s = {value[1], value[2], value[3]}
-    if info.template then
+    if info and info.template then
         world:pub {"EntityEvent", "scale", self.eid, info.template.data.scene.s or {1,1,1}, s}
         info.template.data.scene.s = s
     else
@@ -191,7 +198,7 @@ end
 
 function BaseView:on_get_scale()
     local info = hierarchy:get_node_info(self.eid)
-    if info.template then
+    if info and info.template then
         local s = info.template.data.scene.s
         if s then
             return type(s) == "table" and s or {s, s, s}
@@ -206,7 +213,7 @@ end
 
 function BaseView:on_set_aabbmin(value)
     local info = hierarchy:get_node_info(self.eid)
-    if info.template then
+    if info and info.template then
         if info.template.data.bounding then
             local tv = {value[1], value[2], value[3]}
             info.template.data.bounding.aabb[1] = tv
@@ -230,7 +237,7 @@ end
 
 function BaseView:on_get_aabbmin()
     local info = hierarchy:get_node_info(self.eid)
-    if info.template then
+    if info and info.template then
         local bounding = info.template.data.bounding
         if bounding then
             return bounding.aabb[1]
@@ -241,7 +248,7 @@ end
 
 function BaseView:on_set_aabbmax(value)
     local info = hierarchy:get_node_info(self.eid)
-    if info.template then
+    if info and info.template then
         if info.template.data.bounding then
             local tv = {value[1], value[2], value[3]}
             info.template.data.bounding.aabb[2] = tv
@@ -265,7 +272,7 @@ end
 
 function BaseView:on_get_aabbmax()
     local info = hierarchy:get_node_info(self.eid)
-    if info.template then
+    if info and info.template then
         local bounding = info.template.data.bounding
         if bounding then
             return bounding.aabb[2]
@@ -286,7 +293,7 @@ end
 
 function BaseView:create_aabb()
     local info = hierarchy:get_node_info(self.eid)
-    if info.template then
+    if info and info.template then
         local e <close> = world:entity(self.eid, "bounding:update scene_needchange?out")
         e.scene_needchange = true
         local min = {-1, -1, -1}
@@ -311,7 +318,7 @@ end
 
 function BaseView:delete_aabb()
     local info = hierarchy:get_node_info(self.eid)
-    if info.template then
+    if info and info.template then
         info.template.data.bounding = nil
         self.base.create_aabb:set_visible(true)
         self.base.delete_aabb:set_visible(false)

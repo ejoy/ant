@@ -152,7 +152,11 @@ function m:post_init()
 end
 
 function m:data_changed()
+
 end
 
 function m:exit()
+	if global_data.fileserver and global_data.fileserver.subprocess then
+		global_data.fileserver.subprocess:wait()
+	end
 end

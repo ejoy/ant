@@ -149,7 +149,7 @@ local function show_scene_node(node)
         if ImGui.IsItemClicked() then
             -- ImGui.SetKeyboardFocusHere()
             if is_editable(eid) then
-                gizmo:set_target(eid)
+                gizmo:set_target({eid})
             end
             if imodifier.highlight then
                 imodifier.set_target(imodifier.highlight, eid)

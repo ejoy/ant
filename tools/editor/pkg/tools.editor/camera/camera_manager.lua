@@ -36,6 +36,7 @@ function camera_mgr.create_camera()
     local template = {
         policy = {
             "ant.camera|camera",
+            "ant.camera|exposure"
         },
         data = {
             camera = {
@@ -51,6 +52,12 @@ function camera_mgr.create_camera()
                 t = {math3d.index(srt.t, 1, 2, 3)},
                 updir   = {0, 1, 0, 0},
             },
+            exposure = {
+				type 			= "manual",
+				aperture 		= 16.0,
+				shutter_speed 	= 0.008,
+				ISO 			= 100,
+			}
         },
         tag = {
             gen_camera_name()
