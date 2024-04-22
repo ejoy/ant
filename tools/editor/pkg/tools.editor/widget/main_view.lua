@@ -13,11 +13,24 @@ local ImGuiInternal = require "imgui.internal"
 
 local m = {}
 
+local function screen_to_win(viewport, sx, sy)
+    local offset = viewport.Pos
+    local nsx, nsy = sx - offset.x, sy - offset.y
+    if platform.os == "macos" then
+        return nsx*viewport.DpiScale, nsy * viewport.DpiScale
+    end
+    return nsx, nsy
+end
+
 --x, y in scene view space
 local function is_mouse_in_view(viewport)
-    local x, y = ImGui.GetMousePos()
-    x, y = iviewport.cvt2scenept(x - viewport.Pos.x, y - viewport.Pos.y)
-    return mu.pt2d_in_rect(x, y, iviewport.viewrect)
+    --sx, sy with dpi scale value in screen coordinate
+    local sx, sy = ImGui.GetMousePos()
+    --sdx, sdy after dpi transform window coordinate
+    local sdx, sdy = screen_to_win(viewport, sx, sy)
+    --dx, dy relative to scene viewrect
+    local dx, dy = iviewport.cvt2scenept(sdx, sdy)
+    return mu.pt2d_in_rect(dx, dy, iviewport.viewrect)
 end
 
 local last_vr = {x=0, y=0, w=0, h=0}
@@ -85,7 +98,7 @@ local function handle_main_view(viewport)
             "NoDockingOverCentralNode",
             "PassthruCentralNode",
         })
-        --NOTE: the coordinate reture from BuilderGetCentralRect function is relative to full viewport
+        --NOTE: the coordinate return from DockBuilderGetCentralRect function is relative to full viewport
         local dock_vr = {}
         dock_vr.x, dock_vr.y, dock_vr.w, dock_vr.h = ImGuiInternal.DockBuilderGetCentralRect(node_id)
 
@@ -108,7 +121,7 @@ local function handle_main_view(viewport)
         if is_viewrect_different(dock_vr, last_vr) then
             --copy it
             last_vr.x, last_vr.y, last_vr.w, last_vr.h = dock_vr.x, dock_vr.y, dock_vr.w, dock_vr.h
-            iviewport.set_device_viewrect(last_vr)
+            iviewport.set_device_viewrect(dock_vr)
             world:dispatch_message {
                 type        = "scene_viewrect",
                 viewrect    = dock_vr,

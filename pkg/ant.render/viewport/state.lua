@@ -6,10 +6,16 @@ local setting = import_package "ant.settings"
 local DEFAULT_RESOLUTION_WIDTH <const> = 1280
 local DEFAULT_RESOLUTION_HEIGHT <const> = 720
 
+--device_viewrect = scene_viewrect * scale
 local scene_viewrect  = {x=0, y=0,}
 local device_viewrect = {x=0, y=0,}
 
 local scene_ratio<const> = setting:get "scene/ratio"
+
+local function viewrect_ratio()
+    --scene_viewrect.h/device_viewrect.h equal to scene_viewrect.w/device_viewrect.w, see: calc_scene_size
+    return scene_viewrect.w/device_viewrect.w
+end
 
 local function calc_scene_size(refw, refh)
     assert(refh > 0)
@@ -31,7 +37,7 @@ local function log_viewrect()
     log.info("scene viewrect: ",    vr.x, vr.y, vr.w, vr.h)
     log.info("device viewport: ",   dvr.x, dvr.y, dvr.w, dvr.h)
 
-    local scene_scale_ratio<const>  = vr.w/dvr.w
+    local scene_scale_ratio<const>  = viewrect_ratio()
     log.info("scene scale ratio: ", scene_scale_ratio)
 
     log.info("scene width/hegiht:",  vr.w/vr.h)
@@ -56,10 +62,31 @@ local function set_device_viewrect(dvr)
     resize(dvr.w, dvr.h)
 end
 
+local function scale_xy(x, y)
+    local scale = viewrect_ratio()
+    return x * scale, y * scale
+end
+
+--sx, sy are scale scene coordinate
+local function unscale_xy(sx, sy)
+    local scale = 1.0 / viewrect_ratio()
+    return sx * scale, sy * scale
+end
+
+--x, y are window coordinate(device coordinate)
+local function remap_xy(screen_x, scree_y)
+    --x, y are coordinate in viewport, but we want to find them in scene_viewrect
+    local x, y = cvt2scenept(screen_x, scree_y)
+    return scale_xy(x, y)
+end
+
 return {
     viewrect            = scene_viewrect,
     device_viewrect     = device_viewrect,
     set_device_viewrect = set_device_viewrect,
     cvt2scenept         = cvt2scenept,
+    remap_xy            = remap_xy,
+    scale_xy            = scale_xy,
+    unscale_xy          = unscale_xy,
     resize              = resize,
 }

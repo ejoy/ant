@@ -513,18 +513,6 @@ function util.saturate(v)
 	return util.clamp(v, 0.0, 1.0)
 end
 
-function util.convert_device_to_screen_coord(bvp, svr, x, y)
-    local bw, bh = bvp.w, bvp.h
-    local sw, sh = svr.w, svr.h
-    return x * (sw / bw), y * (sh / bh)
-end
-
-function util.convert_screen_to_device_coord(bvp, svr, x, y)
-    local bw, bh = bvp.w, bvp.h
-    local sw, sh = svr.w, svr.h
-    return x * (bw / sw), y * (bh / sh)
-end
-
 function util.aabb_minmax(aabb)
 	return math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
 end
