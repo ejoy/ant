@@ -6,7 +6,7 @@
 #include "memfile.h"
 
 #include <bee/utility/zstring_view.h>
-#include <bee/platform/win/cwtf8.h>
+#include <bee/win/cwtf8.h>
 
 extern "C" {
 #include "sha1.h"

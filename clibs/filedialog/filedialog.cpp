@@ -5,7 +5,7 @@
 #include <string_view>
 #include <memory>
 
-#include <bee/platform/win/wtf8.h>
+#include <bee/win/wtf8.h>
 
 using Microsoft::WRL::ComPtr;
 

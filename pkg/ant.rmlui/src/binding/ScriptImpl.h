@@ -1,10 +1,9 @@
 #pragma once
 
 #include <core/Interface.h>
-#include "luaref.h"
+#include <binding/luaref.h>
 
 namespace Rml {
-
 class Node;
 class Element;
 class Document;

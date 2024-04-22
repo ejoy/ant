@@ -23,6 +23,7 @@ local function need(lst)
     for _, v in ipairs(OS) do
         if not map[v] then
             t[#t+1] = "!bee/**/*_"..v..".cpp"
+            t[#t+1] = "!bee/"..v.."/**/*.cpp"
         end
     end
     return t
@@ -84,6 +85,7 @@ lm:lua_source "bee" {
             "binding/port/lua_windows.cpp",
         },
         links = {
+            "ntdll",
             "ws2_32",
             "ole32",
             "user32",

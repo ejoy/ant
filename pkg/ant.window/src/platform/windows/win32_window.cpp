@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <vector>
 #include <memory>
-#include <bee/platform/win/wtf8.h>
+#include <bee/win/wtf8.h>
 #include <bee/nonstd/unreachable.h>
 #include "../../window.h"
 
