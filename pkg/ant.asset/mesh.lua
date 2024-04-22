@@ -26,7 +26,7 @@ local function append_mesh(mesh, meshout)
 
 	update_buffer(mesh.vb, meshout.vb)
 	update_buffer(mesh.vb2,meshout.vb2)
-	update_buffer(mesh.ib, meshout.vb)
+	update_buffer(mesh.ib, meshout.ib)
 
 	meshout.vbnums[#meshout.vbnums+1] = mesh.vb.num
 	meshout.ibnums[#meshout.ibnums+1] = mesh.ib.num
