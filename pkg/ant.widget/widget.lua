@@ -60,13 +60,13 @@ function widget_drawer_sys:init()
 end
 
 function widget_drawer_sys:end_frame()
---[[ 	local e = w:first "widget_drawer render_object:update"
+	local e = w:first "widget_drawer render_object:update"
 	if e then
 		local ro = e.render_object
 		MESH.set_num(ro.mesh_idx, "vb0", 0)
 		MESH.set_num(ro.mesh_idx, "ib", 0)
 		w:submit(e)
-	end ]]
+	end
 end
 
 local iwd = {}
