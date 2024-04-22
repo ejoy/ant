@@ -10,7 +10,7 @@ local imesh = {}
 imesh.init_mesh = ext_meshbin.init
 imesh.delete_mesh = ext_meshbin.delete
 
-local function append_mesh(mesh, meshout)
+local function meshset_append(meshset, mesh)
 	local function update_buffer(b, ob)
 		if b then
 			local om 	= ob.memory
@@ -24,12 +24,12 @@ local function append_mesh(mesh, meshout)
 		end
 	end
 
-	update_buffer(mesh.vb, meshout.vb)
-	update_buffer(mesh.vb2,meshout.vb2)
-	update_buffer(mesh.ib, meshout.ib)
+	update_buffer(mesh.vb, meshset.vb)
+	update_buffer(mesh.vb2,meshset.vb2)
+	update_buffer(mesh.ib, meshset.ib)
 
-	meshout.vbnums[#meshout.vbnums+1] = mesh.vb.num
-	meshout.ibnums[#meshout.ibnums+1] = mesh.ib.num
+	meshset.vbnums[#meshset.vbnums+1] = mesh.vb.num
+	meshset.ibnums[#meshset.ibnums+1] = mesh.ib.num
 end
 
 local function init_buffer() return {start=0, num=0, memory = {list={}, nil, 1, 0} } end
@@ -52,35 +52,44 @@ local function build_offset(nums)
 	end
 end
 
-local function build_meshlist(meshout)
-	local vboffsets, iboffsets = build_offset(meshout.vbnums), build_offset(meshout.ibnums)
+local function meshset_build(meshset)
+	local vboffsets, iboffsets = build_offset(meshset.vbnums), build_offset(meshset.ibnums)
 	return{
 		mesh = ext_meshbin.init{
-			vb	= tobuffer(meshout.vb),
-			vb2	= tobuffer(meshout.vb2),
-			ib  = tobuffer(meshout.ib),
+			vb	= tobuffer(meshset.vb),
+			vb2	= tobuffer(meshset.vb2),
+			ib  = tobuffer(meshset.ib),
 		},
-		vbnums		= meshout.vbnums,
-		ibnums		= meshout.ibnums,
+		vbnums		= meshset.vbnums,
+		ibnums		= meshset.ibnums,
 		vboffsets	= vboffsets,
 		iboffsets	= iboffsets,
 	} 
 end
 
-function imesh.build_meshes(files)
-	local meshout = {
+local function meshset_create()
+	return {
 		vb = init_buffer(),
 		vb2= init_buffer(),
 		ib = init_buffer(),
 		vbnums = {},
 		ibnums = {},
 	}
+end
+
+
+function imesh.build_meshes(files)
+	local meshset = meshset_create()
 	for _, mf in ipairs(files) do
 		local mesh = assetmgr.resource(mf)
-		append_mesh(mesh, meshout)
+		meshset_append(meshset, mesh)
 	end
 
-	return build_meshlist(meshout)
+	return meshset_build(meshset)
 end
+
+imesh.meshset_create= meshset_create
+imesh.meshset_append= meshset_append
+imesh.meshset_build	= meshset_build
 
 return imesh
