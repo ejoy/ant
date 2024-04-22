@@ -5,6 +5,7 @@ lm:lua_source "scene" {
     includes = {
         lm.AntDir .. "/clibs/ecs",
         lm.AntDir .. "/3rd/math3d",
+        lm.AntDir .. "/3rd/bee.lua",
         lm.AntDir .. "/3rd/luaecs",
     },
     sources = {

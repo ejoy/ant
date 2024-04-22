@@ -6,7 +6,7 @@
 #include <string_view>
 #include <vector>
 #include <imgui.h>
-#include "enum.h"
+#include <bee/utility/bitmask.h>
 #include <bee/utility/zstring_view.h>
 
 struct lua_State;
@@ -151,7 +151,7 @@ namespace ant::window {
 		suspend what;
 	};
 
-ENUM_FLAG_OPERATORS(mouse_buttons)
+BEE_BITMASK_OPERATORS(mouse_buttons)
 
 	enum class msg_type {
 		keyboard,

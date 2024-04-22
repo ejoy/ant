@@ -1,7 +1,7 @@
 #include "ecs/world.h"
 #include "ecs/select.h"
 #include "ecs/component.hpp"
-#include "flatmap.h"
+#include <bee/utility/flatmap.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <cstdio>
@@ -32,7 +32,7 @@ math3d_update(struct math_context* math3d, math_t& id, math_t const& m) {
 }
 
 static bool
-worldmat_update(ant::flatmap<component::eid, math_t>& worldmats, struct math_context* math3d, component::scene& s, component::eid& id, struct ecs_world *w) {
+worldmat_update(bee::flatmap<component::eid, math_t>& worldmats, struct math_context* math3d, component::scene& s, component::eid& id, struct ecs_world *w) {
 	math_t mat = math3d_make_srt(math3d, s.s, s.r, s.t);
 	if (!math_isnull(s.mat)) {
 		mat = math3d_mul_matrix(math3d, mat, s.mat);
@@ -89,12 +89,12 @@ is_constant(struct ecs_world *w, component::eid eid) {
 }
 
 static inline bool
-is_changed(ant::flatset<component::eid> &changed, component::eid eid) {
+is_changed(bee::flatset<component::eid> &changed, component::eid eid) {
 	return changed.contains(eid);
 }
 
 static void
-rebuild_mutable_set(struct ecs_world *w, ant::flatset<component::eid> &changed) {
+rebuild_mutable_set(struct ecs_world *w, bee::flatset<component::eid> &changed) {
 	using namespace ecs::flags;
 	for (auto& e : ecs::select< component::scene, component::scene_mutable(absent), component::eid>(w->ecs)) {
 		auto& s = e.get<component::scene>();
@@ -111,7 +111,7 @@ scene_changed(lua_State *L) {
 	auto math3d = w->math3d->M;
 	math3d_checkpoint cp(math3d);
 
-	ant::flatset<component::eid> changed;
+	bee::flatset<component::eid> changed;
 
 	// step.1
 	auto selector = ecs::select<component::scene_needchange, component::eid>(w->ecs);
@@ -137,7 +137,7 @@ scene_changed(lua_State *L) {
 	}
 
 	// step.2
-	ant::flatmap<component::eid, math_t> worldmats;
+	bee::flatmap<component::eid, math_t> worldmats;
 	for (auto& e : ecs::select<component::scene_mutable, component::scene, component::eid>(w->ecs)) {
 		auto& s = e.get<component::scene>();
 		component::eid id = e.get<component::eid>();
