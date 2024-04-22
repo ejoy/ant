@@ -1,6 +1,5 @@
 #include <core/Tween.h>
 #include <utility>
-#include <math.h>
 #include <bee/nonstd/to_underlying.h>
 #include <bee/nonstd/unreachable.h>
 #include <numbers>
