@@ -4,7 +4,7 @@ local world = ecs.world
 local platform      = require "bee.platform"
 local mathpkg       = import_package "ant.math"
 local mu            = mathpkg.util
-
+local icons         = require "common.icons"
 local iviewport = ecs.require "ant.render|viewport.state"
 
 local uiconfig      = require "widget.config"
@@ -119,8 +119,15 @@ local function handle_main_view(viewport)
     ImGui.End()
 end
 
+local function update_icons_dpi(viewport)
+    if not icons.scale then
+        icons.scale = platform.os == "macos" and 1.0 or viewport.DpiScale
+    end
+end
+
 function m.show()
     local viewport = ImGui.GetMainViewport()
+    update_icons_dpi(viewport)
     --drag file to view
     handle_drop_file(viewport)
     handle_main_view(viewport)
