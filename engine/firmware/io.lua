@@ -108,6 +108,7 @@ local LOG; do
 		local text = ('[%s][IO   ](%s:%d) %s'):format(os_date('%Y-%m-%d %H:%M:%S:{ms}'), info.short_src, info.currentline, packstring(...))
 		LOGRAW(text)
 	end
+	print = LOG
 end
 
 local vfs = assert(loadfile "/engine/firmware/vfs.lua")()

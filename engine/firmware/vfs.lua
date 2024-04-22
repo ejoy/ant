@@ -19,6 +19,7 @@ local function readroot(self)
 		if ziproot == self.ziproot then
 			return root
 		end
+		print(("vfs updated local:%s zip:%s"):format(ziproot, self.ziproot))
 		os.remove(self.localpath .. "root" .. self.slot)
 	end
 	return self.ziproot
