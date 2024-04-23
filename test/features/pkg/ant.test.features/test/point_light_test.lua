@@ -32,10 +32,11 @@ local function get_random_color(colorscale)
 end
 
 
-local function update_light_prefab(lightprefab, lightinfo)
+local function update_light_prefab(lightprefab, lightinfo, parent)
     local entites = lightprefab.tag['*']
     local root<close> = world:entity(entites[1], "scene:update")
-    iom.set_position(root, lightinfo.pos)
+    root.scene.parent = parent
+    iom.set_position(root, math3d.vector(lightinfo.pos))
 
     local sphere<close> = world:entity(entites[4])
     local point<close> = world:entity(entites[5], "light:in")
@@ -402,14 +403,12 @@ local function uniform_lights()
                 PC:create_instance{
                     prefab = "/pkg/ant.test.features/assets/entities/sphere_with_point_light.prefab",
                     on_ready = function(pl)
-                        local root<close> = world:entity(pl.tag['*'][1], "scene:update")
-                        root.scene.parent = parent
                         update_light_prefab(pl, {
                             color   = get_random_color(1),
                             pos     = {0, 0, 10, 1},
                             intensity_scale = math.random(7, 10),
                             radius  = math.random(15, 30),
-                        })
+                        }, parent)
                     end
                 }
 
@@ -464,11 +463,7 @@ local function simple_scene()
         PC:create_instance{
             prefab = "/pkg/ant.test.features/assets/entities/sphere_with_point_light.prefab",
             on_ready = function(pl)
-                local root<close> = world:entity(pl.tag['*'][1], "scene:update")
-                root.scene.parent = parent
-                p.pos = {0, 0, 0, 1}
-                update_light_prefab(pl, p)
-                
+                update_light_prefab(pl, p, parent)
             end
         }
     end
@@ -485,73 +480,17 @@ local function simple_scene()
 end
 
 function plt_sys.init_world()
-    --Sponza_scene()
-    simple_scene()
-
-    -- local ppeid = PC:create_entity{
-    --     policy = {
-    --         "ant.scene|scene_object",
-    --     },
-    --     data = {
-    --         scene = {
-    --             t = {0, 1, 0, 1},
-    --         },
-    --         rotator = true,
-    --     }
-    -- }
-
-    -- local peid = PC:create_entity{
-    --     policy = {
-    --         "ant.scene|scene_object",
-    --     },
-    --     data = {
-    --         scene = {
-    --             t = {1, 3, 0, 1},
-    --         },
-    --         on_ready = function(e)
-    --             w:extend(e, "scene:update")
-    --             e.scene.parent = ppeid
-    --             w:submit(e)
-    --         end
-    --     }
-    -- }
-
-    -- PC:create_entity{
-    --     policy = {
-    --         "ant.render|light",
-    --     },
-    --     data = {
-    --         scene = {
-    --             t = {0, 0, 0, 1},
-    --             parent = peid,
-    --         },
-    --         light = {
-	-- 			type		= "point",
-	-- 			motion_type = "DYNAMIC",
-	-- 			color		= {1.0, 1.0, 0.0, 1.0},
-	-- 			intensity	= 120000,
-	-- 			intensity_unit="candela",
-	-- 			range		= 30,
-	-- 		},
-	-- 		visible = true,
-    --     }
-    -- }
+    Sponza_scene()
+    --simple_scene()
 end
 
 
 function plt_sys.data_changed()
     local r = math3d.quaternion{axis=math3d.vector(0.0, 1.0, 0.0, 0.0), r=math.pi*0.1}
     for e in w:select "rotator scene:update" do
-        local rr = iom.get_rotation(e)
-        iom.set_rotation(e, math3d.mul(r, rr))
+        iom.set_rotation(e, math3d.mul(r, iom.get_rotation(e)))
     end
 end
-
--- function plt_sys:render_submit()
---     for l in w:select "scene_changed light scene:in" do
---         print(math3d.tostring(math3d.index(l.scene.worldmat, 4)))
---     end
--- end
 
 local split_frustum = import_package "ant.camera".split_frustum
 
