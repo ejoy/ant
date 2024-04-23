@@ -81,7 +81,6 @@ lm:source_set "rmlui" {
     deps = {
         "yoga",
         "stylecache",
-        "luabind",
         "rmlui_core",
         "rmlui_css",
         "rmlui_binding",
