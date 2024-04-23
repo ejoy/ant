@@ -46,7 +46,16 @@ local function isChanged()
 		return true
 	end
 
-	return w:check "scene_changed light"
+	if w:first "scene_changed light" then
+		return true
+	end
+
+	for _ in w:select "scene_changed light" do
+		return true
+	end
+
+	-- local ccc = w:check "scene_changed light"
+	-- return ccc
 	--TODO state
 end
 

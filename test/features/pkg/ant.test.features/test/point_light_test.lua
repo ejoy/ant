@@ -369,6 +369,9 @@ local function inside_box2()
         },
     }
 end
+w:register{
+    name = "rotator",
+}
 
 local function uniform_lights()
     local nx, ny, nz = 8, 8, 8
@@ -384,14 +387,28 @@ local function uniform_lights()
             for ix=0, nx-1 do
                 local x = ix*dx
 
+                local parent = PC:create_entity{
+                    policy = {
+                        "ant.scene|scene_object",
+                    },
+                    data = {
+                        scene = {
+                            t = {x, y+1, z, 1}
+                        },
+                        rotator = true,
+                    }
+                }
+
                 PC:create_instance{
                     prefab = "/pkg/ant.test.features/assets/entities/sphere_with_point_light.prefab",
                     on_ready = function(pl)
+                        local root<close> = world:entity(pl.tag['*'][1], "scene:update")
+                        root.scene.parent = parent
                         update_light_prefab(pl, {
-                            color = get_random_color(1),
-                            pos = {x, y+1, z, 1},
+                            color   = get_random_color(1),
+                            pos     = {0, 0, 10, 1},
                             intensity_scale = math.random(7, 10),
-                            radius = math.random(15, 30),
+                            radius  = math.random(15, 30),
                         })
                     end
                 }
@@ -416,14 +433,14 @@ end
 local function simple_scene()
     local pl_pos = {
         { pos = {-5, 1, 5,}, radius = 3, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
-        { pos = {-5, 1,-5,}, radius = 3, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
-        { pos = { 5, 2, 5,}, radius = 3, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
-        { pos = { 5, 2,-5,}, radius = 3, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
+        -- { pos = {-5, 1,-5,}, radius = 3, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
+        -- { pos = { 5, 2, 5,}, radius = 3, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
+        -- { pos = { 5, 2,-5,}, radius = 3, intensity_scale=1.0, color=math3d.ref(math3d.vector(1.0, 0.0, 0.0, 1.0))},
 
-        { pos = {-10, 1, 10}, radius = 5, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
-        { pos = {-10, 1,-10}, radius = 5, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
-        { pos = { 10, 2, 10}, radius = 5, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
-        { pos = { 10, 2,-10}, radius = 5, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
+        -- { pos = {-10, 1, 10}, radius = 5, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
+        -- { pos = {-10, 1,-10}, radius = 5, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
+        -- { pos = { 10, 2, 10}, radius = 5, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
+        -- { pos = { 10, 2,-10}, radius = 5, intensity_scale=1.0, color=math3d.ref(math3d.vector(0.0, 1.0, 1.0, 1.0))},
         
         -- { pos = {  3, 1, 3}, radius = 10, intensity_scale=1.0},
         -- { pos = { -3, 1, 3}, radius = 10, intensity_scale=1.0},
@@ -431,11 +448,27 @@ local function simple_scene()
         -- { pos = {  3, 2,-3}, radius = 10, intensity_scale=1.0},
     }
 
+    local parent = PC:create_entity{
+        policy = {
+            "ant.scene|scene_object",
+        },
+        data = {
+            scene = {
+                t = {1, 3, 1, 1}
+            },
+            rotator = true,
+        }
+    }
+
     for _, p in ipairs(pl_pos) do
         PC:create_instance{
             prefab = "/pkg/ant.test.features/assets/entities/sphere_with_point_light.prefab",
             on_ready = function(pl)
+                local root<close> = world:entity(pl.tag['*'][1], "scene:update")
+                root.scene.parent = parent
+                p.pos = {0, 0, 0, 1}
                 update_light_prefab(pl, p)
+                
             end
         }
     end
@@ -452,9 +485,73 @@ local function simple_scene()
 end
 
 function plt_sys.init_world()
-    Sponza_scene()
-    --simple_scene()
+    --Sponza_scene()
+    simple_scene()
+
+    -- local ppeid = PC:create_entity{
+    --     policy = {
+    --         "ant.scene|scene_object",
+    --     },
+    --     data = {
+    --         scene = {
+    --             t = {0, 1, 0, 1},
+    --         },
+    --         rotator = true,
+    --     }
+    -- }
+
+    -- local peid = PC:create_entity{
+    --     policy = {
+    --         "ant.scene|scene_object",
+    --     },
+    --     data = {
+    --         scene = {
+    --             t = {1, 3, 0, 1},
+    --         },
+    --         on_ready = function(e)
+    --             w:extend(e, "scene:update")
+    --             e.scene.parent = ppeid
+    --             w:submit(e)
+    --         end
+    --     }
+    -- }
+
+    -- PC:create_entity{
+    --     policy = {
+    --         "ant.render|light",
+    --     },
+    --     data = {
+    --         scene = {
+    --             t = {0, 0, 0, 1},
+    --             parent = peid,
+    --         },
+    --         light = {
+	-- 			type		= "point",
+	-- 			motion_type = "DYNAMIC",
+	-- 			color		= {1.0, 1.0, 0.0, 1.0},
+	-- 			intensity	= 120000,
+	-- 			intensity_unit="candela",
+	-- 			range		= 30,
+	-- 		},
+	-- 		visible = true,
+    --     }
+    -- }
 end
+
+
+function plt_sys.data_changed()
+    local r = math3d.quaternion{axis=math3d.vector(0.0, 1.0, 0.0, 0.0), r=math.pi*0.1}
+    for e in w:select "rotator scene:update" do
+        local rr = iom.get_rotation(e)
+        iom.set_rotation(e, math3d.mul(r, rr))
+    end
+end
+
+-- function plt_sys:render_submit()
+--     for l in w:select "scene_changed light scene:in" do
+--         print(math3d.tostring(math3d.index(l.scene.worldmat, 4)))
+--     end
+-- end
 
 local split_frustum = import_package "ant.camera".split_frustum
 
