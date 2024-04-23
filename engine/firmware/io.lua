@@ -116,7 +116,7 @@ local vfs = assert(loadfile "/engine/firmware/vfs.lua")()
 local repo = vfs.new {
 	bundlepath = config.directory.internal,
 	localpath = vfs_directory,
-	slot = vfs.slot or "",
+	slot = config.vfs.slot or "",
 }
 
 local connection = {
