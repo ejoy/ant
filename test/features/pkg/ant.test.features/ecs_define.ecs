@@ -13,6 +13,8 @@ local function DEFINE_TEST(n)
     system(n .. "_test_system").implement(("test/%s_test.lua"):format(n))
 end
 
+DEFINE_TEST "animation_baker"
+
 DEFINE_TEST "grid"
 DEFINE_TEST "pbr"
 DEFINE_TEST "shadow"
