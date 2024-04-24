@@ -413,7 +413,10 @@ end
 
 local append_frame, finish_frame; do
     local function pack_uint(uint)
-        return ("I"):pack(uint[1]|uint[2]<<8|uint[3]<<16|uint[4]<<24)
+        assert(uint.n == 4)
+        local r = ("I"):pack(uint[1]|uint[2]<<8|uint[3]<<16|uint[4]<<24)
+        uint.n = 1
+        return r
     end
 
     local uint = {n=1, 0, 0, 0, 0}
@@ -432,6 +435,7 @@ local append_frame, finish_frame; do
         for i=uint.n, 4 do
             uint[i] = 0
         end
+        uint.n = 4
         uint_frames[#uint_frames+1] = pack_uint(uint)
     end
 end
@@ -475,7 +479,7 @@ local function dispatch_(ce, ai, di)
 end
 
 local function dispatch(compute, ai, di)
-    dispatch_(world:create(compute, "dispatch:in"), ai, di)
+    dispatch_(world:entity(compute, "dispatch:in"), ai, di)
 end
 
 local MAX_INSTANCES<const> = 1024
@@ -499,7 +503,7 @@ function iab.create(prefab, instances, bakenum)
     local ani = {}
     for n, m in pairs(meshset) do
         ani[n] = {
-            eid = world:create_entity{
+            render = world:create_entity{
                 policy = {
                     "ant.render|simplerender",
                     "ant.render|draw_indirect",
@@ -543,7 +547,7 @@ function iab.create(prefab, instances, bakenum)
                     },
                     on_ready = function (e)
                         w:extend(e, "dispatch:in")
-                        local re = world:entity(ani[n].eid, "animation_instances:in draw_indirect:in")
+                        local re = world:entity(ani[n].render, "animation_instances:in draw_indirect:in")
                         dispatch_(e, re.animation_instances, re.draw_indirect)
                     end,
                 }
@@ -572,7 +576,7 @@ local function pack_frame_buffer(frames)
 end
 
 function iab.update_frames(abo, frames)
-    local re = world:create(abo.render, "animation_instances:in draw_indirect:in")
+    local re = world:entity(abo.render, "animation_instances:in draw_indirect:in")
     if #frames ~= idi.instance_num(re) then
         error(("frames number:%d should equal instance buffer num:%d, or use update_instances instead"):format(#frames, idi.instance_num(re)))
     end
@@ -591,6 +595,11 @@ function iab.update_instances(abo, instances)
     idi.update_instance_buffer(re, instancebuffer, #instances)
     check_recreate_frame_buffer(ai, framebuffer)
 
+    dispatch(abo.compute, re.animation_instances, re.draw_indirect)
+end
+
+function iab.dispatch(abo)
+    local re = world:entity(abo.render, "animation_instances:in draw_indirect:in")
     dispatch(abo.compute, re.animation_instances, re.draw_indirect)
 end
 

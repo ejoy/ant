@@ -22,15 +22,15 @@ function ab_test_sys:init()
 
     abo = iab.create("/pkg/ant.test.features/assets/zombies/1-appear.glb/mesh.prefab", {
         {
-            s = 1,
+            s = 0.1,
             r = math3d.quaternion{0, math.pi*0.3, 0},
-            t = math3d.vector(1, 0, 0, 1),
+            t = math3d.vector(3, 2, 0, 1),
             frame = 0,
         },
         {
-            s = 2,
+            s = 0.2,
             r = math3d.quaternion{0,-math.pi*0.3, 0},
-            t = math3d.vector(-1, 0, 0, 1),
+            t = math3d.vector(-3, 2, 0, 1),
             frame = 1,
         }
     }, 4)
@@ -44,12 +44,16 @@ function ab_test_sys:data_changed()
     if abo then
         for _, key, press in kb_mb:unpack() do
             if press == 0 and key == "C" then
-                iab.update_frames(assert(abo.appear), {
+                iab.update_frames(assert(abo.Armature_Take_001_BaseLayer), {
                     3, 2
                 })
             end
         end
     end
+end
+
+function ab_test_sys:render_submit()
+    iab.dispatch(abo.Armature_Take_001_BaseLayer)
 end
 
 function ab_test_sys:exit()
