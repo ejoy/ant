@@ -501,7 +501,7 @@ function util.h2f(h)
 end
 
 function util.f2h(f)
-	return (util.check_nan(f)*HALF_UINT16) + 0.5
+	return math.floor((util.check_nan(f)*HALF_UINT16) + 0.5)
 end
 
 function util.H2B(H)
