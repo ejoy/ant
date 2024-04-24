@@ -3,7 +3,6 @@ local fs = require "bee.filesystem"
 local platform = require "bee.platform"
 
 local RuntimeBacklist <const> = {
-    filedialog = true,
     window = platform.os == "android" or platform.os == "linux",
     debugger = lm.luaversion == "lua55",
 }
