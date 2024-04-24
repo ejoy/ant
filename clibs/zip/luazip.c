@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <bee/platform/win/cwtf8.h>
+#include <bee/win/cwtf8.h>
 
 #define ZLIB_UTF8_FLAG (1<<11)
 #define FILECHUNK (4096 * 4)

@@ -1,9 +1,9 @@
 #include <core/Tween.h>
 #include <utility>
-#include <math.h>
 #include <bee/nonstd/to_underlying.h>
 #include <bee/nonstd/unreachable.h>
 #include <numbers>
+#include <cmath>
 
 static constexpr auto const_pi = std::numbers::pi_v<float>;
 
@@ -31,7 +31,7 @@ static float bounce(float t) {
 }
 
 static float circular(float t) {
-	return 1.f - sqrtf(1.f - t * t);
+	return 1.f - std::sqrt(1.f - t * t);
 }
 
 static float cubic(float t) {
@@ -41,13 +41,13 @@ static float cubic(float t) {
 static float elastic(float t) {
 	if (t == 0) return t;
 	if (t == 1) return t;
-	return -expf(7.24f * (t - 1.f)) * sinf((t - 1.1f) * 2.f * const_pi / 0.4f);
+	return -std::exp(7.24f * (t - 1.f)) * std::sin((t - 1.1f) * 2.f * const_pi / 0.4f);
 }
 
 static float exponential(float t) {
 	if (t == 0) return t;
 	if (t == 1) return t;
-	return expf(7.24f * (t - 1.f));
+	return std::exp(7.24f * (t - 1.f));
 }
 
 static float linear(float t) {
@@ -67,7 +67,7 @@ static float quintic(float t) {
 }
 
 static float sine(float t) {
-	return 1.f - cosf(t * const_pi * 0.5f);
+	return 1.f - std::cos(t * const_pi * 0.5f);
 }
 
 enum class Direction : uint8_t {

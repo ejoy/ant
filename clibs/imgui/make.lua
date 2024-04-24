@@ -87,7 +87,6 @@ lm:lua_source "imgui" {
 
 lm:lua_source "imgui" {
     confs = { "bgfx" },
-    deps = "luabind",
     includes = {
         ".",
         lm.AntDir .. "/3rd/imgui",

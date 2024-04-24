@@ -17,24 +17,16 @@ function dpd_sys:init()
     gesture_mb = world:sub{"gesture", "tap"}
 end
 
-local function remap_xy(x, y)
-    local vp = iviewport.device_viewrect
-    local vr = iviewport.viewrect
-    local nx, ny = x - vp.x, y - vp.y
-    nx, ny  = mu.convert_device_to_screen_coord(vp, vr, nx, ny)
-	return nx, ny
-end
-
 function dpd_sys:data_changed()
     for _, _, state, x, y in topick_mb:unpack() do
         if state == "DOWN" then
-            x, y = remap_xy(x, y)
+            x, y = iviewport.remap_xy(x, y)
             ipu.pick(x, y)
         end
     end
 
     for _, _, pt in gesture_mb:unpack() do
-        local x, y = remap_xy(pt.x, pt.y)
+        local x, y = iviewport.remap_xy(pt.x, pt.y)
         ipu.pick(x, y)
     end
 end

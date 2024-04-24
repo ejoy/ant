@@ -41,18 +41,22 @@ end
 local MERGE_MESH
 local MESH_PARAMS
 
+local function check_vec(vec)
+    if #vec > 4 then
+        error("Invalid data")
+    end
+    for i=#vec+1, 4 do
+        vec[i] = 0
+    end
+    return vec
+end
+
 local function init_mountain_mesh(meshbins)
-
-    local function overlay_offset(v)
-		return {0, v[1], v[1] + v[2], v[1] + v[2] + v[3]}
-	end
-
-    local vbnums, ibnums
-    MERGE_MESH, vbnums, ibnums = imesh.build_meshes(meshbins)
-    local vboffsets, iboffsets = overlay_offset(vbnums), overlay_offset(ibnums)
+    local mesh = imesh.build_meshes(meshbins)
+    MERGE_MESH = mesh.mesh
 
     MESH_PARAMS = math3d.ref(math3d.array_vector{
-        math3d.vector(vboffsets), math3d.vector(iboffsets), math3d.vector(ibnums)
+        math3d.vector(check_vec(mesh.vboffsets)), math3d.vector(check_vec(mesh.iboffsets)), math3d.vector(check_vec(mesh.ibnums))
     })
 end
 

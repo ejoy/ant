@@ -1,14 +1,14 @@
-local ecs = ...
+local ecs   = ...
 local world = ecs.world
-local w = world.w
+local w     = world.w
 
 local assetmgr = import_package "ant.asset"
-local ozz = require "ozz"
 local skinning = ecs.require "skinning"
 
-local m = ecs.system "animation_system"
+local ozz = require "ozz"
+local api = {}
 
-local function create(filename)
+function api.create(filename)
     local data = assetmgr.resource(filename)
     local skeleton = data.skeleton
     local status = {}
@@ -36,26 +36,6 @@ local function create(filename)
         skins = skins,
     }
     return obj
-end
-
-function m:component_init()
-    local animations = {}
-    for e in w:select "INIT scene:in eid:in animation?update skinning?update animation_changed?out" do
-        if e.animation ~= nil then
-            local obj = create(e.animation)
-            e.animation = obj
-            e.animation_changed = true
-            animations[e.eid] = obj
-        elseif e.scene.parent ~= 0 then
-            local obj = animations[e.scene.parent]
-            if obj then
-                animations[e.eid] = obj
-                if e.skinning ~= nil then
-                    e.skinning = obj.skins[e.skinning]
-                end
-            end
-        end
-    end
 end
 
 local function resize_locals(ani, n)
@@ -101,21 +81,13 @@ local function sampling(ani)
     ozz.LocalToModelJob(skeleton, locals, ani.models)
 end
 
-function m:animation_sample()
-    for e in w:select "animation_changed animation:in" do
-        local obj = e.animation
-        sampling(obj)
-        for _, skin in ipairs(obj.skins) do
-            skinning.build(obj.models, skin)
-        end
+function api.sample(e)
+    local obj = e.animation
+    sampling(obj)
+    for _, skin in ipairs(obj.skins) do
+        skinning.build(obj.models, skin)
     end
 end
-
-function m:final()
-    w:clear "animation_changed"
-end
-
-local api = {}
 
 function api.set_status(e, name, ratio, weight)
     w:extend(e, "animation:in animation_changed?out")

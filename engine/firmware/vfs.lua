@@ -11,15 +11,21 @@ local CACHESIZE <const> = 8 * 1024 * 1024
 local uncomplete = {}
 
 local function readroot(self)
+	print("[vfs] slot:", self.slot)
 	local f = io.open(self.localpath .. "root" .. self.slot, "rb")
 	if f then
 		local root = f:read "l"
 		local ziproot = f:read "l"
 		f:close()
 		if ziproot == self.ziproot then
+			print("[vfs] root:", ziproot)
 			return root
 		end
+		print(("[vfs] updated local:%s zip:%s"):format(ziproot, self.ziproot))
+		print("[vfs] remove local cache.")
 		os.remove(self.localpath .. "root" .. self.slot)
+	else
+		print("[vfs] slot is empty")
 	end
 	return self.ziproot
 end

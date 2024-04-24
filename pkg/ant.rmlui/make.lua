@@ -50,7 +50,6 @@ lm:lua_source "rmlui_css" {
         lm.AntDir .. "/3rd/yoga",
         lm.AntDir .. "/3rd/stylecache",
         lm.AntDir .. "/3rd/bee.lua",
-        lm.AntDir .. "/clibs/luabind",
     },
     defines = {
         lm.mode == "debug" and "DEBUG",
@@ -82,7 +81,6 @@ lm:source_set "rmlui" {
     deps = {
         "yoga",
         "stylecache",
-        "luabind",
         "rmlui_core",
         "rmlui_css",
         "rmlui_binding",

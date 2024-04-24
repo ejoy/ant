@@ -5,7 +5,7 @@
 #include <memory>
 #include "memfile.h"
 
-#include <bee/platform/win/wtf8.h>
+#include <bee/win/wtf8.h>
 
 static std::wstring towstring(lua_State* L, int idx) {
     size_t len = 0;

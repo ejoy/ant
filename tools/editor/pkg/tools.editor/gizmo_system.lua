@@ -33,10 +33,6 @@ local rotate_axis
 local uniform_scale = false
 local local_space = false
 
-local function cvt2scenept(x, y)
-    return x - iviewport.device_viewrect.x, y - iviewport.device_viewrect.y
-end
-
 function gizmo_sys:init()
 	navigizmo:init()
 end
@@ -53,12 +49,23 @@ function gizmo:update()
 	self:update_axis_plane()
 end
 
-function gizmo:set_target(eid)
-	local target = eid
+function gizmo:set_target(eids, group_center)
+	self.group_eids = nil
+	local target = eids
+	if eids then
+		target = #eids > 1 and self.group_root or eids[1]
+		if self.group_root == target then
+			self.group_eids = eids
+			local e <close> = world:entity(target)
+			iom.set_position(e, group_center)
+		end
+	end
 	if self.target_eid == target then
+		if self.group_root == target then
+			world:pub {"UpdateAABB", self.group_eids}
+		end
 		return
 	end
-	
 	local old_target = self.target_eid
 	self.target_eid = target
 	if target then
@@ -306,6 +313,17 @@ local geopkg = import_package "ant.geometry"
 local geolib = geopkg.geometry
 local LINEWIDTH = 3
 function gizmo_sys:post_init()
+	gizmo.group_root = world:create_entity {
+		policy = {
+			"ant.scene|scene_object",
+		},
+		data = {
+			scene = {},
+		},
+		tag = {
+			"multi select root"
+		}
+	}
 	local axis_root = world:create_entity {
 		policy = {
 			"ant.scene|scene_object",
@@ -1042,7 +1060,7 @@ local last_mouse_pos_x = 0
 local last_mouse_pos_y = 0
 local function on_mouse_move()
 	local mp = world:get_mouse()
-	local x, y = cvt2scenept(mp.x, mp.y)
+	local x, y = iviewport.cvt2scenept(mp.x, mp.y)
 	if navigizmo:hit_test(x, y) then
 		return
 	end
@@ -1078,16 +1096,17 @@ local event_mouse_drag	= world:sub {"mousedrag"}
 local event_mouse_down	= world:sub {"mousedown"}
 local event_mouse_up	= world:sub {"mouseup"}
 local event_keypress	= world:sub {"keyboard"}
-local vr_mb 			= world:sub {"view_rect_changed", "main_queue"}
+local vr_mb 			= world:sub {"scene_viewrect_changed"}
 
 function gizmo_sys:handle_input()
-	for _, _, _ in vr_mb:unpack() do
-		navigizmo:on_view_rect()
+	for _, viewrect in vr_mb:unpack() do
+		navigizmo:on_view_rect(viewrect)
         break
     end
 	for _, what, x, y in event_mouse_down:unpack() do
-		x, y = cvt2scenept(x, y)
+		x, y = iviewport.cvt2scenept(x, y)
 		if what == "LEFT" then
+			rectselect:start(x, y)
 			if not navigizmo:on_click(x, y) then
 				gizmo_seleted = gizmo:select_gizmo(x, y)
 				gizmo:click_axis_or_plane(move_axis)
@@ -1096,9 +1115,31 @@ function gizmo_sys:handle_input()
 		end
 	end
 
+
+	on_mouse_move()
+
+	for _, what, x, y in event_mouse_drag:unpack() do
+		x, y = iviewport.cvt2scenept(x, y)
+		if what == "LEFT" then
+			if light_gizmo_mode ~= 0 then
+				move_light_gizmo(x, y)
+			elseif gizmo.mode == gizmo_const.MOVE and move_axis then
+				move_gizmo(x, y)
+			elseif gizmo.mode == gizmo_const.SCALE then
+				if move_axis or uniform_scale then
+					scale_gizmo(x, y)
+				end
+			elseif gizmo.mode == gizmo_const.ROTATE and rotate_axis then
+				rotate_gizmo(x, y)
+			else
+				rectselect:draw(x, y)
+			end
+		end
+	end
+
 	for _, what, x, y in event_mouse_up:unpack() do
-		x, y = cvt2scenept(x, y)
-		rectselect:active_rect_select(false)
+		x, y = iviewport.cvt2scenept(x, y)
+		rectselect:finish()
 		if what == "LEFT" then
 			gizmo:reset_move_axis_color()
 			if gizmo.mode == gizmo_const.ROTATE then
@@ -1139,27 +1180,7 @@ function gizmo_sys:handle_input()
 			end
 		end
 	end
-
-	on_mouse_move()
-
-	for _, what, x, y in event_mouse_drag:unpack() do
-		x, y = cvt2scenept(x, y)
-		if what == "LEFT" then
-			if light_gizmo_mode ~= 0 then
-				move_light_gizmo(x, y)
-			elseif gizmo.mode == gizmo_const.MOVE and move_axis then
-				move_gizmo(x, y)
-			elseif gizmo.mode == gizmo_const.SCALE then
-				if move_axis or uniform_scale then
-					scale_gizmo(x, y)
-				end
-			elseif gizmo.mode == gizmo_const.ROTATE and rotate_axis then
-				rotate_gizmo(x, y)
-			else
-				rectselect:on_rect_select(x, y)
-			end
-		end
-	end
+	
 	for _, key, press, state in event_keypress:unpack() do
 		if state.CTRL then
 			if key == "Z" and press == 1 then
@@ -1201,7 +1222,7 @@ function gizmo_sys:handle_event()
 			if not gizmo_seleted then
 				local teid = hierarchy:get_select_adapter(eid)
 				if hierarchy:get_node(teid) then
-					gizmo:set_target(teid)
+					gizmo:set_target({teid})
 				end
 			end
 			if imodifier.highlight then
@@ -1211,7 +1232,7 @@ function gizmo_sys:handle_event()
 		else
 			if not gizmo_seleted and not camera_mgr.select_frustum then
 				if last_mouse_pos_x and last_mouse_pos_y then
-					gizmo:set_target(nil)
+					gizmo:set_target()
 				end
 			end
 		end

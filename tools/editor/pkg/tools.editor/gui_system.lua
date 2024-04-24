@@ -232,7 +232,7 @@ function m:handle_event()
             end
         elseif what == "parent" then
             target = prefab_mgr:set_parent(target, v1)
-            gizmo:set_target(target)
+            gizmo:set_target({target})
         end
         if transform_dirty then
             on_update(target)
@@ -257,7 +257,7 @@ function m:handle_event()
     for _, what in event_window_title:unpack() do
         local title = "Editor - " .. what
         window.set_title(title)
-        gizmo:set_target(nil)
+        gizmo:set_target()
     end
 
     hierarchy:handle_event()

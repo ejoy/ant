@@ -24,7 +24,7 @@ component "animation_playback"
 component "slot".type "lua"
 
 system "animation_system"
-    .implement "animation.lua"
+    .implement "animation_system.lua"
 
 system "playback_system"
     .implement "playback.lua"

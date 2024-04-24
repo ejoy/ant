@@ -6,61 +6,42 @@
 #include "memfile.h"
 
 #include <bee/utility/zstring_view.h>
-#include <bee/platform/win/cwtf8.h>
+#include <bee/win/cwtf8.h>
 
 extern "C" {
 #include "sha1.h"
 }
 
-#if defined(LUA_USE_POSIX)
-#   include <sys/types.h>
-#   define l_fseek(f,o,w)	fseeko(f,o,w)
-#   define l_ftell(f)		ftello(f)
-#   define l_seeknum		off_t
-#elif defined(LUA_USE_WINDOWS) && !defined(_CRTIMP_TYPEINFO) && defined(_MSC_VER) && (_MSC_VER >= 1400)
-#   define l_fseek(f,o,w)	_fseeki64(f,o,w)
-#   define l_ftell(f)		_ftelli64(f)
-#   define l_seeknum		__int64
-#else
-#   define l_fseek(f,o,w)	fseek(f,o,w)
-#   define l_ftell(f)		ftell(f)
-#   define l_seeknum		long
-#endif
-
-#if defined(_WIN32)
-#include <Windows.h>
-static const wchar_t* u2w(lua_State* L, bee::zstring_view str) {
-    if (str.empty()) {
-        return L"";
-    }
-    size_t wlen = wtf8_to_utf16_length(str.data(), str.size());
-    if (wlen == (size_t)-1) {
-        luaL_error(L, "invalid wtf-8 string");
-        return NULL;
-    }
-    wchar_t* wresult = (wchar_t*)lua_newuserdatauv(L, (wlen + 1) * sizeof(wchar_t), 0);
-    if (!wresult) {
-        luaL_error(L, "not enough memory");
-        return NULL;
-    }
-    wtf8_to_utf16(str.data(), str.size(), wresult, wlen);
-    wresult[wlen] = L'\0';
-    return wresult;
-}
-#endif
-
 namespace fileutil {
     static FILE* open(lua_State* L, bee::zstring_view filename) noexcept {
 #if defined(_WIN32)
-        return _wfopen(u2w(L, filename), L"rb");
+        size_t wlen = wtf8_to_utf16_length(filename.data(), filename.size());
+        if (wlen == (size_t)-1) {
+            errno = EILSEQ;
+            return NULL;
+        }
+        wchar_t* wfilename = (wchar_t*)lua_newuserdatauv(L, (wlen + 1) * sizeof(wchar_t), 0);
+        if (!wfilename) {
+            errno = ENOMEM;
+            return NULL;
+        }
+        wtf8_to_utf16(filename.data(), filename.size(), wfilename, wlen);
+        wfilename[wlen] = L'\0';
+        return _wfopen(wfilename, L"rb");
 #else
         return fopen(filename.data(), "r");
 #endif
     }
     static size_t size(FILE* f) noexcept {
-        l_fseek(f, 0, SEEK_END);
-        l_seeknum size = l_ftell(f);
-        l_fseek(f, 0, SEEK_SET);
+#if defined(_WIN32)
+        _fseeki64(f, 0, SEEK_END);
+        long long size = _ftelli64(f);
+        _fseeki64(f, 0, SEEK_SET);
+#else
+        fseeko(f, 0, SEEK_END);
+        off_t size = ftello(f);
+        fseeko(f, 0, SEEK_SET);
+#endif
         return (size_t)size;
     }
     static size_t read(FILE* f, void* buf, size_t sz) noexcept {
@@ -102,12 +83,20 @@ static bee::zstring_view getfile(lua_State *L) {
     return { buf, len };
 }
 
+static bool is_runtime(lua_State *L) {
+    lua_setglobal(L, "__ANT_RUNTIME__");
+    bool r = !lua_isnil(L, -1);
+    lua_pop(L, 1);
+    return r;
+}
+
 static const char* getsymbol(lua_State *L, bee::zstring_view filename) {
-#if defined(__ANT_RUNTIME__)
-    return luaL_optstring(L, 2, filename.data());
-#else
-    return filename.data();
-#endif
+    if (is_runtime(L)) {
+        return luaL_optstring(L, 2, filename.data());
+    }
+    else {
+        return filename.data();
+    }
 }
 
 struct wrap {

@@ -5,7 +5,7 @@
 #include <core/ComputedValues.h>
 #include <core/TextEffect.h>
 #include <glm/glm.hpp>
-#include "luavalue.h"
+#include <binding/luavalue.h>
 
 namespace Rml {
 

@@ -49,7 +49,6 @@ local function check_viewrect_size(queue_vr, newsize)
 	local nw, nh = newsize.w, newsize.h
 	if queue_vr.w ~= nw or queue_vr.h ~= nh then
 		queue_vr.w, queue_vr.h = nw, nh
-		queue_vr.x, queue_vr.y = mu.cvt_size(queue_vr.x, 1, 0), mu.cvt_size(queue_vr.x, 1, 0)
 	end
 end
 

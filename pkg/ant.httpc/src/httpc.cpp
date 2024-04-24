@@ -3,7 +3,7 @@
 #include <lua.hpp>
 #include <bee/lua/binding.h>
 #include <bee/thread/simplethread.h>
-#include <bee/platform/win/wtf8.h>
+#include <bee/win/wtf8.h>
 #include <bee/error.h>
 #include <array>
 #include <charconv>
@@ -333,7 +333,7 @@ struct HttpcSession {
         lua_setfield(L, -2, "id");
         lua_pushstring(L, "error");
         lua_setfield(L, -2, "type");
-        lua_pushstring(L, bee::make_syserror("download").c_str());
+        lua_pushstring(L, bee::error::sys_errmsg("download").c_str());
         lua_setfield(L, -2, "errmsg");
         response.push(seri_pack(L, 0, NULL));
     }
@@ -397,7 +397,7 @@ static int session(lua_State* L) {
     auto& s = bee::lua::newudata<HttpcSession>(L);
     if (!s.init()) {
         lua_pushnil(L);
-        lua_pushstring(L, bee::make_syserror("session").c_str());
+        lua_pushstring(L, bee::error::sys_errmsg("session").c_str());
         return 2;
     }
     return 1;
@@ -420,7 +420,7 @@ static int download(lua_State* L) {
         }
     }
     lua_pushnil(L);
-    lua_pushstring(L, bee::make_syserror("download").c_str());
+    lua_pushstring(L, bee::error::sys_errmsg("download").c_str());
     return 2;
 }
 

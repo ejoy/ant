@@ -1,0 +1,3 @@
+component "animation_instances".type "lua"
+policy "animation_instances"
+    .component "animation_instances"

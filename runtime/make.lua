@@ -3,7 +3,6 @@ local fs = require "bee.filesystem"
 local platform = require "bee.platform"
 
 local RuntimeBacklist <const> = {
-    filedialog = true,
     window = platform.os == "android" or platform.os == "linux",
     debugger = lm.luaversion == "lua55",
 }
@@ -14,14 +13,6 @@ local EditorBacklist <const> = {
     debugger = lm.luaversion == "lua55",
 }
 
-local RuntimeAlias <const> = {
-    fastio = "fastio_runtime",
-}
-
-local EditorAlias <const> = {
-    fastio = "fastio_editor",
-}
-
 local RuntimeModules = {}
 local EditorModules = {}
 
@@ -30,15 +21,13 @@ local function checkAddModule(name, makefile)
         lm:import(makefile)
     end
     if not RuntimeBacklist[name] then
-        local alias = RuntimeAlias[name] or name
-        if lm:has(alias) then
-            RuntimeModules[#RuntimeModules + 1] = alias
+        if lm:has(name) then
+            RuntimeModules[#RuntimeModules + 1] = name
         end
     end
     if not EditorBacklist[name] then
-        local alias = EditorAlias[name] or name
-        if lm:has(alias) then
-            EditorModules[#EditorModules + 1] = alias
+        if lm:has(name) then
+            EditorModules[#EditorModules + 1] = name
         end
     end
 end

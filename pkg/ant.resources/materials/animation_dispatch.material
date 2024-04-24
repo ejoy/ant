@@ -1,0 +1,3 @@
+fx:
+  cs: /pkg/ant.resources/shaders/animation/cs_animation_dispatch.sc
+
