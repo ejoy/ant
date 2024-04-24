@@ -367,6 +367,11 @@ local function pack_buffers(instances)
     return table.concat(transforms, ""), table.concat(uint_frames, "")
 end
 
+local function create_frame_buffer(framebuffer)
+    assert(#framebuffer > 0)
+    return bgfx.create_index_buffer(irender.align_buffer(framebuffer), "dr")
+end
+
 local function update_compute_properties(material, ai, di)
     local mesh = ai.mesh
     material.u_mesh_param        = math3d.vector(mesh.vbnum, mesh.ibnum, mesh.bakenum, di.num)
@@ -421,7 +426,7 @@ function iab.create(prefab, instances, bakenum)
                             ibnum   = ib and ib.num or 0,
                             bakenum = bakenum,
                         },
-                        framehandle = bgfx.create_index_buffer(irender.align_buffer(animationframe_buffer), "dr")
+                        framehandle = create_frame_buffer(animationframe_buffer),
                     },
                     visible         = true,
                 }
@@ -448,26 +453,48 @@ function iab.create(prefab, instances, bakenum)
     return ani
 end
 
---TODO: it's a heavy operation, will update the full instance buffer and animation framebuffer, need a more light operation
+local function dispatch(compute, ai, di)
+    local ce = world:create(compute, "dispatch:in")
+    update_compute_properties(ce.dispatch.material, ai, di)
+
+    icompute.dispatch(ce)
+end
+
+local function check_recreate_frame_buffer(ai, framebuffer)
+    if ai.framehandle then
+        bgfx.destroy(ai.framehandle)
+    end
+
+    ai.framehandle = create_frame_buffer(framebuffer)
+end
+
+function iab.update_frames(abo, frames)
+    local re = world:create(abo.render, "animation_instances:in draw_indirect:in")
+    if #frames ~= re.draw_indirect.num then
+        error(("frames number:%d should equal instance buffer num:%d, or use update_instances instead"):format(#frames, re.draw_indirect.num))
+    end
+
+    local ai = re.animation_instances
+    local uint_frames = {}
+    for _, f in ipairs(frames) do
+        append_frame(uint_frames, f)
+    end
+
+    check_recreate_frame_buffer(ai, table.concat(uint_frames, ""))
+
+    dispatch(abo.compute, re.animation_instances, re.draw_indirect)
+end
+
 function iab.update_instances(abo, instances)
     local re = world:create(abo.render, "animation_instances:in draw_indirect:in")
-    local ce = world:create(abo.compute, "dispatch:in")
-
     local ai = re.animation_instances
     ai.instances = instances
 
     local instancebuffer, framebuffer = pack_buffers(instances)
     idi.update_instance_buffer(re, instancebuffer, #instances)
+    check_recreate_frame_buffer(ai, framebuffer)
 
-    if ai.framehandle then
-        bgfx.destroy(ai.framehandle)
-    end
-
-    ai.framehandle = bgfx.create_index_buffer(irender.align_buffer(framebuffer), "dr")
-
-    update_compute_properties(ce.dispatch.material, re.animation_instances, re.draw_indirect)
-
-    icompute.dispatch(ce)
+    dispatch(abo.compute, re.animation_instances, re.draw_indirect)
 end
 
 return iab
