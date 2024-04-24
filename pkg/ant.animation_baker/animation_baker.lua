@@ -255,15 +255,10 @@ local function bake_animation_mesh(anie, meshobj, num)
         dupilcate_vb2bin = vb2bin:rep(num)
     end
 
-    local dupilcate_ibbin
-    if meshobj.meshres.ib then
-        local ibbin = meshobj.meshres.ib.memory[1]
-        dupilcate_ibbin = ibbin:rep(num)
-    end
-
-    local skin = aniobj.skins[meshobj.skinning]
-    local wm = meshobj:load_transform()
+    local skin      = aniobj.skins[meshobj.skinning]
+    local wm        = meshobj:load_transform()
     local skinning_matrices = build_skinning_matrices(wm, skin.matrices)
+    local numvb     = meshobj:numv()
 
     for n, status in pairs(aniobj.status) do
         for i=1, num do
@@ -272,7 +267,8 @@ local function bake_animation_mesh(anie, meshobj, num)
 
             -- transform vertices
             local vb = {}
-            for iv=1, meshobj:numv() do
+            
+            for iv=1, numvb do
                 local v = {}
 
                 local indices = meshobj:loadindices(iv)
@@ -304,11 +300,11 @@ local function bake_animation_mesh(anie, meshobj, num)
             buffers[#buffers+1] = vb
         end
 
-        local vbbin = table.concat(buffers, "")
-        local new_numv = meshobj:numv() * num
+        local newvbbin = table.concat(buffers, "")
+        local new_numv = numvb * num
         local newmeshobj = {
             vb = {
-                memory  = {vbbin, 1, #vbbin},
+                memory  = {newvbbin, 1, #newvbbin},
                 start   = 0,
                 num     = new_numv,
                 declname= meshobj.meshres.vb.declname,
@@ -316,7 +312,6 @@ local function bake_animation_mesh(anie, meshobj, num)
         }
 
         if dupilcate_vb2bin then
-            local vb2 = meshobj.meshres.vb2
             newmeshobj.vb2 = {
                 memory = {dupilcate_vb2bin, 1, #dupilcate_vb2bin},
                 start   = 0,
@@ -325,22 +320,14 @@ local function bake_animation_mesh(anie, meshobj, num)
             }
         end
 
-        if dupilcate_ibbin then
-            --TODO: use one ib, and add offset in drawindirect, copy ib buffer rightnow
-            newmeshobj.ib = {
-                memory  = {dupilcate_ibbin, 1, #dupilcate_ibbin},
-                start   = 0,
-                num     = num * meshobj.meshres.ib.num,
-                flag    = meshobj.meshres.ib.flag,
-            }
-        end
+        newmeshobj.ib = meshobj.meshres.ib
         meshset[n] = newmeshobj
     end
 
     return meshset
 end
 
-local function build_mesh_obj(meshe, transform)
+local function create_mesh_obj(meshe, transform)
     local o = setmetatable({
         meshres     = assetmgr.resource(meshe.data.mesh),
         skinning    = meshe.data.skinning,
@@ -380,6 +367,13 @@ local function pack_buffers(instances)
     return table.concat(transforms, ""), table.concat(uint_frames, "")
 end
 
+local function update_compute_properties(material, ai, di)
+    local mesh = ai.mesh
+    material.u_mesh_param        = math3d.vector(mesh.vbnum, mesh.ibnum, mesh.bakenum, di.num)
+    material.b_instance_frames   = ai.framehandle
+    material.b_indirect_buffer   = di.idb_handle
+end
+
 local MAX_INSTANCES<const> = 1024
 function iab.create(prefab, instances, bakenum)
     local pc = serialize.load(prefab)
@@ -390,7 +384,7 @@ function iab.create(prefab, instances, bakenum)
 
     local meshe = pc[2]
 
-    local meshobj = build_mesh_obj(meshe, math3d.matrix(meshe.data.scene))
+    local meshobj = create_mesh_obj(meshe, math3d.matrix(meshe.data.scene))
     local meshset = bake_animation_mesh(anie, meshobj, bakenum)
 
     local instancebuffer, animationframe_buffer = pack_buffers(instances)
@@ -426,7 +420,6 @@ function iab.create(prefab, instances, bakenum)
                             vbnum   = meshobj.meshres.vb.num,
                             ibnum   = ib and ib.num or 0,
                             bakenum = bakenum,
-                            numinstance = 0,
                         },
                         framehandle = bgfx.create_index_buffer(irender.align_buffer(animationframe_buffer), "dr")
                     },
@@ -443,17 +436,9 @@ function iab.create(prefab, instances, bakenum)
                         size = {numinstance//64+1, 1, 1},
                     },
                     on_ready = function (e)
-                        local re = world:entity(ani[n].eid, "animation_instances:in draw_indirect:in")
-                        local ai = re.animation_instances
                         w:extend(e, "dispatch:in")
-                        local vbnum = meshobj.meshres.vb.num
-                        local ib = meshobj.meshres.ib
-                        local ibnum = ib and ib.num or 0
-
-                        local material = e.dispatch.material
-                        material.u_mesh_param        = math3d.vector(vbnum, ibnum, bakenum, 0)
-                        material.b_instance_frames   = ai.framehandle
-                        material.b_indirect_buffer   = re.draw_indirect.idb_handle
+                        local re = world:entity(ani[n].eid, "animation_instances:in draw_indirect:in")
+                        update_compute_properties(e.dispatch.material, re.animation_instances, re.draw_indirect)
                     end,
                 }
             }
@@ -479,9 +464,8 @@ function iab.update_instances(abo, instances)
     end
 
     ai.framehandle = bgfx.create_index_buffer(irender.align_buffer(framebuffer), "dr")
-    local material = ce.dispatch.material
-    material.b_instance_frames   = ai.framehandle
-    material.b_indirect_buffer   = re.draw_indirect.idb_handle
+
+    update_compute_properties(ce.dispatch.material, re.animation_instances, re.draw_indirect)
 
     icompute.dispatch(ce)
 end
