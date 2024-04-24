@@ -8,6 +8,8 @@ local renderpkg     = import_package "ant.render"
 local mathpkg       = import_package "ant.math"
 local mc, mu        = mathpkg.constant, mathpkg.util
 
+local hwi           = import_package "ant.hwi"
+
 local layoutmgr     = renderpkg.layoutmgr
 
 local imesh         = ecs.require "ant.asset|mesh"
@@ -290,7 +292,7 @@ local function create_new_vb_layout(desc)
 end
 
 local function compress_quat(q)
-    local x, y, z, w = math3d.index(q)
+    local x, y, z, w = math3d.index(q, 1, 2, 3, 4)
     return ('hhhh'):pack(mu.f2h(x), mu.f2h(y), mu.f2h(z), mu.f2h(w))
 end
 
@@ -461,7 +463,19 @@ local function update_compute_properties(material, ai, di)
     local mesh = ai.mesh
     material.u_mesh_param        = math3d.vector(mesh.vbnum, mesh.ibnum, mesh.bakenum, di.instance_buffer.num)
     material.b_instance_frames   = ai.framehandle
-    material.b_indirect_buffer   = di.idb_handle
+    material.b_indirect_buffer   = di.handle
+end
+
+local main_viewid<const> = hwi.viewid_get "main_view"
+
+local function dispatch_(ce, ai, di)
+    update_compute_properties(ce.dispatch.material, ai, di)
+    ce.dispatch.size[1] = di.instance_buffer.num // 64+1
+    icompute.dispatch(main_viewid, ce.dispatch)
+end
+
+local function dispatch(compute, ai, di)
+    dispatch_(world:create(compute, "dispatch:in"), ai, di)
 end
 
 local MAX_INSTANCES<const> = 1024
@@ -530,7 +544,7 @@ function iab.create(prefab, instances, bakenum)
                     on_ready = function (e)
                         w:extend(e, "dispatch:in")
                         local re = world:entity(ani[n].eid, "animation_instances:in draw_indirect:in")
-                        update_compute_properties(e.dispatch.material, re.animation_instances, re.draw_indirect)
+                        dispatch_(e, re.animation_instances, re.draw_indirect)
                     end,
                 }
             }
@@ -538,13 +552,6 @@ function iab.create(prefab, instances, bakenum)
     end
 
     return ani
-end
-
-local function dispatch(compute, ai, di)
-    local ce = world:create(compute, "dispatch:in")
-    update_compute_properties(ce.dispatch.material, ai, di)
-
-    icompute.dispatch(ce)
 end
 
 local function check_recreate_frame_buffer(ai, framebuffer)

@@ -205,6 +205,7 @@ function render_sys:entity_init()
 		w:extend(e, "filter_result?out")
 		e.filter_result = true
 		update_default_material_index(e)
+		w:extend(e, "animation_instances?in")
 
 		--mesh & material
 		w:extend(e, "mesh_result:in")
