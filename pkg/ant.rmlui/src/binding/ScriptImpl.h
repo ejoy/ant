@@ -1,7 +1,7 @@
 #pragma once
 
 #include <core/Interface.h>
-#include <binding/luaref.h>
+#include <bee/lua/luaref.h>
 
 namespace Rml {
 class Node;

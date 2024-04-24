@@ -34,7 +34,10 @@ lm:source_set "bee" {
 }
 
 lm:source_set "bee" {
-    includes = ".",
+    includes = {
+        ".",
+        "3rd/lua",
+    },
     sources = "bee/**/*.cpp",
     windows = {
         sources = need "win"

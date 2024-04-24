@@ -6,8 +6,8 @@
 #include "luadbg/inc/luadbg.hpp"
 #include "luadbg/bee_module.h"
 
-#include <binding/file.h>
-#include <binding/binding.h>
+#include <bee/lua/file.h>
+#include <bee/lua/module.h>
 
 extern "C" int luaopen_luadebug_hookmgr(luadbg_State* L);
 extern "C" int luaopen_luadebug_stdio(luadbg_State* L);
