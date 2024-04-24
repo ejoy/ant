@@ -23,13 +23,13 @@ function ab_test_sys:init()
     abo = iab.create("/pkg/ant.test.features/assets/zombies/1-appear.glb/mesh.prefab", {
         {
             s = 1,
-            r = math3d.quaternion(0, math.pi*0.3, 0),
+            r = math3d.quaternion{0, math.pi*0.3, 0},
             t = math3d.vector(1, 0, 0, 1),
             frame = 0,
         },
         {
             s = 2,
-            r = math3d.quaternion(0,-math.pi*0.3, 0),
+            r = math3d.quaternion{0,-math.pi*0.3, 0},
             t = math3d.vector(-1, 0, 0, 1),
             frame = 1,
         }

@@ -116,8 +116,8 @@ local function buffer_desc(layout)
             type    = l:sub(6, 6),
             layout  = l,
             load    = function (self, data)
-                local start = self.offset+1
-                return data:sub(start, start+self.stride)
+                local start = self.offset
+                return data:sub(start+1, start+self.stride)
             end,
         }
 
@@ -127,10 +127,21 @@ local function buffer_desc(layout)
     return desc
 end
 
+local function align_vec4_str(s)
+    local n = 16 - #s
+    if n == 0 then
+        return s
+    end
+    assert(n == 4 or n == 8)
+    local nn = n // 4
+    return s .. ('f'):rep(nn):pack(0)
+end
 
 local meshmt = {
     init = function (self)
-        self.desc = buffer_desc(self.meshres.vb.declname)
+        local layout = self.meshres.vb.declname
+        self.desc = buffer_desc(layout)
+        self.vb_stride = layoutmgr.layout_stride(layout)
     end,
     numv = function (self)
         return self.meshres.vb.num
@@ -139,73 +150,102 @@ local meshmt = {
         return self.transform
     end,
     loadvertex = function (self, iv)
-        local vertices = self.vertices[iv]
-        if iv then
-            return vertices[iv]
+        local v = self._vertices[iv]
+        if nil == v then
+            local vb = self.meshres.vb
+            local s = self.vb_stride
+            local start = (iv-1)*s
+            v = vb.str:sub(start+1, start+s)
+            self._vertices[iv] = v
         end
-
-        local s = layoutmgr.layout_stride(self.meshres.declname)
-        local bin = self.meshres.vb.memory[3]
-        local start = (iv-1)*s+1
-        local v = bin:sub(start, start+s)
-        vertices[iv] = v
         return v
     end,
     --iv base0
     loadpos = function(self, iv)
-        assert(self.meshres.num >= iv)
+        assert(self:numv() >= iv)
         local v = self:loadvertex(iv)
 
-        local posdesc = assert(self.desc.p)
-        assert(posdesc.type == 'f')
-        local t = posdesc:load(v)
-        return math3d.vector(t)
+        local desc = assert(self.desc.p)
+        assert(desc.type == 'f')
+        local t = desc:load(v)
+        assert(#t == desc.num * 4) -- 4 for sizeof(float)
+        return math3d.vector(align_vec4_str(t))
     end,
     loadnormal = function(self, iv)
-        assert(self.meshres.num >= iv)
+        assert(self:numv() >= iv)
         local v = self:loadvertex(iv)
 
         local desc = assert(self.desc.n)
         assert(desc.type == 'f')
         local t = desc:load(v)
-        return math3d.vector(t)
+        assert(#t == desc.num * 4) -- 4 for sizeof(float)
+        return math3d.vector(align_vec4_str(t))
     end,
     unpack_quat = function (self, iv)
-        assert(self.meshres.num > iv)
+        assert(self:numv() >= iv)
         local v = self:loadvertex(iv)
-        local tangentdesc = assert(self.desc.T)
-        assert(tangentdesc.type == 'f')
-        return mu.unpack_tangent_frame(math3d.quaternion(tangentdesc:load(v)))
-    end,
-    loadindices = function (self, iv)
-        assert(self.meshres.num >= iv)
-        local v = self:loadvertex(iv)
-        local indexdesc = assert(self.desc.i)
-
-        local fmt
-        if indexdesc.type == "I" then
-            fmt = "H"
-        elseif indexdesc.type == "u" then
-            fmt = "B"
+        local desc = assert(self.desc.T)
+        assert(desc.num == 4)
+        local data = desc:load(v)
+        if desc.type == 'f' then
+            assert(#data == desc.n * 4) -- 4 for sizeof(float)
+            return mu.unpack_tangent_frame(math3d.quaternion(data))
+        elseif desc.type == 'i' then
+            local T1, T2, T3, T4 = ('h'):rep(4):unpack(data)
+            T1, T2, T3, T4 = mu.h2f(T1), mu.h2f(T2), mu.h2f(T3), mu.h2f(T4)
+            return mu.unpack_tangent_frame(math3d.quaternion(T1, T2, T3, T4))
         else
-            assert("Invalid index type")
+            error "Invalid quat data in vertex"
         end
 
-        assert(indexdesc.num == 4)
-        local data = indexdesc:load(v)
-        local i1, i2, i3, i4 = fmt:rep(4):unpack(data)
+    end,
+    loadindices = function (self, iv)
+        assert(self:numv() >= iv)
+        local v = assert(self:loadvertex(iv))
+        local desc = assert(self.desc.i)
+
+        assert(desc.num == 4)
+        local data = desc:load(v)
+        local i1, i2, i3, i4
+        if desc.type == "i" then
+            assert(#data == 8)
+            i1, i2, i3, i4 = ("H"):rep(4):unpack(data)
+            assert(0 <= i1 and i1 < 65536)
+            assert(0 <= i2 and i2 < 65536)
+            assert(0 <= i3 and i3 < 65536)
+            assert(0 <= i4 and i4 < 65536)
+        elseif desc.type == "u" then
+            assert(#data == 4)
+            i1, i2, i3, i4 = ("B"):rep(4):unpack(data)
+            assert(0 <= i1 and i1 < 256)
+            assert(0 <= i2 and i2 < 256)
+            assert(0 <= i3 and i3 < 256)
+            assert(0 <= i4 and i4 < 256)
+        else
+            error(("Invalid index type, only i/u is support:%s, %s"):format(desc.i, desc.layout))
+        end
         return {i1, i2, i3 ,i4}
     end,
     loadweights = function (self, iv)
-        assert(self.meshres.num >= iv)
+        assert(self:numv() >= iv)
         local v = self:loadvertex(iv)
         local desc = assert(self.desc.w)
-        assert(desc.type == 'f')
-        assert(desc.num == 4)
 
         local data = desc:load(v)
-        local f1, f2, f3, f4 = ('f'):rep(4):unpack(data)
-        return {f1, f2, f3, f4}
+        assert(desc.num == 4)
+        local w1, w2, w3, w4
+        if desc.type == 'f' then
+            w1, w2, w3, w4 = ('f'):rep(4):unpack(data)
+        elseif desc.type == 'i' then
+            local _ = desc.layout:sub(4, 4) == 'n' or error(("Invalid layout, type:%s, should use as normalize data:%s"):format(desc.type, desc.layout:sub(4, 4)))
+            local _ = desc.layout:sub(5, 5) == 'i' or error(("Invalid layout, type:%s, weight should be pack in asInt"):format(desc.type, desc.layout:sub(5, 5)))
+            w1, w2, w3, w4 = ('h'):rep(4):unpack(data)
+            w1, w2, w3, w4 = mu.h2f(w1), mu.h2f(w2), mu.h2f(w3), mu.h2f(w4)
+        else
+            error "Invalid weight type"
+        end
+        assert(w1 >= 0 and w2 >= 0 and w3 >= 0 and w4 >= 0)
+        return {w1, w2, w3, w4}
     end,
 }
 
@@ -229,16 +269,16 @@ local function scalar_mul_mat4(s, m1, m2)
     return math3d.matrix(cols[1], cols[2], cols[3], cols[4])
 end
 
-local function calc_bone_matrix(indices, weights, skinning_matrices)
+local function calc_bone_matrix(indices, weights, sm)
     local transform = MAT_ZERO
     for ii=1, 4 do
-        local idx = indices[ii]
-        transform = scalar_mul_mat4(weights[ii], math3d.array_index(skinning_matrices, idx), transform)
+        local idx = indices[ii] --base 0
+        transform = scalar_mul_mat4(weights[ii], math3d.array_index(sm, idx+1), transform)
     end
     return transform
 end
 
-local function bake_animation_mesh(anie, meshobj, num)
+local function bake_animation_mesh(anie, meshobj, bakenum)
     local buffers = {}
     local aniobj = anie.animation
 
@@ -251,20 +291,18 @@ local function bake_animation_mesh(anie, meshobj, num)
 
     local dupilcate_vb2bin
     if meshobj.meshres.vb2 then
-        local vb2bin = meshobj.meshres.vb2.memory[1]
-        dupilcate_vb2bin = vb2bin:rep(num)
+        dupilcate_vb2bin = meshobj.meshres.vb2.str:rep(bakenum)
     end
 
     local skin      = aniobj.skins[meshobj.skinning]
     local wm        = meshobj:load_transform()
-    local skinning_matrices = build_skinning_matrices(wm, skin.matrices)
     local numvb     = meshobj:numv()
 
     for n, status in pairs(aniobj.status) do
-        for i=1, num do
-            status.ratio = (i-1)/(num-1) --make it layon [0, 1]
+        for i=1, bakenum do
+            status.ratio = (i-1)/(bakenum-1) --make it layon [0, 1]
             iani.sample(anie)
-
+            local sm = build_skinning_matrices(wm, skin.matrices)
             -- transform vertices
             local vb = {}
             
@@ -273,7 +311,7 @@ local function bake_animation_mesh(anie, meshobj, num)
 
                 local indices = meshobj:loadindices(iv)
                 local weights = meshobj:loadweights(iv)
-                local transform = calc_bone_matrix(indices, weights, skinning_matrices)
+                local transform = calc_bone_matrix(indices, weights, sm)
 
                 local p = meshobj:loadpos(iv)
                 p = math3d.transform(transform, p, 1)
@@ -301,7 +339,7 @@ local function bake_animation_mesh(anie, meshobj, num)
         end
 
         local newvbbin = table.concat(buffers, "")
-        local new_numv = numvb * num
+        local new_numv = numvb * bakenum
         local newmeshobj = {
             vb = {
                 memory  = {newvbbin, 1, #newvbbin},
@@ -332,6 +370,7 @@ local function create_mesh_obj(meshe, transform)
         meshres     = assetmgr.resource(meshe.data.mesh),
         skinning    = meshe.data.skinning,
         transform   = transform,
+        _vertices   = {},
     }, {__index=meshmt})
     o:init()
 

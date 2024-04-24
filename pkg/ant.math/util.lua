@@ -491,6 +491,22 @@ function util.from_cmat3(...)
     return math3d.constant("mat", util.from_mat3(...))
 end
 
+function util.check_nan(v)
+    return v ~= v and 0 or v
+end
+
+local HALF_UINT16<const> = 32767
+function util.h2f(h)
+	return h/HALF_UINT16
+end
+
+function util.f2h(f)
+	return (util.check_nan(f)*HALF_UINT16) + 0.5
+end
+
+function util.H2B(H)
+	return math.floor(H/65535.0*255+0.5)
+end
 
 function util.clamp_vec(v, minv, maxv)
 	return math3d.max(minv, math3d.min(v, maxv))

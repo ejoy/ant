@@ -1,3 +1,5 @@
+local mu = import_package "ant.math".util
+
 local typemapper<const> = {
 	f = 'f',
 	i = 'H',
@@ -5,9 +7,6 @@ local typemapper<const> = {
 }
 local jointidx_fmt<const> = "HHHH"
 local color8bit_fmt<const> ="BBBB"
-local function u16tou8(vv)
-	return math.floor(vv/65535.0*255+0.5)
-end
 
 local function find_layout_idx(layouts, name)
 	for i=1, #layouts do
@@ -38,17 +37,6 @@ local function load_attrib_math3dvec(math3d, attribidx, vertex, layout)
 		r[3] = 0
 	end
 	return math3d.vector(r)
-end
-
-local function check_nan(v)
-    if v ~= v then
-        return 0
-    else
-        return v
-    end
-end
-local function f2i(v)
-    return math.floor(check_nan(v) * 32767+0.5)
 end
 
 local PACK_TANGENT_FRAME<const> = true
@@ -85,7 +73,7 @@ return {
 
 		local function compress_tangent_frame(v)
 			local tv = load_attrib(tangent_attrib_idx, v, layouts[tangent_attrib_idx].layout)
-			v[tangent_attrib_idx] = ('h'):rep(4):pack(f2i(tv[1]), f2i(tv[2]), f2i(tv[3]), f2i(tv[4]))
+			v[tangent_attrib_idx] = ('h'):rep(4):pack(mu.f2h(tv[1]), mu.f2h(tv[2]), mu.f2h(tv[3]), mu.f2h(tv[4]))
 		end
 
 		local function build_new_layout()
@@ -122,7 +110,7 @@ return {
 		local function compress_color(v)
 			local cv = load_attrib(color_attrib_idx, v, layouts[color_attrib_idx].layout)
 			for i=1, 4 do
-				cv[i] = u16tou8(cv[i])
+				cv[i] = mu.H2B(cv[i])
 			end
 			v[color_attrib_idx] = color8bit_fmt:pack(cv[1], cv[2], cv[3], cv[4])
 		end
@@ -150,7 +138,7 @@ return {
 
 			if need_compress_weights then
 				local w = load_attrib(weights_attrib_idx, v, layouts[weights_attrib_idx].layout)
-				v[weights_attrib_idx] = ('h'):rep(4):pack(f2i(w[1]), f2i(w[2]), f2i(w[3]), f2i(w[4]))
+				v[weights_attrib_idx] = ('h'):rep(4):pack(mu.f2h(w[1]), mu.f2h(w[2]), mu.f2h(w[3]), mu.f2h(w[4]))
 			end
 		end
 
