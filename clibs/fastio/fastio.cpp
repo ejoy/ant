@@ -83,12 +83,20 @@ static bee::zstring_view getfile(lua_State *L) {
     return { buf, len };
 }
 
+static bool is_runtime(lua_State *L) {
+    lua_setglobal(L, "__ANT_RUNTIME__");
+    bool r = !lua_isnil(L, -1);
+    lua_pop(L, 1);
+    return r;
+}
+
 static const char* getsymbol(lua_State *L, bee::zstring_view filename) {
-#if defined(__ANT_RUNTIME__)
-    return luaL_optstring(L, 2, filename.data());
-#else
-    return filename.data();
-#endif
+    if (is_runtime(L)) {
+        return luaL_optstring(L, 2, filename.data());
+    }
+    else {
+        return filename.data();
+    }
 }
 
 struct wrap {
