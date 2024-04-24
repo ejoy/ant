@@ -209,7 +209,10 @@ function render_sys:entity_init()
 		--mesh & material
 		w:extend(e, "mesh_result:in")
 		update_ro(e.render_object, e.mesh_result)
-		check_varyings(e.mesh_result, e.material)
+		w:extend(e, "varyings_no_check?in")
+		if not e.varyings_no_check then
+			check_varyings(e.mesh_result, e.material)
+		end
 
 		--visible_masks
 		w:extend(e, "visible_masks?update")

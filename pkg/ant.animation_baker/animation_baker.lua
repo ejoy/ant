@@ -6,7 +6,7 @@ local serialize     = import_package "ant.serialize"
 local assetmgr      = import_package "ant.asset"
 local renderpkg     = import_package "ant.render"
 local mathpkg       = import_package "ant.math"
-local mu            = mathpkg.util
+local mc, mu        = mathpkg.constant, mathpkg.util
 
 local layoutmgr     = renderpkg.layoutmgr
 
@@ -249,8 +249,8 @@ local meshmt = {
     end,
 }
 
-local function is_quat_tbn(meshobj)
-    return meshobj.desc.T and meshobj.desc.T.num == 4 and meshobj.desc.n == nil
+local function is_quat_tbn(desc)
+    return desc.T and desc.T.num == 4 and desc.n == nil
 end
 
 local function build_skinning_matrices(wm, sm)
@@ -278,14 +278,32 @@ local function calc_bone_matrix(indices, weights, sm)
     return transform
 end
 
+local function create_new_vb_layout(desc)
+    local layout = {desc.p.layout}
+    if is_quat_tbn(desc) then
+        layout[#layout+1] = desc.T.layout
+    elseif desc.n then
+        layout[#layout+1] = desc.n.layout
+    end
+
+    return table.concat(layout, "|")
+end
+
+local function compress_quat(q)
+    local x, y, z, w = math3d.index(q)
+    return ('hhhh'):pack(mu.f2h(x), mu.f2h(y), mu.f2h(z), mu.f2h(w))
+end
+
 local function bake_animation_mesh(anie, meshobj, bakenum)
     local buffers = {}
     local aniobj = anie.animation
 
-    local quattbn = is_quat_tbn(meshobj)
+    local quattbn = is_quat_tbn(meshobj.desc)
     
     assert(meshobj.desc.p.num == 3)
     local hasnormal = nil ~= meshobj.desc.n
+
+    local new_vblayout = create_new_vb_layout(meshobj.desc)
 
     local meshset = {}
 
@@ -306,6 +324,7 @@ local function bake_animation_mesh(anie, meshobj, bakenum)
             -- transform vertices
             local vb = {}
             
+            local cp = math3d.checkpoint()
             for iv=1, numvb do
                 local v = {}
 
@@ -324,7 +343,7 @@ local function bake_animation_mesh(anie, meshobj, bakenum)
                     tangent = math3d.transform(transform, tangent, 0)
                     local x, y, z = math3d.index(tangent, 1, 2, 3)
                     tangent = math3d.vector(x, y, z, sign)
-                    v[#v+1] = math3d.serialize(mu.pack_tangent_frame(normal, tangent))
+                    v[#v+1] = compress_quat(mu.pack_tangent_frame(normal, tangent))
 
                 elseif hasnormal then
                     local normal = meshobj:loadnormal(iv)
@@ -332,10 +351,11 @@ local function bake_animation_mesh(anie, meshobj, bakenum)
                     v[#v+1] = math3d.serialize(normal):sub(1, 12)
                 end
                 
-                vb[#vb+1] = v
+                vb[#vb+1] = table.concat(v, "")
             end
+            math3d.recover(cp)
 
-            buffers[#buffers+1] = vb
+            buffers[#buffers+1] = table.concat(vb, "")
         end
 
         local newvbbin = table.concat(buffers, "")
@@ -345,7 +365,8 @@ local function bake_animation_mesh(anie, meshobj, bakenum)
                 memory  = {newvbbin, 1, #newvbbin},
                 start   = 0,
                 num     = new_numv,
-                declname= meshobj.meshres.vb.declname,
+                declname= new_vblayout,
+                owned   = true,
             },
         }
 
@@ -355,10 +376,21 @@ local function bake_animation_mesh(anie, meshobj, bakenum)
                 start   = 0,
                 num     = new_numv,
                 declname= meshobj.meshres.vb2.declname,
+                owned   = true,
             }
         end
 
-        newmeshobj.ib = meshobj.meshres.ib
+        local ib = meshobj.meshres.ib
+        if ib then
+            --could not share this buffer
+            newmeshobj.ib = {
+                memory  = ib.memory,
+                start   = 0,
+                num     = ib.num,
+                flag    = ib.flag,
+                owned   = true,
+            }
+        end
         meshset[n] = newmeshobj
     end
 
@@ -377,16 +409,28 @@ local function create_mesh_obj(meshe, transform)
     return o
 end
 
-local append_frame; do
+local append_frame, finish_frame; do
+    local function pack_uint(uint)
+        return ("I"):pack(uint[1]|uint[2]<<8|uint[3]<<16|uint[4]<<24)
+    end
+
+    local uint = {n=1, 0, 0, 0, 0}
+
     function append_frame(uint_frames, f)
-        local uint = {n=1, 0, 0, 0, 0}
         uint[uint.n] = f
         if uint.n == 4 then
-            uint_frames[#uint_frames+1] = ("I"):pack(uint[1]|uint[2]<<8|uint[3]<<16|uint[4]<<24)
+            uint_frames[#uint_frames+1] = pack_uint(uint)
             uint.n = 1
         else
             uint.n = uint.n + 1
         end
+    end
+
+    function finish_frame(uint_frames)
+        for i=uint.n, 4 do
+            uint[i] = 0
+        end
+        uint_frames[#uint_frames+1] = pack_uint(uint)
     end
 end
 
@@ -396,13 +440,15 @@ local function pack_buffers(instances)
     --avoid #instance < 4
     for _, i in ipairs(instances) do
         local m = math3d.transpose(math3d.matrix(i))
-        local c0, c1, c2 = math3d.instance(m)
+        local c0, c1, c2, c3 = math3d.index(m, 1, 2, 3, 4)
+        assert(math3d.isequal(c3, mc.ZERO_PT))
 
         transforms[#transforms+1] = ("%s%s%s"):format(math3d.serialize(c0), math3d.serialize(c1), math3d.serialize(c2))
 
         append_frame(uint_frames, i.frame)
     end
 
+    finish_frame(uint_frames)
     return table.concat(transforms, ""), table.concat(uint_frames, "")
 end
 
@@ -413,7 +459,7 @@ end
 
 local function update_compute_properties(material, ai, di)
     local mesh = ai.mesh
-    material.u_mesh_param        = math3d.vector(mesh.vbnum, mesh.ibnum, mesh.bakenum, di.num)
+    material.u_mesh_param        = math3d.vector(mesh.vbnum, mesh.ibnum, mesh.bakenum, di.instance_buffer.num)
     material.b_instance_frames   = ai.framehandle
     material.b_indirect_buffer   = di.idb_handle
 end
@@ -443,9 +489,10 @@ function iab.create(prefab, instances, bakenum)
                 policy = {
                     "ant.render|simplerender",
                     "ant.render|draw_indirect",
-                    "ant.render|animation_instances",
+                    "ant.animation_baker|animation_instances",
                 },
                 data = {
+                    varyings_no_check=true,
                     material        = meshe.data.material,
                     scene           = meshe.data.scene,
                     draw_indirect   = {
@@ -457,7 +504,8 @@ function iab.create(prefab, instances, bakenum)
                             size    = MAX_INSTANCES,
                         }
                     },
-                    mesh_result     = m,
+                    owned_mesh_buffer = true,
+                    mesh_result     = imesh.init_mesh(m),
                     animation_instances = {
                         instances   = instances,
                         mesh        = {
@@ -472,7 +520,7 @@ function iab.create(prefab, instances, bakenum)
             },
             compute = world:create_entity{
                 policy = {
-                    "ant.compute|compute"
+                    "ant.render|compute"
                 },
                 data = {
                     material = "/pkg/ant.resources/materials/animation_dispatch.material",
@@ -507,19 +555,22 @@ local function check_recreate_frame_buffer(ai, framebuffer)
     ai.framehandle = create_frame_buffer(framebuffer)
 end
 
-function iab.update_frames(abo, frames)
-    local re = world:create(abo.render, "animation_instances:in draw_indirect:in")
-    if #frames ~= re.draw_indirect.num then
-        error(("frames number:%d should equal instance buffer num:%d, or use update_instances instead"):format(#frames, re.draw_indirect.num))
-    end
-
-    local ai = re.animation_instances
+local function pack_frame_buffer(frames)
     local uint_frames = {}
     for _, f in ipairs(frames) do
         append_frame(uint_frames, f)
     end
+    finish_frame(uint_frames)
+    return table.concat(uint_frames, "")
+end
 
-    check_recreate_frame_buffer(ai, table.concat(uint_frames, ""))
+function iab.update_frames(abo, frames)
+    local re = world:create(abo.render, "animation_instances:in draw_indirect:in")
+    if #frames ~= idi.instance_num(re) then
+        error(("frames number:%d should equal instance buffer num:%d, or use update_instances instead"):format(#frames, idi.instance_num(re)))
+    end
+
+    check_recreate_frame_buffer(re.animation_instances, pack_frame_buffer(frames))
 
     dispatch(abo.compute, re.animation_instances, re.draw_indirect)
 end
@@ -534,6 +585,13 @@ function iab.update_instances(abo, instances)
     check_recreate_frame_buffer(ai, framebuffer)
 
     dispatch(abo.compute, re.animation_instances, re.draw_indirect)
+end
+
+function iab.destroy(abo)
+    for n, o in pairs(abo) do
+        w:remove(o.render)
+        w:remove(o.compute)
+    end
 end
 
 return iab

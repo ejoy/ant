@@ -1,3 +1,13 @@
 fx:
   cs: /pkg/ant.resources/shaders/animation/cs_animation_dispatch.sc
+properties:
+  u_mesh_param: {0, 0, 0, 0}
+  b_instance_frames:
+    stage: 0
+    access: r
+    buffer: b_instance_frames
+  b_indirect_buffer:
+    stage: 1
+    access: w
+    buffer: b_indirect_buffer
 

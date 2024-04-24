@@ -34,17 +34,28 @@ function ab_test_sys:init()
             frame = 1,
         }
     }, 4)
+
+    util.create_shadow_plane(10, 10)
 end
 
 local kb_mb = world:sub{"keyboard"}
 
 function ab_test_sys:data_changed()
-    assert(abo)
-    for _, key, press in kb_mb:unpack() do
-        if press == 0 and key == "C" then
-            iab.update_frames(abo, {
-                3, 2
-            })
+    if abo then
+        for _, key, press in kb_mb:unpack() do
+            if press == 0 and key == "C" then
+                iab.update_frames(assert(abo.appear), {
+                    3, 2
+                })
+            end
         end
     end
+end
+
+function ab_test_sys:exit()
+    if abo then
+        iab.destroy(abo)
+    end
+
+    PC:clear()
 end

@@ -83,4 +83,9 @@ function idi.update_instance_buffer(e, instancememory, instancenum)
     end
 end
 
+function idi.instance_num(e)
+    w:extend(e, "draw_indirect:in")
+    return e.draw_indirect.instance_buffer.num
+end
+
 return idi
