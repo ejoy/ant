@@ -20,7 +20,7 @@ function ai_test_sys:init()
     --     end
     -- }
 
-    abo = iab.create("/pkg/ant.test.features/assets/zombies/1-appear.glb/ani_bake.prefab", {
+    abo = iab.create("/pkg/ant.test.features/assets/zombies/1-appear.glb/ani_bake.prefab", 4, 2, {
         {
             s = 0.1,
             r = math3d.quaternion{0, math.pi*0.3, 0},
@@ -33,7 +33,7 @@ function ai_test_sys:init()
             t = math3d.vector(-3, 2, 0, 1),
             frame = 1,
         }
-    }, 4)
+    })
 
     util.create_shadow_plane(10, 10)
 end

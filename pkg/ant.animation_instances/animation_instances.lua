@@ -65,7 +65,7 @@ local function pack_buffers(instances)
 
         transforms[#transforms+1] = ("%s%s%s"):format(math3d.serialize(c0), math3d.serialize(c1), math3d.serialize(c2))
 
-        append_frame(uint_frames, i.frame)
+        append_frame(uint_frames, assert(i.frame))
 
         max_local_frame = math.max(max_local_frame, i.frame)
     end
@@ -102,8 +102,35 @@ end
 
 local MAX_INSTANCES<const> = 1024
 
+local function default_instances(num)
+    local instances = {}
+    for i=1, num do
+        instances[i] = {
+            frame = i-1
+        }
+    end
+    return instances
+end
+
+local function check_instances(numinstance, instances)
+    if nil == numinstance and nil == instances then
+        error "one of 'numinstance' or 'instances' argument should be defined"
+    end
+
+    if numinstance and instances and numinstance ~= #instances then
+        error(("'numinstance':%d should equal to '#instances':%d number"):format(numinstance, #instances))
+    end
+
+    numinstance = numinstance or #instances
+    instances   = instances or default_instances(numinstance)
+
+    return numinstance, instances
+end
+
 local iai = {}
-function iai.create(prefab, instances, bakenum)
+function iai.create(prefab, bakenum, numinstance, instances)
+    numinstance, instances = check_instances(numinstance, instances)
+
     local anio, mesho   = anibaker.init(prefab)
     local meshset       = anibaker.bake(anio, mesho, bakenum)
 
