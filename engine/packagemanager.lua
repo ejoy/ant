@@ -1,5 +1,8 @@
 local vfs = require "vfs"
 local fastio = require "fastio"
+local platform = require "bee.platform"
+
+local DLL <const> = platform.os == "windows" and ".dll" or ".so"
 
 local registered = {}
 
@@ -35,6 +38,19 @@ local function sandbox_env(packagename)
                 if not func then
                     error(("error loading module '%s' from file '%s':\n\t%s"):format(name, path, err))
                 end
+                local r = func()
+                if r == nil then
+                    r = true
+                end
+                _LOADED[name] = r
+                return r
+            end
+        end
+        if not __ANT_RUNTIME__ then
+            local dllname = name:match('^[^.]*')..DLL
+            local funcname = "luaopen_"..name:gsub('%.', '_')
+            local func = package.loadlib(dllname, funcname)
+            if func ~= nil then
                 local r = func()
                 if r == nil then
                     r = true
