@@ -5,13 +5,13 @@ local setting = import_package "ant.settings"
 
 local scene_ratio<const> = setting:get "scene/ratio"
 
-local function get_default_resolution()
-    local resolution = setting:get "scene/resolution" or "1280x720"
+local function resolution_limits()
+    local resolution = setting:get "scene/resolution_limits" or "1280x720"
     local sw, sh = resolution:match "(%d+)x(%d+)"
     return math.tointeger(sw), math.tointeger(sh)
 end
 
-local LIMIT_RESOLUTION_WIDTH, LIMIT_RESOLUTION_HEIGHT = get_default_resolution()
+local LIMIT_RESOLUTION_WIDTH, LIMIT_RESOLUTION_HEIGHT = resolution_limits()
 
 --device_viewrect = scene_viewrect * scale
 local scene_viewrect  = {x=0, y=0,}
