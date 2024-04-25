@@ -321,6 +321,7 @@ local function bake_animation_mesh(anie, meshobj, bakenum)
     for n, status in pairs(aniobj.status) do
         for i=1, bakenum do
             status.ratio = (i-1)/(bakenum-1) --make it layon [0, 1]
+            status.weight = 1.0
             iani.sample(anie)
             local sm = build_skinning_matrices(wm, skin.matrices)
             -- transform vertices
@@ -333,7 +334,7 @@ local function bake_animation_mesh(anie, meshobj, bakenum)
                 local indices = meshobj:loadindices(iv)
                 local weights = meshobj:loadweights(iv)
                 local transform = calc_bone_matrix(indices, weights, sm)
-
+                --- load data
                 local p = meshobj:loadpos(iv)
                 p = math3d.transform(transform, p, 1)
                 
@@ -352,6 +353,7 @@ local function bake_animation_mesh(anie, meshobj, bakenum)
                     normal = math3d.transform(transform, normal, 0)
                     v[#v+1] = math3d.serialize(normal):sub(1, 12)
                 end
+                ---
                 
                 vb[#vb+1] = table.concat(v, "")
             end
@@ -419,13 +421,13 @@ local append_frame, finish_frame; do
         return r
     end
 
+    --must init uint vector with 4 values
     local uint = {n=1, 0, 0, 0, 0}
 
     function append_frame(uint_frames, f)
         uint[uint.n] = f
         if uint.n == 4 then
             uint_frames[#uint_frames+1] = pack_uint(uint)
-            uint.n = 1
         else
             uint.n = uint.n + 1
         end
@@ -443,7 +445,6 @@ end
 local function pack_buffers(instances)
     local transforms = {}
     local uint_frames = {}
-    --avoid #instance < 4
     for _, i in ipairs(instances) do
         local m = math3d.transpose(math3d.matrix(i))
         local c0, c1, c2, c3 = math3d.index(m, 1, 2, 3, 4)
@@ -472,9 +473,11 @@ end
 
 local main_viewid<const> = hwi.viewid_get "main_view"
 
+local DISPATCH_SIZE<const> = 64
+
 local function dispatch_(ce, ai, di)
     update_compute_properties(ce.dispatch.material, ai, di)
-    ce.dispatch.size[1] = di.instance_buffer.num // 64+1
+    ce.dispatch.size[1] = di.instance_buffer.num // DISPATCH_SIZE+1
     icompute.dispatch(main_viewid, ce.dispatch)
 end
 
@@ -486,6 +489,7 @@ local MAX_INSTANCES<const> = 1024
 function iab.create(prefab, instances, bakenum)
     local pc = serialize.load(prefab)
 
+    --TODO: need handle general prefab with animations
     local anie = {
         animation = check_create_animation_obj(pc),
     }
@@ -543,7 +547,7 @@ function iab.create(prefab, instances, bakenum)
                 data = {
                     material = "/pkg/ant.resources/materials/animation_dispatch.material",
                     dispatch = {
-                        size = {numinstance//64+1, 1, 1},
+                        size = {1, 1, 1},
                     },
                     on_ready = function (e)
                         w:extend(e, "dispatch:in")
