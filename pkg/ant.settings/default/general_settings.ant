@@ -1,5 +1,7 @@
 debug:
   show_bounding: false
+scene:
+  resolution: 1280x720
 graphic:
   ao:
     radius              : 3.0     # Ambient Occlusion radius in meters, between 0 and ~10.

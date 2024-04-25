@@ -3,14 +3,19 @@ local world = ecs.world
 
 local setting = import_package "ant.settings"
 
-local DEFAULT_RESOLUTION_WIDTH <const> = 1280
-local DEFAULT_RESOLUTION_HEIGHT <const> = 720
+local scene_ratio<const> = setting:get "scene/ratio"
+
+local function get_default_resolution()
+    local resolution = setting:get "scene/resolution" or "1280x720"
+    local sw, sh = resolution:match "(%d+)x(%d+)"
+    return math.tointeger(sw), math.tointeger(sh)
+end
+
+local DEFAULT_RESOLUTION_WIDTH <const>, DEFAULT_RESOLUTION_HEIGHT <const> = get_default_resolution()
 
 --device_viewrect = scene_viewrect * scale
 local scene_viewrect  = {x=0, y=0,}
 local device_viewrect = {x=0, y=0,}
-
-local scene_ratio<const> = setting:get "scene/ratio"
 
 local function viewrect_ratio()
     --scene_viewrect.h/device_viewrect.h equal to scene_viewrect.w/device_viewrect.w, see: calc_scene_size
