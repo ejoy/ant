@@ -81,8 +81,18 @@ static bool GET_ANT_RUNTIME() {
 }
 static bool __ANT_RUNTIME__ = GET_ANT_RUNTIME();
 #elif defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__)
-//TODO
-static bool __ANT_RUNTIME__ = false;
+#include <crt_externs.h>
+static bool GET_ANT_RUNTIME() {
+    int argc = *_NSGetArgc();
+    char** argv = *_NSGetArgv();
+    if (argv && argc >= 2) {
+        if (strcmp(argv[1], "-rt") == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+static bool __ANT_RUNTIME__ = GET_ANT_RUNTIME();
 #else
 static bool __ANT_RUNTIME__ = false;
 #endif
