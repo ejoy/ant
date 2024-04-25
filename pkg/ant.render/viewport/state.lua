@@ -11,7 +11,7 @@ local function get_default_resolution()
     return math.tointeger(sw), math.tointeger(sh)
 end
 
-local DEFAULT_RESOLUTION_WIDTH <const>, DEFAULT_RESOLUTION_HEIGHT <const> = get_default_resolution()
+local LIMIT_RESOLUTION_WIDTH, LIMIT_RESOLUTION_HEIGHT = get_default_resolution()
 
 --device_viewrect = scene_viewrect * scale
 local scene_viewrect  = {x=0, y=0,}
@@ -31,7 +31,7 @@ local function calc_scene_size(refw, refh)
     if scene_ratio then
         h = math.floor(refh * scene_ratio+0.5)
     else
-        h = math.min(DEFAULT_RESOLUTION_HEIGHT, refh)
+        h = math.min(LIMIT_RESOLUTION_HEIGHT, refh)
     end
 
     return math.floor(dr*h+0.5), h
@@ -85,6 +85,10 @@ local function remap_xy(screen_x, scree_y)
     return scale_xy(x, y)
 end
 
+local function set_resolution_limits(width, height)
+    LIMIT_RESOLUTION_WIDTH, LIMIT_RESOLUTION_HEIGHT = width, height
+end
+
 return {
     viewrect            = scene_viewrect,
     device_viewrect     = device_viewrect,
@@ -94,4 +98,5 @@ return {
     scale_xy            = scale_xy,
     unscale_xy          = unscale_xy,
     resize              = resize,
+    set_resolution_limits= set_resolution_limits,
 }
