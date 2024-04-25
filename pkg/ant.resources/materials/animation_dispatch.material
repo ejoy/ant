@@ -2,6 +2,7 @@ fx:
   cs: /pkg/ant.resources/shaders/animation/cs_animation_dispatch.sc
 properties:
   u_mesh_param: {0, 0, 0, 0}
+  u_mesh_param1: {0, 0, 0, 0}
   b_instance_frames:
     stage: 0
     access: r

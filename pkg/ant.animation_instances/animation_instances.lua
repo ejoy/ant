@@ -57,7 +57,6 @@ local function pack_buffers(instances)
     local transforms = {}
     local uint_frames = {}
 
-    local max_local_frame = 0
     for _, i in ipairs(instances) do
         local m = math3d.transpose(math3d.matrix(i))
         local c0, c1, c2, c3 = math3d.index(m, 1, 2, 3, 4)
@@ -66,12 +65,10 @@ local function pack_buffers(instances)
         transforms[#transforms+1] = ("%s%s%s"):format(math3d.serialize(c0), math3d.serialize(c1), math3d.serialize(c2))
 
         append_frame(uint_frames, assert(i.frame))
-
-        max_local_frame = math.max(max_local_frame, i.frame)
     end
 
     finish_frame(uint_frames)
-    return table.concat(transforms, ""), table.concat(uint_frames, ""), max_local_frame
+    return table.concat(transforms, ""), table.concat(uint_frames, "")
 end
 
 local function create_frame_buffer(framebuffer)
@@ -81,8 +78,10 @@ end
 
 local function update_compute_properties(material, ai, di)
     local mesh = ai.mesh
-    material.u_mesh_param        = math3d.vector(mesh.vbnum, mesh.ibnum, ai.offset, di.instance_buffer.num)
-    material.b_instance_frames   = ai.framehandle
+    material.u_mesh_param        = math3d.vector(mesh.vbnum, mesh.ibnum, 0, di.instance_buffer.num)
+    local frame = ai.frame
+    material.u_mesh_param1       = math3d.vector(frame.offset, frame.num, 0, 0)
+    material.b_instance_frames   = frame.handle
     material.b_indirect_buffer   = di.handle
 end
 
@@ -128,13 +127,13 @@ local function check_instances(numinstance, instances)
 end
 
 local iai = {}
-function iai.create(prefab, bakenum, numinstance, instances)
+function iai.create(prefab, framenum, numinstance, instances)
     numinstance, instances = check_instances(numinstance, instances)
 
     local anio, mesho   = anibaker.init(prefab)
-    local meshset       = anibaker.bake(anio, mesho, bakenum)
+    local meshset       = anibaker.bake(anio, mesho, framenum)
 
-    local instancebuffer, animationframe_buffer, max_local_frame = pack_buffers(instances)
+    local instancebuffer, animationframe_buffer = pack_buffers(instances)
 
     local numinstance = #instances
 
@@ -168,11 +167,12 @@ function iai.create(prefab, bakenum, numinstance, instances)
                         mesh        = {
                             vbnum   = mesho:numv(),
                             ibnum   = mesho:numi(),
-                            bakenum = bakenum,
                         },
-                        framehandle = create_frame_buffer(animationframe_buffer),
-                        offset      = 0,
-                        max_local_frame = max_local_frame,
+                        frame       = {
+                            handle = create_frame_buffer(animationframe_buffer),
+                            offset = 0,
+                            num    = framenum,
+                        },
                     },
                     visible         = true,
                 }
@@ -200,22 +200,20 @@ function iai.create(prefab, bakenum, numinstance, instances)
 end
 
 local function check_recreate_frame_buffer(ai, framebuffer)
-    if ai.framehandle then
-        bgfx.destroy(ai.framehandle)
+    if ai.frame.handle then
+        bgfx.destroy(ai.frame.handle)
     end
 
-    ai.framehandle = create_frame_buffer(framebuffer)
+    ai.frame.handle = create_frame_buffer(framebuffer)
 end
 
 local function pack_frame_buffer(ai, frames)
     local instances = ai.instances
     assert(#instances == #frames)
     local uint_frames = {}
-    local max_local_frame = 0
     for idx, f in ipairs(frames) do
         instances[idx].frame = f
         append_frame(uint_frames, f)
-        max_local_frame = math.max(max_local_frame, f)
     end
     finish_frame(uint_frames)
     return table.concat(uint_frames, "")
@@ -247,11 +245,11 @@ end
 
 function iai.update_offset(abo, offset)
     local re = world:entity(abo.render, "animation_instances:in draw_indirect:in")
-    local ai = re.animation_instances
-    if ai.max_local_frame+offset >= ai.mesh.bakenum then
-        error(("offset is too large, max local frame:%d, offset:%d, is exceed max bakenum:%d"):format(ai.max_local_frame, offset, ai.mesh.bakenum))
+    local frame = re.animation_instances.frame
+    if offset < 0 or offset >= frame.num then
+        error(("'offset':%d should lower than 'frame.num': %d"):format(offset, frame.num))
     end
-    re.animation_instances.offset = offset
+    frame.offset = offset
     dispatch(abo.compute, re.animation_instances, re.draw_indirect)
 end
 
