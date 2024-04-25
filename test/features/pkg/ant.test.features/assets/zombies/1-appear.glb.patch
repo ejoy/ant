@@ -1,0 +1,42 @@
+---
+file: mesh.prefab
+op: copyfile
+path: ani_bake.prefab
+---
+file: materials/Material.material
+op: copyfile
+path: materials/Material_ani_bake.material
+---
+file: ani_bake.prefab
+op: replace
+path: /2/data/material
+value: "$path materials/Material_ani_bake.material"
+---
+file: materials/Material_ani_bake.material
+op: replace
+path: /fx/macros
+value:
+    ALPHAMODE_OPAQUE=1
+    WITH_INDICES_ATTRIB=1
+    WITH_COLOR0_ATTRIB=1
+    WITH_TEXCOORD0_ATTRIB=1
+    WITH_POSITION_ATTRIB=1
+    WITH_TANGENT_ATTRIB=1
+    WITH_WEIGHT_ATTRIB=1
+    TANGENT_PACK_FROM_QUAT=1
+    HAS_BASECOLOR_TEXTURE=1
+    ENABLE_SHADOW=1
+    SM_EVSM=1
+    EVSM_COMPONENT=4
+    EVSM_SAMPLE_RADIUS=2
+    EVSM_FILTER_TYPE=1
+---
+file: materials/Material.material
+op: remove
+path: /fx/varyings/a_weight
+value: nil
+---
+file: materials/Material.material
+op: remove
+path: /fx/varyings/a_indices
+value: nil

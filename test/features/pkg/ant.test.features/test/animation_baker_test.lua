@@ -20,7 +20,7 @@ function ab_test_sys:init()
     --     end
     -- }
 
-    abo = iab.create("/pkg/ant.test.features/assets/zombies/1-appear.glb/mesh.prefab", {
+    abo = iab.create("/pkg/ant.test.features/assets/zombies/1-appear.glb/ani_bake.prefab", {
         {
             s = 0.1,
             r = math3d.quaternion{0, math.pi*0.3, 0},
