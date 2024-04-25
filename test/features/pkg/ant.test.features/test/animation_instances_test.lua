@@ -14,11 +14,10 @@ local abo
 local bakenum<const> = 30
 
 local function many_instances(prefab)
-    local s = 0.01
-    local dx, dz = 0.5, 0.5
+    local s = 0.02
+    local dx, dz = 0.7, 0.7
     local instances = {}
 
-    
     local h = 1
 
     local numx, numz = 16, 32
@@ -66,8 +65,8 @@ function ai_test_sys:init()
     --     end
     -- }
 
-    abo = two_instances "/pkg/ant.test.features/assets/zombies/1-appear.glb/ani_bake.prefab"
-    --abo = many_instances "/pkg/ant.test.features/assets/zombies/1-appear.glb/ani_bake.prefab"
+    --abo = two_instances "/pkg/ant.test.features/assets/zombies/1-appear.glb/ani_bake.prefab"
+    abo = many_instances "/pkg/ant.test.features/assets/zombies/1-appear.glb/ani_bake.prefab"
 
     util.create_shadow_plane(10, 10)
 end
@@ -79,15 +78,15 @@ local move_animation_instances; do
     local move_time_ms = 0
     local offset = 0
     function move_animation_instances()
-        local d = timer.delta()
-        if move_time_ms >= move_delta_ms then
+        -- local d = timer.delta()
+        -- if move_time_ms >= move_delta_ms then
             iai.update_offset(abo.Armature_Take_001_BaseLayer, offset)
 
             offset = (offset+1) % bakenum
-            move_time_ms = move_time_ms - move_delta_ms
-        else
-            move_time_ms = move_time_ms + d
-        end
+        --     move_time_ms = move_time_ms - move_delta_ms
+        -- else
+        --     move_time_ms = move_time_ms + d
+        -- end
     end
 end
 
