@@ -2,8 +2,19 @@ local vfs = require "vfs"
 local fastio = require "fastio"
 local platform = require "bee.platform"
 
-local DLL <const> = platform.os == "windows" and ".dll" or ".so"
-
+local dllpath; do
+    if platform.os == "windows" then
+        function dllpath(name)
+            return name..".dll"
+        end
+    else
+        local fs = require "bee.filesystem"
+        local procdir = fs.exe_path():remove_filename():string()
+        function dllpath(name)
+            return procdir..name..".so"
+        end
+    end
+end
 local registered = {}
 
 local function sandbox_env(packagename)
@@ -47,9 +58,8 @@ local function sandbox_env(packagename)
             end
         end
         if not __ANT_RUNTIME__ then
-            local dllname = name:match('^[^.]*')..DLL
             local funcname = "luaopen_"..name:gsub('%.', '_')
-            local func = package.loadlib(dllname, funcname)
+            local func = package.loadlib(dllpath(name:match('^[^.]*')), funcname)
             if func ~= nil then
                 local r = func()
                 if r == nil then
