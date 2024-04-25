@@ -85,14 +85,14 @@ local function update_compute_properties(material, ai, di)
     material.b_indirect_buffer   = di.handle
 end
 
-local main_viewid<const> = hwi.viewid_get "main_view"
+local skinning_viewid<const> = hwi.viewid_get "skinning"
 
 local DISPATCH_SIZE<const> = 64
 
 local function dispatch_(ce, ai, di)
     update_compute_properties(ce.dispatch.material, ai, di)
     ce.dispatch.size[1] = di.instance_buffer.num // DISPATCH_SIZE+1
-    icompute.dispatch(main_viewid, ce.dispatch)
+    icompute.dispatch(skinning_viewid, ce.dispatch)
 end
 
 local function dispatch(compute, ai, di)

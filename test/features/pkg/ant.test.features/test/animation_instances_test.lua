@@ -41,17 +41,17 @@ local function many_instances(prefab)
 end
 
 local function two_instances(prefab)
-    return iai.create(prefab, 4, 2, {
+    return iai.create(prefab, bakenum, 2, {
         {
-            s = 0.1,
-            r = {0, math.pi*0.3, 0},
-            t = {3, 2, 0, 1},
+            s = 0.01,
+            --r = {0, math.pi*0.3, 0},
+            t = {1, 1, 0, 1},
             frame = 0,
         },
         {
-            s = 0.2,
-            r = {0,-math.pi*0.3, 0},
-            t = {-3, 2, 0, 1},
+            s = 0.02,
+            --r = {0,-math.pi*0.3, 0},
+            t = {-1, 1, 0, 1},
             frame = 1,
         }
     })
@@ -66,8 +66,8 @@ function ai_test_sys:init()
     --     end
     -- }
 
-    --abo = two_instances "/pkg/ant.test.features/assets/zombies/1-appear.glb/ani_bake.prefab"
-    abo = many_instances "/pkg/ant.test.features/assets/zombies/1-appear.glb/ani_bake.prefab"
+    abo = two_instances "/pkg/ant.test.features/assets/zombies/1-appear.glb/ani_bake.prefab"
+    --abo = many_instances "/pkg/ant.test.features/assets/zombies/1-appear.glb/ani_bake.prefab"
 
     util.create_shadow_plane(10, 10)
 end
@@ -83,12 +83,7 @@ local move_animation_instances; do
         if move_time_ms >= move_delta_ms then
             iai.update_offset(abo.Armature_Take_001_BaseLayer, offset)
 
-            if offset == bakenum-1 then
-                offset = 0
-            else
-                offset = offset + 1
-            end
-
+            offset = (offset+1) % bakenum
             move_time_ms = move_time_ms - move_delta_ms
         else
             move_time_ms = move_time_ms + d
@@ -96,11 +91,14 @@ local move_animation_instances; do
     end
 end
 
+local move_offset = 1
+
 function ai_test_sys:data_changed()
     if abo then
         for _, key, press in kb_mb:unpack() do
             if press == 0 and key == "C" then
-                iai.update_offset(assert(abo.Armature_Take_001_BaseLayer), 1)
+                iai.update_offset(assert(abo.Armature_Take_001_BaseLayer), move_offset)
+                move_offset = (move_offset + 1) % bakenum
             end
         end
 
