@@ -11,7 +11,7 @@ local mc            = mathpkg.constant
 local iwr           = ecs.require "ant.render|viewport.window_resize"
 
 local common = ecs.require "common"
-common.init_system = "shadow"
+common.init_system = "animation_instances"
 
 local create_instance = ecs.require "util".create_instance
 

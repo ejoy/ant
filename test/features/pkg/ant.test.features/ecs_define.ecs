@@ -6,7 +6,7 @@ import_feature "ant.efk"
 import_feature "ant.landform"
 import_feature "ant.widget"
 import_feature "ant.outline"
-import_feature "ant.animation_baker"
+import_feature "ant.animation_instances"
 system "init_system"
     .implement "init_system.lua"
 
@@ -14,7 +14,7 @@ local function DEFINE_TEST(n)
     system(n .. "_test_system").implement(("test/%s_test.lua"):format(n))
 end
 
-DEFINE_TEST "animation_baker"
+DEFINE_TEST "animation_instances"
 
 DEFINE_TEST "grid"
 DEFINE_TEST "pbr"

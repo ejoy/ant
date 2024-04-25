@@ -5,14 +5,14 @@ local w     = world.w
 local common = ecs.require "common"
 local util  = ecs.require "util"
 local PC    = util.proxy_creator()
-local iab   = ecs.require "ant.animation_baker|animation_baker"
+local iab   = ecs.require "ant.animation_instances|animation_instances"
 local math3d= require "math3d"
 
-local ab_test_sys = common.test_system "animation_baker"
+local ai_test_sys = common.test_system "animation_instances"
 
 local abo
 
-function ab_test_sys:init()
+function ai_test_sys:init()
     -- PC:create_instance {
     --     prefab = "/pkg/ant.test.features/assets/zombies/1-appear.glb/mesh.prefab",
     --     on_ready = function (p)
@@ -40,7 +40,7 @@ end
 
 local kb_mb = world:sub{"keyboard"}
 
-function ab_test_sys:data_changed()
+function ai_test_sys:data_changed()
     if abo then
         for _, key, press in kb_mb:unpack() do
             if press == 0 and key == "C" then
@@ -52,11 +52,7 @@ function ab_test_sys:data_changed()
     end
 end
 
-function ab_test_sys:render_submit()
-    iab.dispatch(abo.Armature_Take_001_BaseLayer)
-end
-
-function ab_test_sys:exit()
+function ai_test_sys:exit()
     if abo then
         iab.destroy(abo)
     end
