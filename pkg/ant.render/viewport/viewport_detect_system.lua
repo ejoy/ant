@@ -87,7 +87,6 @@ function vp_detect_sys:post_init()
 end
 
 local scene_viewrect_changed_mb = world:sub{"scene_viewrect_changed"}
---local scene_ratio_changed_mb = world:sub{"scene_ratio_changed"}
 
 function vp_detect_sys:data_changed()
 	for _, vr in scene_viewrect_changed_mb:unpack() do
@@ -96,20 +95,4 @@ function vp_detect_sys:data_changed()
 			break
 		end
 	end
-
-	-- for _, newratio in scene_ratio_changed_mb:unpack() do
-	-- 	if newratio <= 1e-6 then
-	-- 		error "scene ratio should larger than 0"
-	-- 	end
-	-- 	local vr = iviewport.viewrect
-	-- 	update_render_target(vr)
-	-- 	do
-	-- 		local mq = w:first "main_queue render_target:in"
-	-- 		local vr = mq.render_target.view_rect
-	-- 		log.info(("scene viewrect:x=%2f, y=%2f, w=%2f, h=%2f, scene_ratio=%2f"):format(vr.x, vr.y, vr.w, vr.h, vr.ratio or 1.0))
-	-- 	end
-
-	-- 	iviewport.scene_ratio = newratio
-	-- 	break
-	-- end
 end
