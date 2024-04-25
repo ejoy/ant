@@ -44,9 +44,7 @@ function ai_test_sys:data_changed()
     if abo then
         for _, key, press in kb_mb:unpack() do
             if press == 0 and key == "C" then
-                iab.update_frames(assert(abo.Armature_Take_001_BaseLayer), {
-                    3, 2
-                })
+                iab.update_offset(assert(abo.Armature_Take_001_BaseLayer), 1)
             end
         end
     end

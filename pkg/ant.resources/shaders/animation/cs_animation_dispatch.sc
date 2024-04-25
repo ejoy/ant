@@ -4,6 +4,7 @@ BUFFER_RO(b_instance_frames, uint, 0);
 BUFFER_WR(b_indirect_buffer, uvec4,1);
 
 uniform vec4 u_mesh_param;
+#define u_frame_offset  u_mesh_param.z
 #define u_instance_num  u_mesh_param.w
 
 uint which_frame(uint instanceidx)
@@ -23,10 +24,9 @@ void main()
 
     const float vbnum   = u_mesh_param[0];
     const float ibnum   = u_mesh_param[1];
-    const float bakenum = u_mesh_param[2];
 
     const uint frame = which_frame(tid);
-    const uint vboffset = vbnum * frame;
+    const uint vboffset = vbnum * (frame+u_frame_offset);
     const uint iboffset = 0;
     const uint instanceoffset = tid;
     const uint visible = 1;
