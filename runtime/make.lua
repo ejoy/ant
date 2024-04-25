@@ -2,33 +2,19 @@ local lm = require "luamake"
 local fs = require "bee.filesystem"
 local platform = require "bee.platform"
 
-local RuntimeBacklist <const> = {
+local Backlist <const> = {
     window = platform.os == "android" or platform.os == "linux",
     debugger = lm.luaversion == "lua55",
 }
 
-local EditorBacklist <const> = {
-    firmware = true,
-    window = platform.os == "android" or platform.os == "linux",
-    debugger = lm.luaversion == "lua55",
-}
-
-local RuntimeModules = {}
-local EditorModules = {}
+local Modules = {}
 
 local function checkAddModule(name, makefile)
-    if not RuntimeBacklist[name] or not EditorBacklist[name] then
+    if not Backlist[name] then
         lm:import(makefile)
     end
-    if not RuntimeBacklist[name] then
-        if lm:has(name) then
-            RuntimeModules[#RuntimeModules + 1] = name
-        end
-    end
-    if not EditorBacklist[name] then
-        if lm:has(name) then
-            EditorModules[#EditorModules + 1] = name
-        end
+    if lm:has(name) then
+        Modules[#Modules + 1] = name
     end
 end
 
@@ -138,43 +124,23 @@ lm:source_set "ant_links" {
     }
 }
 
-local antrt_defines = {
-    "ANT_RUNTIME",
-}
-
-local anted_defines = {}
+local ant_defines = {}
 
 if lm.mode == "debug" then
-    antrt_defines[#antrt_defines+1] = "MATH3D_ADAPTER_TEST"
-    anted_defines[#anted_defines+1] = "MATH3D_ADAPTER_TEST"
+    ant_defines[#ant_defines+1] = "MATH3D_ADAPTER_TEST"
 end
 
 lm:lua_source "ant_runtime" {
     deps = {
         "ant_common",
-        RuntimeModules,
+        Modules,
     },
     includes = {
         "../3rd/bgfx/include",
         "../3rd/bx/include",
     },
-    defines = antrt_defines,
+    defines = ant_defines,
     sources = "common/modules.c",
-}
-
-lm:lua_source "ant_editor" {
-    deps = {
-        "ant_common",
-        EditorModules,
-    },
-    includes = {
-        "../3rd/bgfx/include",
-        "../3rd/bx/include",
-    },
-    defines = anted_defines,
-    sources = {
-        "common/modules.c",
-    },
 }
 
 if lm.os == "android" then
@@ -187,24 +153,8 @@ if lm.os == "android" then
             "copy_mainlua"
         }
     }
-    lm:phony "runtime" {
-        deps = "ant"
-    }
     return
 end
-
-lm:exe "lua" {
-    deps = {
-        "ant_editor",
-        "ant_openlibs",
-        "bgfx-lib",
-        "ant_links",
-        "copy_mainlua"
-    },
-    windows = {
-        sources = "windows/lua.rc",
-    },
-}
 
 lm:exe "ant" {
     deps = {
@@ -217,12 +167,4 @@ lm:exe "ant" {
     windows = {
         sources = "windows/lua.rc",
     },
-}
-
-lm:phony "editor" {
-    deps = "lua"
-}
-
-lm:phony "runtime" {
-    deps = "ant"
 }

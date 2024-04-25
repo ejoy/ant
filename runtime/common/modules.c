@@ -132,16 +132,11 @@ void ant_loadmodules(lua_State* L) {
         { "imgui.internal", luaopen_imgui_internal },
         { "imgui.widgets", luaopen_imgui_widgets },
         { "cell.core", luaopen_cell_core },
-#if BX_PLATFORM_IOS
-        { "ios", luaopen_ios },
-        { "window.ios", luaopen_window_ios },
-#endif
-#if BX_PLATFORM_ANDROID
-        { "android", luaopen_android },
-#endif
-#if defined(ANT_RUNTIME)
         { "firmware", luaopen_firmware },
-#else
+        { "system.scene", luaopen_system_scene },
+        { "cull.core", luaopen_system_cull},
+        { "zip", luaopen_zip },
+#if !BX_PLATFORM_IOS && !BX_PLATFORM_ANDROID
         { "ozz.offline", luaopen_ozz_offline },
         { "bee.filewatch", luaopen_bee_filewatch },
         { "bee.subprocess", luaopen_bee_subprocess },
@@ -149,13 +144,17 @@ void ant_loadmodules(lua_State* L) {
         { "filedialog", luaopen_filedialog },
 #endif
 #endif
-        { "system.scene", luaopen_system_scene },
-        { "cull.core", luaopen_system_cull},
-        { "zip", luaopen_zip },
 #if !BX_PLATFORM_LINUX
         { "window", luaopen_window },
         { "httpc", luaopen_httpc },
         { "font.util", luaopen_font_util },
+#endif
+#if BX_PLATFORM_IOS
+        { "ios", luaopen_ios },
+        { "window.ios", luaopen_window_ios },
+#endif
+#if BX_PLATFORM_ANDROID
+        { "android", luaopen_android },
 #endif
 #if BX_PLATFORM_WINDOWS
         { "bee.windows", luaopen_bee_windows },
