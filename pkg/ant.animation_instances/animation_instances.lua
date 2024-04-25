@@ -134,10 +134,6 @@ function iai.create(prefab, framenum, numinstance, instances)
     local meshset       = anibaker.bake(anio, mesho, framenum)
 
     local instancebuffer, animationframe_buffer = pack_buffers(instances)
-
-    local numinstance = #instances
-
-    local ib = mesho:numi()
     local ani = {}
     for n, m in pairs(meshset) do
         ani[n] = {
@@ -148,6 +144,7 @@ function iai.create(prefab, framenum, numinstance, instances)
                     "ant.animation_instances|animation_instances",
                 },
                 data = {
+                    --TODO: need fix material export from glb/gltf bug
                     varyings_no_check=true,
                     material        = mesho.material,
                     scene           = mesho.scene,
