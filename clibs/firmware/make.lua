@@ -1,7 +1,7 @@
 local lm = require "luamake"
 local fs = require "bee.filesystem"
 
-local FirmwareDir = (lm.AntDir .. "/engine/firmware/").value
+local FirmwareDir = lm.AntDir .. "/engine/firmware/"
 local all = {}
 for path in fs.pairs(FirmwareDir) do
     if path:extension() == ".lua" then
@@ -10,7 +10,7 @@ for path in fs.pairs(FirmwareDir) do
         lm:runlua {
             script = "embed.lua",
             args = { "$in", "$out" },
-            inputs = lm:path(path),
+            inputs = path,
             outputs = output,
         }
     end

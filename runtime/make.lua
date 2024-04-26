@@ -18,7 +18,7 @@ local function checkAddModule(name, makefile)
     end
 end
 
-for path in fs.pairs(fs.path(lm.workdir) / "../clibs") do
+for path in fs.pairs(lm.AntDir .. "/clibs") do
     if fs.exists(path / "make.lua") then
         local name = path:stem():string()
         local makefile = ("../clibs/%s/make.lua"):format(name)
@@ -26,7 +26,7 @@ for path in fs.pairs(fs.path(lm.workdir) / "../clibs") do
     end
 end
 
-for path in fs.pairs(fs.path(lm.workdir) / "../pkg") do
+for path in fs.pairs(lm.AntDir .. "/pkg") do
     if fs.exists(path / "make.lua") then
         local name = path:filename():string()
         local makefile = ("../pkg/%s/make.lua"):format(name)
