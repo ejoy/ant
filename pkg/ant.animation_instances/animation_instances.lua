@@ -171,6 +171,7 @@ function iai.create(prefab, framenum, numinstance, instances)
                             bakestep_ratio = result.bakestep_ratio,
                         },
                     },
+                    visible_masks   = "main_view|cast_shadow",
                     visible         = true,
                 }
             },
