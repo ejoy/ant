@@ -167,6 +167,8 @@ function iai.create(prefab, framenum, numinstance, instances)
                             handle = create_frame_buffer(animationframe_buffer),
                             offset = 0,
                             num    = framenum,
+                            duration = result.animation_duration,
+                            bakestep_ratio = result.bakestep_ratio,
                         },
                     },
                     visible         = true,

@@ -74,19 +74,26 @@ end
 local kb_mb = world:sub{"keyboard"}
 
 local move_animation_instances; do
-    local move_delta_ms<const> = 30
     local move_time_ms = 0
     local offset = 0
+    local move_delta_ms
     function move_animation_instances()
-        -- local d = timer.delta()
-        -- if move_time_ms >= move_delta_ms then
-            iai.update_offset(abo.Armature_Take_001_BaseLayer, offset)
+        local bo = abo.Armature_Take_001_BaseLayer
+        if nil == move_delta_ms then
+            local re = world:entity(bo.render, "animation_instances:in")
+            local f = re.animation_instances.frame
+            local durationms = f.duration * 1000
+            move_delta_ms = durationms / f.num
+        end
+        local d = timer.delta()
+        if move_time_ms >= move_delta_ms then
+            iai.update_offset(bo, offset)
 
             offset = (offset+1) % bakenum
-        --     move_time_ms = move_time_ms - move_delta_ms
-        -- else
-        --     move_time_ms = move_time_ms + d
-        -- end
+            move_time_ms = move_time_ms - move_delta_ms
+        else
+            move_time_ms = move_time_ms + d
+        end
     end
 end
 
