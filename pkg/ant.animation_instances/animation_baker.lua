@@ -28,34 +28,19 @@ local function bake_meshes(meshes)
     return meshset
 end
 
-local function find_policy(e, policy)
-    for _, p in ipairs(e.policy) do
-        if p == policy then
-            return true
+local function create_animation_obj(pc)
+    local anie = pc[1]
+    local function check_animation(e)
+        for _, t in ipairs(e.tag) do
+            if t == "animation" then
+                return true
+            end
         end
     end
-end
-
-local function find_skin_meshes(pc)
-    local meshes = {}
-    for _, e in ipairs(pc) do
-        if find_policy(e, "ant.render|skinrender") then
-            meshes[#meshes+1] = e
-        end
-    end
-    return meshes
-end
-
-local function create_ani(anio)
-    return iani.create(anio.data.animation)
-end
-
-local function check_create_animation_obj(pc)
-    local anio = pc[1]
-    local aniescene = anio.data.scene
-    assert(aniescene.t == nil and aniescene.r == nil and aniescene.t == nil)
-    assert(find_policy(anio, "ant.animation|animation"))
-    return iani.create(anio.data.animation)
+    assert(check_animation(anie), "Invalid prefab, need animation entity in the first place")
+    return {
+        animation = iani.create(anie.data.animation)
+    }
 end
 
 local function buffer_desc(layout)
@@ -360,7 +345,20 @@ local function bake_animation_mesh(anio, mesho, bakenum)
     return meshset
 end
 
-local function create_mesh_obj(meshe)
+local function find_policy(e, policy)
+    for _, p in ipairs(e.policy) do
+        if p == policy then
+            return true
+        end
+    end
+end
+
+local function create_mesh_obj(pc)
+    --TODO: bake mesh if mesh entity more than one
+    assert(#pc == 2)
+    local meshe = pc[2]
+    assert(find_policy(meshe, "ant.render|skinrender") and meshe.data.mesh and meshe.data.skinning)
+
     local o = setmetatable({
         meshres     = assetmgr.resource(meshe.data.mesh),
         skinning    = meshe.data.skinning,
@@ -378,14 +376,7 @@ end
 return {
     init = function (prefab)
         local pc = serialize.load(prefab)
-
-        --TODO: need handle general prefab with animations
-        local anio = {
-            animation = check_create_animation_obj(pc),
-        }
-    
-        local meshe = pc[2]
-        return anio, create_mesh_obj(meshe)
+        return create_animation_obj(pc), create_mesh_obj(pc)
     end,
     bake = bake_animation_mesh,
 }
