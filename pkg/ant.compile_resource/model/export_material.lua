@@ -153,6 +153,11 @@ local function get_state(alphamode)
     return copy_state(ALPHA_MODE_STATES[alphamode] or error(("Invalid alphamode: %s"):format(alphamode)))
 end
 
+local function refine_name(name)
+    local newname = name:gsub("['\\/:*?\"<>|#%s]", "_")
+    return newname
+end
+
 return function (status)
     local output = status.output
     local setting = status.setting
@@ -300,9 +305,6 @@ return function (status)
     end
 
     status.material = {}
-    status.material_idx = {}
-    status.material_cfg = {}
-    status.material_cache = {}
     for matidx, mat in ipairs(materials) do
         local name = mat.name or tostring(matidx)
         local pbr_mr = mat.pbrMetallicRoughness
@@ -360,15 +362,9 @@ return function (status)
 
         material.fx.macros = macros
         material.fx.setting = setting
-        local function refine_name(name)
-            local newname = name:gsub("['\\/:*?\"<>|#%s]", "_")
-            return newname
-        end
-        local materialname = refine_name(name)
-        local filename = "materials/" .. materialname .. ".material"
-        status.material_idx[matidx] = filename
-        utility.apply_patch(status, filename, material, function (name, desc)
-            status.material[name] = desc
-        end)
+        status.material[matidx] = {
+            filename = ("materials/%s.material"):format(refine_name(name)),
+            content = material,
+        }
     end
 end
