@@ -291,9 +291,8 @@ local function bake_pose(mesho, wm, skin)
 end
 
 local function bake_animation_mesh(anio, mesho, bakenum)
-    local buffers = {}
-    local aniobj = anio.animation
-    local new_vblayout = create_new_vb_layout(mesho.desc)
+    local aniobj        = anio.animation
+    local new_vblayout  = create_new_vb_layout(mesho.desc)
 
     local meshset = {}
 
@@ -307,12 +306,16 @@ local function bake_animation_mesh(anio, mesho, bakenum)
     local numvb     = mesho:numv()
 
     for n, status in pairs(aniobj.status) do
-        for i=1, bakenum do
-            status.ratio = (i-1)/(bakenum-1) --make it layon [0, 1]
+        local buffers = {}
+        local lastbakeidx = (bakenum-1)
+        for i=0, lastbakeidx do
+            status.ratio = i/lastbakeidx
             status.weight = 1.0
             iani.sample(anio)
             buffers[#buffers+1] = bake_pose(mesho, wm, skin)
         end
+
+        local bakestep_ratio = 1/lastbakeidx
 
         local newvbbin = table.concat(buffers, "")
         local new_numv = numvb * bakenum
@@ -347,7 +350,11 @@ local function bake_animation_mesh(anio, mesho, bakenum)
                 owned   = true,
             }
         end
-        meshset[n] = newmeshobj
+        meshset[n] = {
+            mesh                = newmeshobj,
+            bakestep_ratio      = bakestep_ratio,
+            animation_duration  = status.handle:duration(),
+        }
     end
 
     return meshset

@@ -135,7 +135,7 @@ function iai.create(prefab, framenum, numinstance, instances)
 
     local instancebuffer, animationframe_buffer = pack_buffers(instances)
     local ani = {}
-    for n, m in pairs(meshset) do
+    for n, result in pairs(meshset) do
         ani[n] = {
             render = world:create_entity{
                 policy = {
@@ -158,7 +158,7 @@ function iai.create(prefab, framenum, numinstance, instances)
                         }
                     },
                     owned_mesh_buffer = true,
-                    mesh_result     = imesh.init_mesh(m),
+                    mesh_result     = imesh.init_mesh(result),
                     animation_instances = {
                         instances   = instances,
                         mesh        = {
