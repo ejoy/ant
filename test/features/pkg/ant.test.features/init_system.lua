@@ -9,6 +9,7 @@ local mathpkg       = import_package"ant.math"
 local mc            = mathpkg.constant
 
 local iwr           = ecs.require "ant.render|viewport.window_resize"
+local timer         = ecs.require "ant.timer|timer_system"
 
 local common = ecs.require "common"
 common.init_system = "animation_instances"

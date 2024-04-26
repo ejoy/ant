@@ -118,6 +118,28 @@ function ai_test_sys:init_world()
     init_camera()
 end
 
+local rotate_directional_light; do
+    local FIVE_SECOND<const> = 15000
+    local move_delta_ms = 0
+    function rotate_directional_light()
+        local dl = w:first "directional_light light:in scene:update"
+        if dl then
+            local d = timer.delta()
+            move_delta_ms = move_delta_ms + d
+            if move_delta_ms >= FIVE_SECOND then
+                move_delta_ms = 0
+            end
+
+            local dir = math3d.normalize(math3d.vector(-1, -1, -1))
+            local t = move_delta_ms / FIVE_SECOND
+            local rad = 2*math.pi*t
+            iom.set_direction(dl, math3d.transform(math3d.quaternion{axis=math3d.vector(0, 1, 0), r=rad}, dir, 0))
+            
+            w:submit(dl)
+        end
+    end
+end
+
 local move_offset = 1
 
 function ai_test_sys:data_changed()
@@ -130,6 +152,7 @@ function ai_test_sys:data_changed()
         end
 
         move_animation_instances()
+        rotate_directional_light()
     end
 end
 
