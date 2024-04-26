@@ -184,8 +184,12 @@ local check_refine_material; do
             }
             c[name] = template
 
-            utility.apply_patch(status, fn, mi, function (n, desc)
-                status.refine_materials[n] = desc
+            utility.apply_patch(status, fn, mi, function (n, mc)
+                status.refine_materials[n] = mc
+                if mc.fx.setting.no_skinning then
+                    mc.fx.varyings.a_indices = nil
+                    mc.fx.varyings.a_weight = nil
+                end
             end)
         end
 
