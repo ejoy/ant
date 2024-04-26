@@ -1283,7 +1283,7 @@ function m.save(path)
     end
     utils.write_file(filename, stringify(animdata))
     local lpath = lfs.path(filename)
-    memfs.update("/" .. lfs.relative(lpath, global_data.project_root):string(), lpath:string())
+    -- memfs.update("/" .. lfs.relative(lpath, global_data.project_root):string(), lpath:string())
     if file_path ~= filename then
         file_path = filename
     end

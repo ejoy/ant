@@ -596,7 +596,7 @@ function m.get_title()
     return "Animation"
 end
 local function play_or_pause()
-    if not edit_timeline then
+    if not edit_timeline and current_anim then
         if anim_state.is_playing then
             iani.pause(anim_eid, true, current_anim.name)
         else

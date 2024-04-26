@@ -401,7 +401,9 @@ function CameraView:_init()
     end
     self.inited = true
 
-    self.transform = create_transform_property(self)
+    -- self.transform = create_transform_property(self)
+    self.copy_maincamera = uiproperty.Button({label="SRT From MainCamera"})
+    self.copy_maincamera:set_click(function() world:pub {"CopyMainCamera"} end)
     self.frustum = create_frustum_property(self)
     self.exposure = create_exposure_property(self)
     self.serialize = create_serialize_ui(self)
@@ -440,6 +442,7 @@ function CameraView:show()
         return
     end
     -- self.transform:show()
+    self.copy_maincamera:show()
     self.frustum:show()
     self.exposure:show()
     self.serialize:show()

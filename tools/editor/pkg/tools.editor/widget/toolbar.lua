@@ -1,6 +1,6 @@
 local ecs   = ...
 local world = ecs.world
-
+local w = world.w
 local irq       = ecs.require "ant.render|renderqueue"
 local gizmo     = ecs.require "gizmo.gizmo"
 local ImGui     = require "imgui"
@@ -32,7 +32,12 @@ local showterrain = { false }
 local savehitch = { false }
 local camera_speed = {0.1, speed=0.05, min=0.01, max=10}
 local icons = require "common.icons"
-
+local function mark_camera_changed(eid)
+    local e <close> = world:entity(eid)
+    w:extend(e, "camera_changed?out")
+    e.camera_changed = true
+    w:submit(e)
+end
 function m.show()
     local viewport = ImGui.GetMainViewport()
     ImGui.SetNextWindowPos(viewport.WorkPos.x, viewport.WorkPos.y)
@@ -93,7 +98,7 @@ function m.show()
 
         if is_select_camera() then
             ImGui.SameLine()
-            local sv_camera = irq.camera "second_view"
+            local sv_camera = gizmo.target_eid -- irq.camera "second_view"
             local mq_camera = irq.camera "main_queue"
             if LAST_main_camera == nil then
                 LAST_main_camera = mq_camera
@@ -102,11 +107,15 @@ function m.show()
             if ImGui.Checkbox("As Main Camera", as_mc) then
                 if as_mc[1] then
                     irq.set_camera_from_queuename("main_queue", sv_camera)
-                    irq.set_visible("second_view", false)
+                    world:pub {"LockCamera", sv_camera}
+                    mark_camera_changed(sv_camera)
+                    -- irq.set_visible("second_view", false)
                 else
                     irq.set_camera_from_queuename("main_queue", LAST_main_camera)
+                    -- irq.set_visible("second_view", true)
+                    mark_camera_changed(LAST_main_camera)
                     LAST_main_camera = nil
-                    irq.set_visible("second_view", true)
+                    world:pub {"LockCamera"}
                 end
                 world:pub {"camera", "change"}
             end

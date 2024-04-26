@@ -68,7 +68,7 @@ function BaseView:set_eid(eid)
     local property = {}
     -- property[#property + 1] = self.base.name
     property[#property + 1] = self.base.tag
-    local e <close> = world:entity(self.eid, "scene?in render_layer?in")
+    local e <close> = world:entity(self.eid, "scene?in render_layer?in camera?in")
     if e.scene then
         property[#property + 1] = self.base.position
         if self.has_rotate then
@@ -94,7 +94,7 @@ function BaseView:set_eid(eid)
                 self.base.aabbmax:set_visible(true)
                 self.base.delete_aabb:set_visible(true)
             else
-                self.base.create_aabb:set_visible(true)
+                self.base.create_aabb:set_visible(not e.camera)
             end
         end
     end
@@ -358,9 +358,23 @@ function BaseView:update()
 end
 
 local event_gizmo = world:sub {"Gizmo"}
+local event_copy_maincamera = world:sub {"CopyMainCamera"}
+local irq = ecs.require "ant.render|renderqueue"
 function BaseView:show()
     if not self.eid then return end
     for _, _, _, _ in event_gizmo:unpack() do
+        self:update()
+    end
+    for _ in event_copy_maincamera:unpack() do
+        local camera <close> = world:entity(irq.main_camera(), "camera:in scene:in")
+        -- local srt = camera.scene
+        local r, t = iom.get_rotation(camera), iom.get_position(camera)
+        local rad = math3d.tovalue(math3d.quat2euler(r))
+        self:on_set_rotate({ math.deg(rad[1]), math.deg(rad[2]), math.deg(rad[3]) })
+        self:on_set_position({math3d.index(t, 1, 2, 3)})
+        local e <close> = world:entity(self.eid)
+        iom.set_rotation(e, r)
+        iom.set_position(e, t)
         self:update()
     end
     if self.is_prefab then
@@ -368,6 +382,7 @@ function BaseView:show()
         self.base.preview:show()
     end
     self.general_property:show()
+    
 end
 
 return function ()

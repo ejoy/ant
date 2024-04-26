@@ -238,7 +238,7 @@ function m:create(what, config)
         self:create_slot()
     elseif what == "camera" then
         local new_camera, template = camera_mgr.create_camera()
-        hierarchy:add(new_camera, {template = template}, self.root)
+        hierarchy:add(new_camera, {template = template, is_patch = true}, self.root)
         self.entities[#self.entities+1] = new_camera
     elseif what == "empty" then
         local parent = gizmo.target_eid or (self.scene and self.scene or self.root)
@@ -890,10 +890,10 @@ function m:get_patch_list(template_list)
 end
 
 function m:save(path)
-    if not gd.repo then
-        widget_utils.message_box({title = "SaveError", info = "no project is opened"})
-        return
-    end
+    -- if not gd.repo then
+    --     widget_utils.message_box({title = "SaveError", info = "no project is opened"})
+    --     return
+    -- end
     -- patch glb file
     if self.glb_filename then
         if self.patch_template then
@@ -975,7 +975,7 @@ function m:save(path)
     local saveas = (lfs.path(filename) ~= lfs.path(prefab_filename))
     local template = hierarchy:get_prefab_template()
     utils.write_file(lpath, stringify(template))
-    memfs.update(filename, lpath)
+    -- memfs.update(filename, lpath)
     if saveas then
         self:open(lpath)
         world:pub {"WindowTitle", filename}
