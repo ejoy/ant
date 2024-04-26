@@ -6,12 +6,13 @@ local common    = ecs.require "common"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 local util      = ecs.require "util"
 local PC        = util.proxy_creator()
-local imesh     = ecs.require "ant.asset|mesh"
+
 local ientity 	= ecs.require "ant.entity|entity"
 local imaterial = ecs.require "ant.render|material"
 local ilight    = ecs.require "ant.render|light.light"
 local math3d    = require "math3d"
-local mu        = import_package "ant.math".util
+local mathpkg   = import_package "ant.math"
+local mu, mc    = mathpkg.util, mathpkg.constant
 
 local plt_sys = common.test_system "point_light"
 
@@ -555,6 +556,19 @@ end
 --         test_cluster_light_cull()
 --     end
 -- end
+
+local function init_camera()
+    local mq = w:first "main_queue camera_ref:in"
+    local ce<close> = world:entity(mq.camera_ref)
+    local eyepos = math3d.vector(0, 10,-10)
+    iom.set_position(ce, eyepos)
+    local dir = math3d.normalize(math3d.sub(mc.ZERO_PT, eyepos))
+    iom.set_direction(ce, mc.XAXIS)
+end
+
+function plt_sys:init_world()
+
+end
 
 function plt_sys:exit()
     PC:clear()
