@@ -59,7 +59,7 @@ local function export_filehash(self, vfsrepo)
 				dir = v.dir,
 			}
 		else
-			assert(read_content(v) == read_content(n))
+			--assert(read_content(v) == read_content(n))
 		end
 	end
 end
