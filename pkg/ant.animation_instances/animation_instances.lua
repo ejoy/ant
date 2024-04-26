@@ -144,8 +144,6 @@ function iai.create(prefab, framenum, numinstance, instances)
                     "ant.animation_instances|animation_instances",
                 },
                 data = {
-                    --TODO: need fix material export from glb/gltf bug
-                    varyings_no_check=true,
                     material        = mesho.material,
                     scene           = mesho.scene,
                     draw_indirect   = {

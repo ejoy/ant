@@ -8,7 +8,6 @@ component "visible_masks".type "lua"
 
 component "mesh_result".type "lua"
 component "feature_set".type "lua"
-component "varyings_no_check"
 
 import "render_object.ecs"
 import "renderqueue.ecs"
