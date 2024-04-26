@@ -329,13 +329,13 @@ function efk_sys:follow_scene_update()
 	for e in w:select "scene_changed scene:in efk:in efk_object:update" do
 		e.efk_object.worldmat = e.scene.worldmat
 	end
-
-    local dl        = w:first "directional_light light:in scene:in"
-    if dl then
-        local direction, color = get_light_direction(dl), get_light_color(dl)
-        EFKCTX:set_light_direction(direction)
-        EFKCTX:set_light_color(color)
-    end
+    -- TODO: fix main camera changed 
+    -- local dl        = w:first "directional_light light:in scene:in"
+    -- if dl then
+    --     local direction, color = get_light_direction(dl), get_light_color(dl)
+    --     EFKCTX:set_light_direction(direction)
+    --     EFKCTX:set_light_color(color)
+    -- end
 
     for e in w:select "efk_visible visible efk:in scene:in" do
         local ph = e.efk.play_handle
