@@ -31,7 +31,7 @@ lm:phony {
     outputs = "firmware.cpp",
 }
 
-lm:lua_source "firmware" {
+lm:lua_src "firmware" {
     includes = {
         lm.AntDir .. "/clibs/foundation",
     },

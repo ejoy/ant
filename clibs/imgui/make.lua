@@ -70,7 +70,7 @@ lm:source_set "imgui" {
     defines = defines,
 }
 
-lm:lua_source "imgui" {
+lm:lua_src "imgui" {
     confs = { "glm", "bgfx" },
     includes = {
         ".",
@@ -85,7 +85,7 @@ lm:lua_source "imgui" {
     },
 }
 
-lm:lua_source "imgui" {
+lm:lua_src "imgui" {
     confs = { "bgfx" },
     includes = {
         ".",

@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
-lm:lua_source "ecs" {
+lm:lua_src "ecs" {
     confs = { "glm" },
     includes = {
         lm.AntDir .. "/clibs/ecs",

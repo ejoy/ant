@@ -2,7 +2,7 @@ local lm = require "luamake"
 
 lm:import "bgfx.lua"
 
-lm:lua_source "bgfx" {
+lm:lua_src "bgfx" {
     confs = { "bgfx" },
     deps = {
         "bx",

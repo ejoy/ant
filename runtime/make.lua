@@ -39,7 +39,7 @@ lm:copy "copy_mainlua" {
     outputs = "$bin/main.lua",
 }
 
-lm:lua_source "ant_common" {
+lm:lua_src "ant_common" {
     deps = "lua_source",
     includes = {
         lm.AntDir .. "/3rd/bgfx/include",
@@ -67,7 +67,7 @@ lm:lua_source "ant_common" {
         }
     }
 }
-lm:lua_source "ant_openlibs" {
+lm:lua_src "ant_openlibs" {
     sources = "common/ant_openlibs.c",
 }
 
@@ -130,7 +130,7 @@ if lm.mode == "debug" then
     ant_defines[#ant_defines+1] = "MATH3D_ADAPTER_TEST"
 end
 
-lm:lua_source "ant_runtime" {
+lm:lua_src "ant_runtime" {
     deps = {
         "ant_common",
         Modules,

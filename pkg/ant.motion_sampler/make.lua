@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
-lm:lua_source "motion_sampler" {
+lm:lua_src "motion_sampler" {
     deps = {
         "ozz-animation-runtime",
     },

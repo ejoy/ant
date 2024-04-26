@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
-lm:lua_source "quadsphere" {
+lm:lua_src "quadsphere" {
     sources = {
         "cubesphere.c",
         "quadsphere.cpp"

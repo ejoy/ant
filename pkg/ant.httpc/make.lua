@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
-lm:lua_source "httpc" {
+lm:lua_src "httpc" {
 	includes = {
 		lm.AntDir .. "/3rd/bee.lua",
 	},

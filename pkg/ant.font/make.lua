@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
-lm:lua_source "font-systemfont" {
+lm:lua_src "font-systemfont" {
     includes = {
         lm.AntDir .. "/clibs/foundation",
     },
@@ -22,7 +22,7 @@ lm:lua_source "font-systemfont" {
     },
 }
 
-lm:lua_source "font" {
+lm:lua_src "font" {
     deps = "font-systemfont",
     includes = {
         lm.AntDir .. "/3rd/bgfx/include",

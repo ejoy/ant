@@ -25,7 +25,7 @@ lm:source_set "imgui" {
     },
 }
 
-lm:lua_source "imgui" {
+lm:lua_src "imgui" {
     confs = { "glm" },
     includes = {
         "../imgui",

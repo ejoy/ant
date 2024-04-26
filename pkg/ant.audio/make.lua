@@ -13,7 +13,7 @@ if lm.os == "windows" then
     }
 end
 
-lm:lua_source "audio" {
+lm:lua_src "audio" {
     includes = {
         lm.AntDir .. "/3rd/bee.lua",
         lm.AntDir .. "/clibs/luabind",

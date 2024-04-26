@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
-lm:lua_source "material_core"{
+lm:lua_src "material_core"{
     includes = {
         lm.AntDir .. "/3rd/bgfx/include",
         lm.AntDir .. "/3rd/bx/include",

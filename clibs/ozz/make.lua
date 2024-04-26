@@ -2,7 +2,7 @@ local lm = require "luamake"
 
 lm:import "ozz-animation.lua"
 
-lm:lua_source "ozz" {
+lm:lua_src "ozz" {
     deps = {
         "ozz-animation-base",
         "ozz-animation-runtime",
@@ -21,7 +21,7 @@ lm:lua_source "ozz" {
     },
 }
 
-lm:lua_source "ozz" {
+lm:lua_src "ozz" {
     deps = {
         "ozz-animation-offline",
     },

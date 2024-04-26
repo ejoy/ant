@@ -2,7 +2,7 @@ local lm = require "luamake"
 
 local rootdir = "../../../../"
 
-lm:lua_source "textcell" {
+lm:lua_src "textcell" {
     sources = {
         "cell.c",
     },

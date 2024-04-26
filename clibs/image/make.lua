@@ -1,7 +1,7 @@
 local lm = require "luamake"
 
 
-lm:lua_source "image" {
+lm:lua_src "image" {
     deps = {
         "bimg-decode",
         "bimg",

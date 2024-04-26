@@ -5,7 +5,7 @@ lm:copy "copy_ecs_lua" {
     outputs = lm.AntDir .. "/pkg/ant.luaecs/ecs.lua"
 }
 
-lm:lua_source "ecs" {
+lm:lua_src "ecs" {
     deps = "copy_ecs_lua",
     sources = lm.AntDir .. "/3rd/luaecs/*.c",
     msvc = {

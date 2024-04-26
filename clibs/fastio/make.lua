@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
-lm:lua_source "fastio" {
+lm:lua_src "fastio" {
     includes = {
         lm.AntDir .. "/clibs/foundation",
         lm.AntDir .. "/3rd/bee.lua",

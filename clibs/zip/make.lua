@@ -241,7 +241,7 @@ lm:source_set "minizip-ng" {
     },
 }
 
-lm:lua_source "zip-binding" {
+lm:lua_src "zip-binding" {
     objdeps = {
         "gen-zconf",
         "gen-zlib",
@@ -257,7 +257,7 @@ lm:lua_source "zip-binding" {
     sources = "*.c",
 }
 
-lm:lua_source "zip" {
+lm:lua_src "zip" {
     deps = {
         "zlib-ng",
         "minizip-ng",

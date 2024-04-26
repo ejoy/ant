@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
-lm:lua_source "protocol" {
+lm:lua_src "protocol" {
     sources = {
         "lprotocol.c",
     }

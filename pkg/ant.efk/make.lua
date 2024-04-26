@@ -31,13 +31,13 @@ lm:source_set "efk" {
     }
 }
 
-lm:lua_source "efk" {
+lm:lua_src "efk" {
     sources = {
         "efkbgfx/luabinding/efkcallback.c",
     }
 }
 
-lm:lua_source "efk" {
+lm:lua_src "efk" {
     confs = { "bgfx" },
     includes = {
         lm.AntDir .. "/3rd/Effekseer/Dev/Cpp/Effekseer",

@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
-lm:lua_source "debugger" {
+lm:lua_src "debugger" {
     defines = {
         "LUA_VERSION_LATEST",
     },

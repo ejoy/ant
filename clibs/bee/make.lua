@@ -75,7 +75,7 @@ lm:source_set "bee" {
     }
 }
 
-lm:lua_source "bee" {
+lm:lua_src "bee" {
     includes = {
         "3rd/lua-seri",
         "."

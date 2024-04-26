@@ -15,7 +15,7 @@ lm:copy "copy_task_lua" {
     }
 }
 
-lm:lua_source "ltask" {
+lm:lua_src "ltask" {
     deps = "copy_task_lua",
     sources = {
         lm.AntDir .. "/3rd/ltask/src/*.c",

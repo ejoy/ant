@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
-lm:lua_source "resource_manager" {
+lm:lua_src "resource_manager" {
     includes = {
         lm.AntDir .. "/clibs/bgfx",
         lm.AntDir .. "/3rd/bgfx/include",

@@ -50,7 +50,7 @@ lm:copy "copy_Meshbaker" {
     outputs = outputpaths,
 }
 
-lm:lua_source "bake" {
+lm:lua_src "bake" {
     includes = {
         GLMInclude,
         "../luabind",

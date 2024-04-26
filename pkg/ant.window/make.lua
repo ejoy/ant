@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
-lm:lua_source "window" {
+lm:lua_src "window" {
     includes = {
         lm.AntDir .. "/3rd/bee.lua",
         lm.AntDir .. "/3rd/imgui",

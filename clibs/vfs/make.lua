@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
-lm:lua_source "vfs" {
+lm:lua_src "vfs" {
     sources = {
         "vfs.cpp",
     }

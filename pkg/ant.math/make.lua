@@ -17,7 +17,7 @@ if lm.mode == "debug" then
     defines[#defines+1] = "MATH3D_ADAPTER_TEST"
 end
 
-lm:lua_source "math" {
+lm:lua_src "math" {
     confs = { "glm" },
     includes = {
         lm.AntDir .. "/3rd/math3d",

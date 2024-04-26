@@ -22,7 +22,7 @@ lm:source_set "stylecache" {
     }
 }
 
-lm:lua_source "rmlui_core" {
+lm:lua_src "rmlui_core" {
     confs = { "glm" },
     includes = {
         "src",
@@ -43,7 +43,7 @@ lm:lua_source "rmlui_core" {
     }
 }
 
-lm:lua_source "rmlui_css" {
+lm:lua_src "rmlui_css" {
     confs = { "glm" },
     includes = {
         "src",
@@ -59,7 +59,7 @@ lm:lua_source "rmlui_css" {
     }
 }
 
-lm:lua_source "rmlui_binding" {
+lm:lua_src "rmlui_binding" {
     confs = { "glm" },
     includes = {
         "src",
