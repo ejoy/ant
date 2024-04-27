@@ -164,13 +164,6 @@ end
 function message.SHAKEHANDS()
 end
 
-ltask.fork(function ()
-	while not quit do
-		roothash = ltask.call(ServiceVfsMgr, "CHANGEROOT", roothash)
-		response("ROOT", roothash)
-	end
-end)
-
 function message.ROOT()
 	response("ROOT", roothash)
 end
@@ -284,6 +277,7 @@ local function dispatch(fd)
 end
 
 local function quit()
+	ltask.call(ServiceVfsMgr, "QUIT", roothash)
 	socket.close(FD)
 	ltask.call(ServiceLogManager, "CLOSE", LoggerIndex)
 	if ServiceDebugProxy then

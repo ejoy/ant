@@ -34,9 +34,9 @@ local function ignore_path(p)
 	end
 end
 
+local agent_count = 0
 local changed = {}
 local changed_mark = {}
-local changed_time
 
 local function add_changed(type, lpath)
 	local originpath = lpath:string()
@@ -47,7 +47,6 @@ local function add_changed(type, lpath)
 	print(type, originpath)
 	changed_mark[path] = true
 	changed[#changed+1] = path
-	changed_time = btime.monotonic()
 end
 
 local function update_watch()
@@ -70,13 +69,12 @@ local function update_watch()
 end
 
 local function update_vfs()
-	if #changed == 0 or compiling > 0 or btime.monotonic() - changed_time <= 1000 then
+	if #changed == 0 or compiling > 0 or agent_count > 0 then
 		return
 	end
 	print("repo rebuild ...")
 	changed = {}
 	changed_mark = {}
-	changed_time = nil
 	repo:close()
 	repo = assert(vfsrepo.new_std {
 		rootpath = fs.path(REPOPATH),
@@ -111,15 +109,13 @@ end
 local S = {}
 
 function S.ROOT()
+	agent_count = agent_count + 1
 	print("repo root:", repo:root())
 	return repo:root()
 end
 
-function S.CHANGEROOT(oldroot)
-	while oldroot == repo:root() do
-		ltask.multi_wait "CHANGEROOT"
-	end
-	return repo:root()
+function S.QUIT()
+	agent_count = agent_count - 1
 end
 
 function S.GET(hash)
