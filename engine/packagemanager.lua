@@ -2,6 +2,8 @@ local vfs = require "vfs"
 local fastio = require "fastio"
 local platform = require "bee.platform"
 
+local AllowDll <const> = platform.os ~= "ios"
+
 local dllpath; do
     if platform.os == "windows" then
         function dllpath(name)
@@ -57,7 +59,7 @@ local function sandbox_env(packagename)
                 return r
             end
         end
-        if not __ANT_RUNTIME__ then
+        if AllowDll then
             local funcname = "luaopen_"..name:gsub('%.', '_')
             local func = package.loadlib(dllpath(name:match('^[^.]*')), funcname)
             if func ~= nil then
