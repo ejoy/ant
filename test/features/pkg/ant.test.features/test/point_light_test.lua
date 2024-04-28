@@ -479,8 +479,16 @@ local function simple_scene()
         end
     }
 end
+local function init_camera()
+    local mq = w:first "main_queue camera_ref:in"
+    local ce<close> = world:entity(mq.camera_ref)
+    local eyepos = math3d.vector(0, 10,-10)
+    iom.set_position(ce, eyepos)
+    iom.set_direction(ce, mc.XAXIS)
+end
 
 function plt_sys.init_world()
+    init_camera()
     Sponza_scene()
     --simple_scene()
 end
@@ -556,19 +564,6 @@ end
 --         test_cluster_light_cull()
 --     end
 -- end
-
-local function init_camera()
-    local mq = w:first "main_queue camera_ref:in"
-    local ce<close> = world:entity(mq.camera_ref)
-    local eyepos = math3d.vector(0, 10,-10)
-    iom.set_position(ce, eyepos)
-    local dir = math3d.normalize(math3d.sub(mc.ZERO_PT, eyepos))
-    iom.set_direction(ce, mc.XAXIS)
-end
-
-function plt_sys:init_world()
-
-end
 
 function plt_sys:exit()
     PC:clear()
