@@ -40,7 +40,7 @@ struct DropManager : public IDropTarget {
 				wlen++;
 				std::unique_ptr<wchar_t[]> wstr(new wchar_t[wlen]);
 				::DragQueryFileW(hdrop, i, wstr.get(), wlen);
-				m_files.push_back(bee::wtf8::w2u({ wstr.get(), (size_t)wlen }));
+				m_files.push_back(bee::wtf8::w2u({ wstr.get(), (size_t)(wlen-1) }));
 			}
 			ReleaseStgMedium(&stgm);
 		}
