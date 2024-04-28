@@ -75,7 +75,7 @@ function ai_test_sys:init()
     --abo = two_instances "/pkg/ant.test.features/assets/zombies/1-appear.glb/ani_bake.prefab"
     abo = many_instances "/pkg/ant.test.features/assets/zombies/5-normal1.glb/ani_bake.prefab"
 
-    util.create_shadow_plane(50, 50)
+    PC:add_entity(util.create_shadow_plane(50, 50))
 end
 
 local kb_mb = world:sub{"keyboard"}
@@ -110,7 +110,6 @@ local function init_camera()
     local eyepos = math3d.vector(0, 15,-10)
     iom.set_position(ce, eyepos)
     local dir = math3d.normalize(math3d.sub(mc.ZERO_PT, eyepos))
-    --iom.set_direction(ce, mc.XAXIS)
     iom.set_direction(ce, dir)
 end
 
