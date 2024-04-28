@@ -42,7 +42,7 @@ local function build_scene_info(C, sb)
 	local mqidx = queuemgr.queue_index "main_queue"
 
 	local F = C.camera.frustum
-	local zn, zf = F.n, F.f
+	local zn, zf = math.maxinteger, -math.maxinteger
 	local PSR_ln, PSR_lf = math.maxinteger, -math.maxinteger
 	local PSC_ln, PSC_lf = math.maxinteger, -math.maxinteger
 
@@ -90,7 +90,7 @@ local function build_scene_info(C, sb)
 	end
 
 	local si = sb.scene_info
-	si.zn, si.zf = zn, zf
+	si.zn, si.zf = math.max(F.n, zn), math.min(zf, F.f)
 
 	if math3d.aabb_isvalid(PSC) then
 		si.PSC = PSC
