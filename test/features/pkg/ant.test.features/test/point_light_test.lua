@@ -373,21 +373,22 @@ local function inside_box2()
 end
 w:register{
     name = "rotator",
+    type = "float",
 }
 
 local function uniform_lights()
     local nx, ny, nz = 8, 8, 8
     local sx, sy, sz = 150, 150, 300
     local dx, dy, dz = sx/nx, sy/ny, sz/nz
-
+    local ox, oy, oz = 24, 0, 0
     local s = 0.5
     dx, dy, dz = dx*s, dy*s, dz*s
     for iz=0, nz-1 do
-        local z = iz*dz
+        local z = iz*dz+oz
         for iy=0, ny-1 do
-            local y = iy*dy
+            local y = iy*dy+oy
             for ix=0, nx-1 do
-                local x = ix*dx
+                local x = ix*dx+ox
 
                 local parent = PC:create_entity{
                     policy = {
@@ -397,7 +398,7 @@ local function uniform_lights()
                         scene = {
                             t = {x, y+1, z, 1}
                         },
-                        rotator = true,
+                        rotator = math.pi * math.random(1, 5) * 0.01,
                     }
                 }
 
@@ -406,7 +407,7 @@ local function uniform_lights()
                     on_ready = function(pl)
                         update_light_prefab(pl, {
                             color   = get_random_color(1),
-                            pos     = {0, 0, 10, 1},
+                            pos     = {0, 0, math.random(3, 10), 1},
                             intensity_scale = math.random(7, 10),
                             radius  = math.random(15, 30),
                         }, parent)
@@ -493,10 +494,9 @@ function plt_sys.init_world()
     --simple_scene()
 end
 
-
 function plt_sys.data_changed()
-    local r = math3d.quaternion{axis=math3d.vector(0.0, 1.0, 0.0, 0.0), r=math.pi*0.1}
-    for e in w:select "rotator scene:update" do
+    for e in w:select "rotator:in scene:update" do
+        local r = math3d.quaternion{axis=math3d.vector(0.0, 1.0, 0.0, 0.0), r=e.rotator}
         iom.set_rotation(e, math3d.mul(r, iom.get_rotation(e)))
     end
 end
