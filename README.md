@@ -9,10 +9,11 @@ Ant 是由灵犀互娱开发的开源游戏引擎。现阶段仅将代码仓库�
 
 ### 搭建编译环境
 
-#### MSVC
+#### 1.1 Windows
+##### 1.1.1 MSVC
 - 安装 Visual Studio
 
-#### MINGW
+##### 1.1.2 MINGW
 - 下载并安装 [msys2](https://www.msys2.org/)
 - 找到 msys2 安装目录，用 mingw64.exe 打开 msys2 的终端
 - 在 msys2 的终端中修改镜像服务器
@@ -33,13 +34,11 @@ echo "export PATH=\$MINGW/bin:\$PATH" >> ~/.bash_profile
 pacman -Syu mingw-w64-x86_64-gcc mingw-w64-x86_64-ninja
 ```
 
-#### MACOS
+#### 1.2 MACOS
 - 安装xcode, ninja
 
-
-### 编译
-
-#### 编译构建工具 luamake
+#### 2.1 Common
+##### 2.1.1 编译构建工具 luamake
 
 ``` bash
 git clone https://github.com/actboy168/luamake
@@ -48,6 +47,8 @@ git submodule update --init
 .\compile\install.bat (msvc)
 ./compile/install.sh (mingw/linux/macos)
 ```
+
+### 编译
 
 #### 编译runtime
 
