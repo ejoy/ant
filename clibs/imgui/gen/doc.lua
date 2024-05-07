@@ -286,7 +286,11 @@ special_arg["char*"] = function (type_meta, status)
 end
 
 return_type["bool*"] = function (type_meta)
-    writeln("---@return boolean | nil %s", safe_name(type_meta.name))
+    if type_meta.default_value then
+        writeln("---@return boolean | nil %s", safe_name(type_meta.name))
+    else
+        writeln("---@return boolean %s", safe_name(type_meta.name))
+    end
 end
 
 default_type["float"] = function (value)
