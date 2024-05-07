@@ -764,7 +764,7 @@ static int StringBuf(lua_State* L) {
 static int CreateContext(lua_State* L) {
     auto shared_font_atlas = lua_isnoneornil(L, 1)? NULL: *(ImFontAtlas**)lua_touserdata(L, 1);
     auto&& _retval = ImGui::CreateContext(shared_font_atlas);
-   (void)_retval;
+    (void)_retval;
     return 0;
 }
 
@@ -807,7 +807,11 @@ static int Begin(lua_State* L) {
     auto flags = (ImGuiWindowFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiWindowFlags_None));
     auto&& _retval = ImGui::Begin(name, (has_p_open? &p_open: NULL), flags);
     lua_pushboolean(L, _retval);
-    lua_pushboolean(L, has_p_open || p_open);
+    if (has_p_open) {
+        lua_pushboolean(L, p_open);
+    } else {
+        lua_pushnil(L);
+    }
     return 2;
 }
 
@@ -3661,7 +3665,11 @@ static int BeginPopupModal(lua_State* L) {
     auto flags = (ImGuiWindowFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiWindowFlags_None));
     auto&& _retval = ImGui::BeginPopupModal(name, (has_p_open? &p_open: NULL), flags);
     lua_pushboolean(L, _retval);
-    lua_pushboolean(L, has_p_open || p_open);
+    if (has_p_open) {
+        lua_pushboolean(L, p_open);
+    } else {
+        lua_pushnil(L);
+    }
     return 2;
 }
 
@@ -3905,7 +3913,11 @@ static int BeginTabItem(lua_State* L) {
     auto flags = (ImGuiTabItemFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiTabItemFlags_None));
     auto&& _retval = ImGui::BeginTabItem(label, (has_p_open? &p_open: NULL), flags);
     lua_pushboolean(L, _retval);
-    lua_pushboolean(L, has_p_open || p_open);
+    if (has_p_open) {
+        lua_pushboolean(L, p_open);
+    } else {
+        lua_pushnil(L);
+    }
     return 2;
 }
 

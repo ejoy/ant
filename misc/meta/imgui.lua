@@ -1599,7 +1599,7 @@ function ImGui.GetVersion() end
 ---@param p_open true | nil
 ---@param flags? ImGui.WindowFlags | `ImGui.WindowFlags { "None" }`
 ---@return boolean
----@return boolean p_open
+---@return boolean | nil p_open
 function ImGui.Begin(name, p_open, flags) end
 
 function ImGui.End() end
@@ -2442,7 +2442,7 @@ function ImGui.ArrowButton(str_id, dir) end
 ---@param label string
 ---@param v boolean[]
 ---@return boolean
----@return boolean v
+---@return boolean | nil v
 function ImGui.Checkbox(label, v) end
 
 ---@param label string
@@ -3319,7 +3319,7 @@ function ImGui.CollapsingHeader(label, flags) end
 ---@param p_visible boolean[]
 ---@param flags? ImGui.TreeNodeFlags | `ImGui.TreeNodeFlags { "None" }`
 ---@return boolean
----@return boolean p_visible
+---@return boolean | nil p_visible
 function ImGui.CollapsingHeaderBoolPtr(label, p_visible, flags) end
 
 --
@@ -3359,7 +3359,7 @@ function ImGui.SelectableEx(label, selected, flags, size_x, size_y) end
 ---@param p_selected boolean[]
 ---@param flags? ImGui.SelectableFlags | `ImGui.SelectableFlags { "None" }`
 ---@return boolean
----@return boolean p_selected
+---@return boolean | nil p_selected
 function ImGui.SelectableBoolPtr(label, p_selected, flags) end
 
 --
@@ -3371,7 +3371,7 @@ function ImGui.SelectableBoolPtr(label, p_selected, flags) end
 ---@param size_x? number | `0`
 ---@param size_y? number | `0`
 ---@return boolean
----@return boolean p_selected
+---@return boolean | nil p_selected
 function ImGui.SelectableBoolPtrEx(label, p_selected, flags, size_x, size_y) end
 
 --
@@ -3470,7 +3470,7 @@ function ImGui.MenuItemEx(label, shortcut, selected, enabled) end
 ---@param p_selected boolean[]
 ---@param enabled? boolean | `true`
 ---@return boolean
----@return boolean p_selected
+---@return boolean | nil p_selected
 function ImGui.MenuItemBoolPtr(label, shortcut, p_selected, enabled) end
 
 --
@@ -3542,7 +3542,7 @@ function ImGui.BeginPopup(str_id, flags) end
 ---@param p_open true | nil
 ---@param flags? ImGui.WindowFlags | `ImGui.WindowFlags { "None" }`
 ---@return boolean
----@return boolean p_open
+---@return boolean | nil p_open
 function ImGui.BeginPopupModal(name, p_open, flags) end
 
 --
@@ -3837,7 +3837,7 @@ function ImGui.EndTabBar() end
 ---@param p_open true | nil
 ---@param flags? ImGui.TabItemFlags | `ImGui.TabItemFlags { "None" }`
 ---@return boolean
----@return boolean p_open
+---@return boolean | nil p_open
 function ImGui.BeginTabItem(label, p_open, flags) end
 
 --

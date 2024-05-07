@@ -227,7 +227,7 @@ end
 
 write_ret["ImGuiContext*"] = function()
     --NOTICE: Ignore ImGuiContext for now.
-    writeln("   (void)_retval;")
+    writeln("    (void)_retval;")
     return 0
 end
 
@@ -280,7 +280,11 @@ end
 
 write_arg_ret["bool*"] = function(type_meta)
     if type_meta.default_value then
-        writeln("    lua_pushboolean(L, has_%s || %s);", type_meta.name, type_meta.name)
+        writeln("    if (has_%s) {", type_meta.name)
+        writeln("        lua_pushboolean(L, %s);", type_meta.name)
+        writeln("    } else {")
+        writeln("        lua_pushnil(L);")
+        writeln("    }")
         return 1
     end
     writeln "    if (_retval) {"
