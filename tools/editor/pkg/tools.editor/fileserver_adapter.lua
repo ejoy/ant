@@ -6,7 +6,6 @@ local SELECT_READ <const> = select.SELECT_READ
 local SELECT_WRITE <const> = select.SELECT_WRITE
 local protocol = require "protocol"
 local lfs = require "bee.filesystem"
-local cthread = require "bee.thread"
 local sender
 
 local m = {}
