@@ -807,7 +807,7 @@ static int Begin(lua_State* L) {
     auto flags = (ImGuiWindowFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiWindowFlags_None));
     auto&& _retval = ImGui::Begin(name, (has_p_open? &p_open: NULL), flags);
     lua_pushboolean(L, _retval);
-    lua_pushboolean(L, has_p_open || p_open);
+    lua_pushboolean(L, !has_p_open || p_open);
     return 2;
 }
 
