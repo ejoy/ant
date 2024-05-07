@@ -123,8 +123,9 @@ function ImGui.InputTextFlags(flags) end
 ---| "Leaf"                 #  No collapsing, no arrow (use as a convenience for leaf nodes).
 ---| "Bullet"               #  Display a bullet instead of arrow. IMPORTANT: node can still be marked open/close if you don't set the _Leaf flag!
 ---| "FramePadding"         #  Use FramePadding (even for an unframed text node) to vertically align text baseline to regular widget height. Equivalent to calling AlignTextToFramePadding().
----| "SpanAvailWidth"       #  Extend hit box to the right-most edge, even if not framed. This is not the default in order to allow adding other items on the same line. In the future we may refactor the hit system to be front-to-back, allowing natural overlaps and then this can become the default.
----| "SpanFullWidth"        #  Extend hit box to the left-most and right-most edges (bypass the indented area).
+---| "SpanAvailWidth"       #  Extend hit box to the right-most edge, even if not framed. This is not the default in order to allow adding other items on the same line without using AllowOverlap mode.
+---| "SpanFullWidth"        #  Extend hit box to the left-most and right-most edges (cover the indent area).
+---| "SpanTextWidth"        #  Narrow hit box + narrow hovering highlight, will only cover the label text.
 ---| "SpanAllColumns"       #  Frame will span all columns of its container table (text will still fit in current column)
 ---| "NavLeftJumpsBackHere" #  (WIP) Nav: left direction may move to this TreeNode() from any of its child (items submitted between TreeNode and TreePop)
 ---| "CollapsingHeader"
@@ -919,41 +920,45 @@ ImGui.Col = {}
 -- - The enum only refers to fields of ImGuiStyle which makes sense to be pushed/popped inside UI code.
 --   During initialization or between frames, feel free to just poke into ImGuiStyle directly.
 -- - Tip: Use your programming IDE navigation facilities on the names in the _second column_ below to find the actual members and their description.
---   In Visual Studio IDE: CTRL+comma ("Edit.GoToAll") can follow symbols in comments, whereas CTRL+F12 ("Edit.GoToImplementation") cannot.
---   With Visual Assist installed: ALT+G ("VAssistX.GoToImplementation") can also follow symbols in comments.
+--   - In Visual Studio: CTRL+comma ("Edit.GoToAll") can follow symbols inside comments, whereas CTRL+F12 ("Edit.GoToImplementation") cannot.
+--   - In Visual Studio w/ Visual Assist installed: ALT+G ("VAssistX.GoToImplementation") can also follow symbols inside comments.
+--   - In VS Code, CLion, etc.: CTRL+click can follow symbols inside comments.
 -- - When changing this enum, you need to update the associated internal table GStyleVarInfo[] accordingly. This is where we link enum values to members offset/type.
 --
 ---@alias ImGui.StyleVar
----| `ImGui.StyleVar.Alpha`                   #  float     Alpha
----| `ImGui.StyleVar.DisabledAlpha`           #  float     DisabledAlpha
----| `ImGui.StyleVar.WindowPadding`           #  ImVec2    WindowPadding
----| `ImGui.StyleVar.WindowRounding`          #  float     WindowRounding
----| `ImGui.StyleVar.WindowBorderSize`        #  float     WindowBorderSize
----| `ImGui.StyleVar.WindowMinSize`           #  ImVec2    WindowMinSize
----| `ImGui.StyleVar.WindowTitleAlign`        #  ImVec2    WindowTitleAlign
----| `ImGui.StyleVar.ChildRounding`           #  float     ChildRounding
----| `ImGui.StyleVar.ChildBorderSize`         #  float     ChildBorderSize
----| `ImGui.StyleVar.PopupRounding`           #  float     PopupRounding
----| `ImGui.StyleVar.PopupBorderSize`         #  float     PopupBorderSize
----| `ImGui.StyleVar.FramePadding`            #  ImVec2    FramePadding
----| `ImGui.StyleVar.FrameRounding`           #  float     FrameRounding
----| `ImGui.StyleVar.FrameBorderSize`         #  float     FrameBorderSize
----| `ImGui.StyleVar.ItemSpacing`             #  ImVec2    ItemSpacing
----| `ImGui.StyleVar.ItemInnerSpacing`        #  ImVec2    ItemInnerSpacing
----| `ImGui.StyleVar.IndentSpacing`           #  float     IndentSpacing
----| `ImGui.StyleVar.CellPadding`             #  ImVec2    CellPadding
----| `ImGui.StyleVar.ScrollbarSize`           #  float     ScrollbarSize
----| `ImGui.StyleVar.ScrollbarRounding`       #  float     ScrollbarRounding
----| `ImGui.StyleVar.GrabMinSize`             #  float     GrabMinSize
----| `ImGui.StyleVar.GrabRounding`            #  float     GrabRounding
----| `ImGui.StyleVar.TabRounding`             #  float     TabRounding
----| `ImGui.StyleVar.TabBarBorderSize`        #  float     TabBarBorderSize
----| `ImGui.StyleVar.ButtonTextAlign`         #  ImVec2    ButtonTextAlign
----| `ImGui.StyleVar.SelectableTextAlign`     #  ImVec2    SelectableTextAlign
----| `ImGui.StyleVar.SeparatorTextBorderSize` #  float  SeparatorTextBorderSize
----| `ImGui.StyleVar.SeparatorTextAlign`      #  ImVec2    SeparatorTextAlign
----| `ImGui.StyleVar.SeparatorTextPadding`    #  ImVec2    SeparatorTextPadding
----| `ImGui.StyleVar.DockingSeparatorSize`    #  float     DockingSeparatorSize
+---| `ImGui.StyleVar.Alpha`                       #  float     Alpha
+---| `ImGui.StyleVar.DisabledAlpha`               #  float     DisabledAlpha
+---| `ImGui.StyleVar.WindowPadding`               #  ImVec2    WindowPadding
+---| `ImGui.StyleVar.WindowRounding`              #  float     WindowRounding
+---| `ImGui.StyleVar.WindowBorderSize`            #  float     WindowBorderSize
+---| `ImGui.StyleVar.WindowMinSize`               #  ImVec2    WindowMinSize
+---| `ImGui.StyleVar.WindowTitleAlign`            #  ImVec2    WindowTitleAlign
+---| `ImGui.StyleVar.ChildRounding`               #  float     ChildRounding
+---| `ImGui.StyleVar.ChildBorderSize`             #  float     ChildBorderSize
+---| `ImGui.StyleVar.PopupRounding`               #  float     PopupRounding
+---| `ImGui.StyleVar.PopupBorderSize`             #  float     PopupBorderSize
+---| `ImGui.StyleVar.FramePadding`                #  ImVec2    FramePadding
+---| `ImGui.StyleVar.FrameRounding`               #  float     FrameRounding
+---| `ImGui.StyleVar.FrameBorderSize`             #  float     FrameBorderSize
+---| `ImGui.StyleVar.ItemSpacing`                 #  ImVec2    ItemSpacing
+---| `ImGui.StyleVar.ItemInnerSpacing`            #  ImVec2    ItemInnerSpacing
+---| `ImGui.StyleVar.IndentSpacing`               #  float     IndentSpacing
+---| `ImGui.StyleVar.CellPadding`                 #  ImVec2    CellPadding
+---| `ImGui.StyleVar.ScrollbarSize`               #  float     ScrollbarSize
+---| `ImGui.StyleVar.ScrollbarRounding`           #  float     ScrollbarRounding
+---| `ImGui.StyleVar.GrabMinSize`                 #  float     GrabMinSize
+---| `ImGui.StyleVar.GrabRounding`                #  float     GrabRounding
+---| `ImGui.StyleVar.TabRounding`                 #  float     TabRounding
+---| `ImGui.StyleVar.TabBorderSize`               #  float     TabBorderSize
+---| `ImGui.StyleVar.TabBarBorderSize`            #  float     TabBarBorderSize
+---| `ImGui.StyleVar.TableAngledHeadersAngle`     #  float     TableAngledHeadersAngle
+---| `ImGui.StyleVar.TableAngledHeadersTextAlign` #  ImVec2  TableAngledHeadersTextAlign
+---| `ImGui.StyleVar.ButtonTextAlign`             #  ImVec2    ButtonTextAlign
+---| `ImGui.StyleVar.SelectableTextAlign`         #  ImVec2    SelectableTextAlign
+---| `ImGui.StyleVar.SeparatorTextBorderSize`     #  float     SeparatorTextBorderSize
+---| `ImGui.StyleVar.SeparatorTextAlign`          #  ImVec2    SeparatorTextAlign
+---| `ImGui.StyleVar.SeparatorTextPadding`        #  ImVec2    SeparatorTextPadding
+---| `ImGui.StyleVar.DockingSeparatorSize`        #  float     DockingSeparatorSize
 ImGui.StyleVar = {}
 
 --
