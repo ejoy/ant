@@ -1,3 +1,4 @@
+local platform = require "bee.platform"
 local math3d = require "math3d"
 local math3d_adapter = require "math3d.adapter" (math3d._COBJECT)
 
@@ -24,7 +25,7 @@ if not ozz.adapter then
     ozz.BuildSkinningMatrices = math3d_adapter.matrix(ozz.BuildSkinningMatrices, 5)
 end
 
-if not __ANT_RUNTIME__ then
+if platform.os ~= "ios" and platform.os ~= "android" then
     local ozzoffline = require "ozz.offline"
     if not ozzoffline.adapter then
         ozzoffline.adapter = true
