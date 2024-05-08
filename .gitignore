@@ -6,6 +6,7 @@
 res/
 .app/
 
+.cache/
 *.DS_Store
 
 editor.settings
