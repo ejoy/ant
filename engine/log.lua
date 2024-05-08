@@ -1,4 +1,5 @@
 local ltask = require "ltask"
+local platform = require "bee.platform"
 
 local LEVELS <const> = {
     'debug',
@@ -12,7 +13,7 @@ local COLOR <const> = {
     error = "\x1b[31m",
 }
 
-local SupportColor <const> = not __ANT_RUNTIME__ --TODO
+local SupportColor <const> = platform.os ~= "ios" and platform.os ~= "android" --TODO
 local ServiceName <const> = ltask.label()
 
 local function round(x, increment)
@@ -35,7 +36,7 @@ end
 
 local m = {}
 
-m.level = __ANT_RUNTIME__ and 'debug' or 'info'
+m.level = 'debug'
 
 local levels = {}
 
