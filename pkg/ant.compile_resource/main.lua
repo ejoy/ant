@@ -1,5 +1,7 @@
-if __ANT_RUNTIME__ then
-    error "Cannot be imported in runtime mode."
+local platform = require "bee.platform"
+
+if platform.os == "ios" or platform.os == "android" then
+    error "ios/android does not support compile resources."
 end
 
 local sha1    = require "sha1"
