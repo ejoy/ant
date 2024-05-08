@@ -3,8 +3,10 @@
 #include <string.h>
 #include <assert.h>
 #include <array>
+#include <optional>
 #include "memfile.h"
 
+#include <bee/nonstd/unreachable.h>
 #include <bee/utility/zstring_view.h>
 #include <bee/win/cwtf8.h>
 
@@ -52,6 +54,45 @@ namespace fileutil {
         (void)rc;
         assert(rc == 0);
     }
+    static memory_file* readall_v(lua_State* L, bee::zstring_view filename) noexcept {
+        FILE* f = fileutil::open(L, filename);
+        if (!f) {
+            return nullptr;
+        }
+        size_t size = fileutil::size(f);
+        auto file = memory_file_alloc(size);
+        if (!file) {
+            fileutil::close(f);
+            luaL_error(L, "not enough memory");
+            std::unreachable();
+        }
+        size_t nr = fileutil::read(f, (void*)file->data, file->sz);
+        if (nr != size) {
+            memory_file_close(file);
+            fileutil::close(f);
+            luaL_error(L, "unknown read error");
+            std::unreachable();
+        }
+        fileutil::close(f);
+        lua_pushlightuserdata(L, file);
+        return file;
+    }
+    static std::optional<std::string_view> readall_s(lua_State* L, bee::zstring_view filename) noexcept {
+        FILE* f = fileutil::open(L, filename);
+        if (!f) {
+            return std::nullopt;
+        }
+        size_t size = fileutil::size(f);
+        void* data = lua_newuserdatauv(L, size, 0);
+        if (!data) {
+            fileutil::close(f);
+            luaL_error(L, "not enough memory");
+            std::unreachable();
+        }
+        size_t nr = fileutil::read(f, data, size);
+        fileutil::close(f);
+        return std::string_view { (const char*)data, nr };
+    }
 }
 
 template <bool RAISE>
@@ -83,15 +124,17 @@ static bee::zstring_view getfile(lua_State *L) {
     return { buf, len };
 }
 
-static bool is_runtime(lua_State *L) {
-    lua_setglobal(L, "__ANT_RUNTIME__");
-    bool r = !lua_isnil(L, -1);
-    lua_pop(L, 1);
-    return r;
+// Although it will be accessed by multiple threads,
+// we only modify it once during initialization, so it is thread-safe.
+static bool readability = true;
+
+static int set_readability(lua_State *L) {
+    readability = !!lua_toboolean(L, 1);
+    return 0;
 }
 
 static const char* getsymbol(lua_State *L, bee::zstring_view filename) {
-    if (is_runtime(L)) {
+    if (!readability) {
         return luaL_optstring(L, 2, filename.data());
     }
     else {
@@ -133,23 +176,10 @@ template <bool RAISE>
 static int readall_v(lua_State *L) {
     auto filename = getfile(L);
     lua_settop(L, 2);
-    FILE* f = fileutil::open(L, filename);
-    if (!f) {
+    auto file = fileutil::readall_v(L, filename);
+    if (!file) {
         return raise_error<RAISE>(L, "open", getsymbol(L, filename));
     }
-    size_t size = fileutil::size(f);
-    auto file = memory_file_alloc(size);
-    if (!file) {
-        fileutil::close(f);
-        return luaL_error(L, "not enough memory");
-    }
-    size_t nr = fileutil::read(f, (void*)file->data, file->sz);
-    if (nr != size) {
-        memory_file_close(file);
-        fileutil::close(f);
-        return luaL_error(L, "unknown read error");
-    }
-    fileutil::close(f);
     lua_pushlightuserdata(L, file);
     return 1;
 }
@@ -158,23 +188,10 @@ template <bool RAISE>
 static int readall_f(lua_State *L) {
     auto filename = getfile(L);
     lua_settop(L, 2);
-    FILE* f = fileutil::open(L, filename);
-    if (!f) {
+    auto file = fileutil::readall_v(L, filename);
+    if (!file) {
         return raise_error<RAISE>(L, "open", getsymbol(L, filename));
     }
-    size_t size = fileutil::size(f);
-    auto file = memory_file_alloc(size);
-    if (!file) {
-        fileutil::close(f);
-        return luaL_error(L, "not enough memory");
-    }
-    size_t nr = fileutil::read(f, (void*)file->data, file->sz);
-    if (nr != size) {
-        memory_file_close(file);
-        fileutil::close(f);
-        return luaL_error(L, "unknown read error");
-    }
-    fileutil::close(f);
     lua_pushlightuserdata(L, file);
     lua_pushcclosure(L, wrap_closure, 1);
     return 1;
@@ -184,19 +201,11 @@ template <bool RAISE>
 static int readall_s(lua_State *L) {
     auto filename = getfile(L);
     lua_settop(L, 2);
-    FILE* f = fileutil::open(L, filename);
-    if (!f) {
+    auto str = fileutil::readall_s(L, filename);
+    if (!str) {
         return raise_error<RAISE>(L, "open", getsymbol(L, filename));
     }
-    size_t size = fileutil::size(f);
-    void* data = lua_newuserdatauv(L, size, 0);
-    if (!data) {
-        fileutil::close(f);
-        return luaL_error(L, "not enough memory");
-    }
-    size_t nr = fileutil::read(f, data, size);
-    fileutil::close(f);
-    lua_pushlstring(L, (const char*)data, nr);
+    lua_pushlstring(L, str->data(), str->size());
     return 1;
 }
 
@@ -326,6 +335,7 @@ static int loadlua(lua_State* L) {
 extern "C" int
 luaopen_fastio(lua_State* L) {
     luaL_Reg l[] = {
+        {"set_readability", set_readability},
         {"readall_v", readall_v<true>},
         {"readall_v_noerr", readall_v<false>},
         {"readall_f", readall_f<true>},

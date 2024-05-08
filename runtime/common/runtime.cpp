@@ -40,9 +40,9 @@ static int pmain(lua_State *L) {
     createargtable(L, argc, argv);
     lua_gc(L, LUA_GCGEN, 0, 0);
     dostring(L, R"=(
+local fastio = require "fastio"
 do
     local function LoadFile(path, env)
-        local fastio = require "fastio"
         local data = fastio.readall_v(path, path)
         local func, err = fastio.loadlua(data, path, env)
         if not func then
@@ -72,6 +72,7 @@ do
     end
 end
 if __ANT_RUNTIME__ then
+    fastio.set_readability(false)
     dofile "/engine/firmware/bootstrap.lua"
 else
     local mainfunc; do
