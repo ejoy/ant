@@ -456,7 +456,6 @@ int luaopen_httpc(lua_State* L) {
 namespace bee::lua {
     template <>
     struct udata<HttpcSession> {
-        static inline auto name = "HttpcSession";
         static inline auto metatable = +[](lua_State*){};
     };
 }

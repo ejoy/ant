@@ -170,7 +170,6 @@ int luaopen_ozz_offline(lua_State *L) {
 namespace bee::lua {
 	template <>
 	struct udata<ozz::animation::offline::RawAnimation> {
-		static inline auto name = "ozz::RawAnimation";
 		static inline auto metatable = ozzlua::RawAnimation::metatable;
 	};
 }

@@ -203,22 +203,18 @@ void init_animation(lua_State* L) {
 namespace bee::lua {
 	template <>
 	struct udata<ozzUint16Verctor> {
-		static inline auto name = "ozzUint16Verctor";
 		static inline auto metatable = ozzlua::Uint16Verctor::metatable;
 	};
 	template <>
 	struct udata<ozzMatrixVector> {
-		static inline auto name = "ozzMatrixVector";
 		static inline auto metatable = ozzlua::MatrixVector::metatable;
 	};
 	template <>
 	struct udata<ozzSoaTransformVector> {
-		static inline auto name = "ozzSoaTransformVector";
 		static inline auto metatable = ozzlua::SoaTransformVector::metatable;
 	};
 	template <>
 	struct udata<ozz::animation::Animation> {
-		static inline auto name = "ozz::Animation";
 		static inline auto metatable = ozzlua::Animation::metatable;
 	};
 }
