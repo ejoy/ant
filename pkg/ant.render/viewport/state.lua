@@ -6,9 +6,11 @@ local setting = import_package "ant.settings"
 local scene_ratio<const> = setting:get "scene/ratio"
 
 local function resolution_limits()
-    local resolution = setting:get "scene/resolution_limits" or "1280x720"
-    local sw, sh = resolution:match "(%d+)x(%d+)"
-    return math.tointeger(sw), math.tointeger(sh)
+    local resolution = setting:get "scene/resolution_limits"
+    if resolution then
+        local sw, sh = resolution:match "(%d+)x(%d+)"
+        return math.tointeger(sw), math.tointeger(sh)
+    end
 end
 
 local LIMIT_RESOLUTION_WIDTH, LIMIT_RESOLUTION_HEIGHT = resolution_limits()
@@ -30,8 +32,10 @@ local function calc_scene_size(refw, refh)
     local h
     if scene_ratio then
         h = math.floor(refh * scene_ratio+0.5)
-    else
+    elseif LIMIT_RESOLUTION_HEIGHT then
         h = math.min(LIMIT_RESOLUTION_HEIGHT, refh)
+    else
+	h = refh
     end
 
     return math.floor(dr*h+0.5), h
