@@ -70,13 +70,13 @@ luamake [target] -mode [debug/release] #-mode默认是debug
 ### Run
 Run a minimal example
 ``` bash
-bin/msvc/debug/lua.exe test/simple/main.lua
+bin/msvc/debug/ant.exe test/simple/main.lua
 ```
 
 ### Start Editor
 
 ```bash
-bin/msvc/debug/lua.exe tools/editor/main.lua [projectdir] #for example: test/simple
+bin/msvc/debug/ant.exe tools/editor/main.lua [projectdir] #for example: test/simple
 ```
 
 ### Debug
@@ -92,7 +92,10 @@ bin/msvc/debug/lua.exe tools/editor/main.lua [projectdir] #for example: test/sim
             "type": "lua",
             "request": "launch",
             "name": "Debug",
-            "luaexe": "${workspaceFolder}/bin/msvc/debug/lua.exe",
+            "luaexe": "${workspaceFolder}/bin/msvc/debug/ant.exe",
+            "luaVersion": "lua-latest",
+            "path": null,
+            "cpath": null,
             "console": "integratedTerminal",
             "stopOnEntry": true,
             "outputCapture": [],
