@@ -16,22 +16,22 @@ local function readall(filename)
     return f:read "a"
 end
 
-return function (input, output, setting, changed)
+return function (lpath, vpath, output, setting, changed)
     lfs.remove_all(output)
     lfs.create_directories(output)
     local status = {
-        input = input,
+        input = lpath,
         output = output,
         setting = setting,
         tasks = parallel_task.new(),
         depfiles = depends.new(),
     }
-    depends.add_lpath(status.depfiles, input)
+    depends.add_lpath(status.depfiles, lpath)
     depends.add_vpath(status.depfiles, setting, "/pkg/ant.compile_resource/model/version.lua")
     status.math3d = math3d_pool.alloc(status.setting)
-    status.patch = patch.init(input, status.depfiles)
+    status.patch = patch.init(lpath, vpath, status.depfiles)
 
-    local gltf_cwd = lfs.path(input):remove_filename():string()
+    local gltf_cwd = lfs.path(lpath):remove_filename():string()
     function status.gltf_fetch(uri)
         if uri:sub(1, 5) == "data:" then
             local match = uri:match "^data:[a-z-]+/[a-z-]+;base64,"
@@ -42,7 +42,7 @@ return function (input, output, setting, changed)
         depends.add_lpath(status.depfiles, fullpath)
         return readall(fullpath)
     end
-    status.gltfscene = gltf.decode(input, status.gltf_fetch)
+    status.gltfscene = gltf.decode(lpath, status.gltf_fetch)
 
     local gltfscene = status.gltfscene
     if gltfscene.animations then

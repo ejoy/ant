@@ -55,7 +55,7 @@ local function compile_file(setting, vpath, lpath)
     local output = setting.respath / ext / get_filename(vpath)
     local changed = depends.dirty(setting, output / ".dep")
     if changed then
-        local ok, deps = COMPILER[ext](lpath, output, setting, changed)
+        local ok, deps = COMPILER[ext](lpath, vpath, output, setting, changed)
         if not ok then
             local err = deps
             error("compile failed: " .. lpath .. "\n" .. err)

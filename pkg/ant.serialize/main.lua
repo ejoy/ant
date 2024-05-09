@@ -38,6 +38,20 @@ local function load(filename)
 	end)
 end
 
+local function parse(content, filename)
+	local basepath = filename:match "^(.-)[^/|]*$"
+	return datalist.parse(content, function (args)
+		if args[1] == "path" then
+			local path = args[2]
+			if path:sub(1,1) == "/" then
+				return path
+			end
+			return normalize(basepath .. (path:match "^%./(.+)$" or path))
+		end
+		return args[2]
+	end)
+end
+
 local function default_func(args)
     return args[2]
 end
@@ -53,6 +67,7 @@ end
 return {
     load = load,
     load_lfs = load_lfs,
+    parse = parse,
     stringify = require "stringify",
     path = builtin_path,
 }

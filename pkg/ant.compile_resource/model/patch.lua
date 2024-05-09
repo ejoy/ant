@@ -1,8 +1,8 @@
 local lua_patch = require "util.lua_patch"
 local lfs       = require "bee.filesystem"
-local datalist  = require "datalist"
-local fastio    = require "fastio"
 local depends   = require "depends"
+local fastio    = require "fastio"
+local serialize = import_package "ant.serialize"
 
 local m = {}
 
@@ -13,11 +13,11 @@ local function absolute_path(path, base)
     return base:match "^(.-)[^/]*$" .. (path:match "^%./(.+)$" or path)
 end
 
-local function load_patch(patchLst, depfiles, path)
-    depends.add_lpath(depfiles, path)
-    for _, patch in ipairs(assert(datalist.parse(fastio.readall_f(path)))) do
+local function load_patch(patchLst, depfiles, lpath, vpath)
+    depends.add_lpath(depfiles, lpath)
+    for _, patch in ipairs(serialize.parse(fastio.readall_f(lpath), vpath)) do
         if patch.include then
-            load_patch(patchLst, depfiles, absolute_path(patch.include, path))
+            load_patch(patchLst, depfiles, absolute_path(patch.include, lpath), absolute_path(patch.include, vpath))
         else
             local file = assert(patch.file)
             patch.file = nil
@@ -30,14 +30,15 @@ local function load_patch(patchLst, depfiles, path)
     end
 end
 
-function m.init(input, depfiles)
-    local path = input..".patch"
-    if not lfs.exists(path) then
-        depends.add_lpath(depfiles, path)
+function m.init(lpath, vpath, depfiles)
+    lpath = lpath..".patch"
+    vpath = vpath..".patch"
+    if not lfs.exists(lpath) then
+        depends.add_lpath(depfiles, lpath)
         return {}
     end
     local patchLst = {}
-    load_patch(patchLst, depfiles, path)
+    load_patch(patchLst, depfiles, lpath, vpath)
     return patchLst
 end
 
