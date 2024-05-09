@@ -196,7 +196,7 @@ struct imguiGizmo
     bool getTransforms(quat& q, const char* label, vec3& dir, float size) {
         float len = length(dir);
 
-        if(len<1.0 && len>= FLT_EPSILON) { normalize(dir); len = 1.0; }
+        if(len<1.0 && len>= FLT_EPSILON) { dir = normalize(dir); len = 1.0; }
         else if(len< FLT_EPSILON) { dir = vec3(1.f, 0.f, 0.f); len = 1.0; }
 
         q = angleAxis(acosf(dir.x/len), normalize(vec3(FLT_EPSILON, -dir.z, dir.y)));

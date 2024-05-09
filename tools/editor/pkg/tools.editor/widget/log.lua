@@ -1,7 +1,8 @@
 local ImGui     = require "imgui"
 local uiconfig  = require "widget.config"
 local utils     = require "common.utils"
-local cthread   = require "bee.thread"
+local thread    = require "bee.thread"
+local channel   = require "bee.channel"
 local fs        = require "filesystem"
 local icons     = require "common.icons"
 local faicons   = require "common.fa_icons"
@@ -118,7 +119,6 @@ function m.error(msg)
     m.to_bottom = true
 end
 
-local err_receiver
 local function reset_log()
     for _, v in ipairs(log_tags) do
         log_items[v] = {}
@@ -133,7 +133,7 @@ end
 local log_receiver
 function m.init_log_receiver()
     if not log_receiver then
-        log_receiver = cthread.channel "log_channel"
+        log_receiver = channel.query "log_channel"
     end
 end
 
@@ -155,15 +155,15 @@ local function getlevel(msg_str)
 end
 
 local function checkLog()
-    local error, info = err_receiver:pop()
-    if error then
+    local errmsg = thread.errlog()
+    if errmsg then
         local count = 0
-        for _ in string.gmatch(info, '\n') do
+        for _ in string.gmatch(errmsg, '\n') do
             count = count + 1
         end
         m.error({
             tag = "Thread",
-            message = "[" .. utils.time2str(os.time()) .. "][Thread]" .. info,
+            message = "[" .. utils.time2str(os.time()) .. "][Thread]" .. errmsg,
             height = count * log_item_height,
             line_count = count
         })
@@ -381,9 +381,6 @@ function m.get_title()
 end
 
 function m.show()
-    if not err_receiver then
-        err_receiver = cthread.channel "errlog"
-    end
     local viewport = ImGui.GetMainViewport()
     if not log_item_height then
         log_item_height = 22 * viewport.DpiScale

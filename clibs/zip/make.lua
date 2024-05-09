@@ -1,7 +1,14 @@
 local lm = require "luamake"
+local platform = require "bee.platform"
 
 local ZLIBDIR = lm.AntDir.."/3rd/zlib-ng"
 local MINIZIPDIR = lm.AntDir.."/3rd/minizip-ng"
+
+local function macos_support_arm64()
+    -- 这意味着luamake的arch是arm64，说明当前macos可以运行arm64，所以我们把ant也编译为arm64，否则编译为x86_64。
+    -- 理论上我们可以用x86_64的luamake编译arm64的ant，比如在CI里。但目前我们不需要这样做。
+    return platform.Arch == "arm64"
+end
 
 lm:runlua "gen-zconf" {
     script = "configure_file.lua",
@@ -145,7 +152,7 @@ lm:source_set "zlib-ng" {
         deps = "zlib-ng-x86",
     },
     macos = {
-        deps = "zlib-ng-arm",
+        deps = macos_support_arm64() and "zlib-ng-arm" or "zlib-ng-x86",
     },
     ios = {
         deps = "zlib-ng-arm",

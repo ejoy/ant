@@ -140,7 +140,6 @@ void init_skeleton(lua_State* L) {
 namespace bee::lua {
 	template <>
 	struct udata<ozz::animation::Skeleton> {
-		static inline auto name = "ozz::Skeleton";
 		static inline auto metatable = ozzlua::Skeleton::metatable;
 	};
 }

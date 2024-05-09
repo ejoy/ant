@@ -1,6 +1,8 @@
 Ant Game Engine
 =====
 
+[English Version](./README.en.md) | [中文版本](./README.md)
+
 Ant is an open source game engine developed by Lingxi Interactive Entertainment. At this stage, only the code repository is made public and has not yet been officially released. Documentation, examples, etc. are to be gradually improved on the [Wiki](https://github.com/ejoy/ant/wiki) If you have any questions, you can post in [Discussions](https://github.com/ejoy/ant/discussions). Issues are only used for bug tracking, please do not ask questions in them.
 
 ### Update and Initialize Third-party Libraries:
@@ -70,13 +72,13 @@ luamake [target] -mode [debug/release] #-mode默认是debug
 ### Run
 Run a minimal example
 ``` bash
-bin/msvc/debug/lua.exe test/simple/main.lua
+bin/msvc/debug/ant.exe test/simple/main.lua
 ```
 
 ### Start Editor
 
 ```bash
-bin/msvc/debug/lua.exe tools/editor/main.lua [projectdir] #for example: test/simple
+bin/msvc/debug/ant.exe tools/editor/main.lua [projectdir] #for example: test/simple
 ```
 
 ### Debug
@@ -92,7 +94,10 @@ bin/msvc/debug/lua.exe tools/editor/main.lua [projectdir] #for example: test/sim
             "type": "lua",
             "request": "launch",
             "name": "Debug",
-            "luaexe": "${workspaceFolder}/bin/msvc/debug/lua.exe",
+            "luaexe": "${workspaceFolder}/bin/msvc/debug/ant.exe",
+            "luaVersion": "lua-latest",
+            "path": null,
+            "cpath": null,
             "console": "integratedTerminal",
             "stopOnEntry": true,
             "outputCapture": [],

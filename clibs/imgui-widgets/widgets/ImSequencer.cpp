@@ -180,7 +180,7 @@ namespace ImSequencer
 				draw_list->AddLine(ImVec2(float(px), float(tiretStart)), ImVec2(float(px), float(tiretEnd)), 0x30606060, 1);
 			}
 			const auto& flags = current_anim->event_flags;
-			if (i < flags.size() && flags[i]) {
+			if ((size_t)i < flags.size() && flags[i]) {
 				draw_list->AddRectFilled(ImVec2((float)px, contentMin.y), ImVec2((float)px + framePixelWidth, contentMin.y + ItemHeight), 0x8050BF50);
 			}
 		};
@@ -216,7 +216,7 @@ namespace ImSequencer
 				selected_frame = col;
 			}
 			const auto& flags = current_anim->event_flags;
-			if (selected_frame >= 0 && selected_frame < flags.size() && flags[selected_frame]) {
+			if (selected_frame >= 0 && (size_t)selected_frame < flags.size() && flags[selected_frame]) {
 				movingEntry = true;
 				movingPos = cx;
 				movingKeyFrame = selected_frame;

@@ -9,10 +9,10 @@ local function readdatalist(filepath)
 	end)
 end
 
-return function (input, output, setting)
-    local mat = readdatalist(input)
+return function (lpath, vpath, output, setting)
+    local mat = readdatalist(lpath)
     local depfiles = depends.new()
-    depends.add_lpath(depfiles, input)
-    compile(depfiles, mat, input, output, setting)
+    depends.add_lpath(depfiles, lpath)
+    compile(depfiles, mat, lpath, output, setting)
     return true, depfiles
 end

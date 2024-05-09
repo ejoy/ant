@@ -43,8 +43,16 @@ jobs:
       run: ./compile/build.sh notest
     - shell: msys2 {0}
       run: ./luamake/luamake
-  macos:
+  macos-arm64:
     runs-on: macos-14
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+    - uses: actboy168/setup-luamake@master
+    - run: luamake
+  macos-x86_64:
+    runs-on: macos-13
     steps:
     - uses: actions/checkout@v4
       with:

@@ -4,6 +4,7 @@
 #include <bgfx/c99/bgfx.h>
 
 int luaopen_android(lua_State* L);
+int luaopen_bee_channel(lua_State* L);
 int luaopen_bee_debugging(lua_State* L);
 int luaopen_bee_filesystem(lua_State* L);
 int luaopen_bee_filewatch(lua_State* L);
@@ -75,6 +76,7 @@ int luaopen_cell_core(lua_State *L);
 
 void ant_loadmodules(lua_State* L) {
     static const luaL_Reg modules[] = {
+        { "bee.channel", luaopen_bee_channel },
         { "bee.debugging", luaopen_bee_debugging },
         { "bee.filesystem", luaopen_bee_filesystem },
         { "bee.select", luaopen_bee_select },

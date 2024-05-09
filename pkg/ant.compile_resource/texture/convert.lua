@@ -17,13 +17,13 @@ local function absolute_path(setting, base, path)
     return lfs.absolute(lfs.path(base):parent_path() / (path:match "^%./(.+)$" or path))
 end
 
-return function (input, output, setting)
-	local param = readdatalist(input)
+return function (lpath, vpath, output, setting)
+	local param = readdatalist(lpath)
 	if param.path then
-		param.path = absolute_path(setting, input, param.path)
+		param.path = absolute_path(setting, lpath, param.path)
 	end
 	local depfiles = depends.new()
-    depends.add_lpath(depfiles, input)
+    depends.add_lpath(depfiles, lpath)
 	local ok, err = compile(param, output, setting, depfiles)
 	if not ok then
 		return nil, err

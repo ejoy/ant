@@ -515,13 +515,22 @@ static RECT createWindowRect(const char *size) {
 	auto& monitor = monitors[0];
 	LONG work_w = monitor.rcWork.right - monitor.rcWork.left;
 	LONG work_h = monitor.rcWork.bottom - monitor.rcWork.top;
-	LONG window_w = (LONG)(work_w * 0.7f);
-	LONG window_h = (LONG)(window_w / 16.f * 9.f);
-	if (size) {
-		int w, h;
-		if (sscanf(size, "%dx%d", &w, &h) == 2) {
-			window_w = w;
-			window_h = h;
+	LONG window_w, window_h;
+
+	int w, h;
+	if (size && sscanf(size, "%dx%d", &w, &h) == 2) {
+		window_w = w;
+		window_h = h;
+	} else {
+		window_w = (LONG)(work_w * 0.7f);
+		window_h = (LONG)(work_h * 0.7f);
+		
+		// Set window to 16:9
+		
+		if (window_w * 9 > window_h * 16) {
+ 			window_w = window_h * 16 / 9;
+		} else {
+			window_h = window_w * 9 / 16;
 		}
 	}
 	RECT rect;
