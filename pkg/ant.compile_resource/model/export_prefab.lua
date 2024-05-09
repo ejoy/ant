@@ -70,7 +70,7 @@ local check_refine_material; do
     end
 
     local function build_cfg_name(basename, cfg)
-        return ("%s_%s%s"):format(basename, cfg.pack_tangent_frame, declname_shortnames(cfg.binded_declname))
+        return ("%s_%s%s%s"):format(basename, cfg.no_skinning, cfg.pack_tangent_frame, declname_shortnames(cfg.binded_declname))
     end
 
     local function build_name(filename, cfg)
@@ -178,6 +178,11 @@ local check_refine_material; do
             -- check next(c) to let the first material file use basename, because most materials with the same basic name have only one
             local fn = ("materials/%s.material"):format(next(c) and name or basename)
             local mi = build_material(materialtemplate.content, cfg)
+            if cfg.no_skinning then
+                mi.fx.setting.no_skinning = true
+                mi.fx.varyings.a_indices = nil
+                mi.fx.varyings.a_weight = nil
+            end
             template = {
                 filename    = fn,
                 content     = mi,
@@ -264,11 +269,16 @@ local function create_mesh_node_entity(math3d, gltfscene, parentNodeIndex, nodei
         local mode      = prim.mode or 4
         assert(mode == 4, "Only 'TRIANGLES' primitive mode is supported")
 
-        local materialtemplate = status.material[prim.material+1] or error(("Invalid prim.material index:%d"):format(prim.material+1))
-        local rmaterial = refine_material(status, materialtemplate, {
+        local needskinning<const> = node.skin and status.animation
+        local materialcfg = {
             pack_tangent_frame  = em.pack_tangent_frame and "P" or "",
             binded_declname     = mesh_declname(em),
-        })
+        }
+        if not needskinning then
+            materialcfg.no_skinning = "NS"
+        end
+        local materialtemplate = status.material[prim.material+1] or error(("Invalid prim.material index:%d"):format(prim.material+1))
+        local rmaterial = refine_material(status, materialtemplate, materialcfg)
         update_material_names(status, materialtemplate, rmaterial)
 
         local data = {
@@ -281,7 +291,7 @@ local function create_mesh_node_entity(math3d, gltfscene, parentNodeIndex, nodei
 
         local policy = {}
 
-        if node.skin and status.animation then
+        if needskinning then
             --local jointsMap = GetJointsMap(gltfscene, prim)
             policy[#policy+1] = "ant.render|skinrender"
             policy[#policy+1] = "ant.animation|skinning"
