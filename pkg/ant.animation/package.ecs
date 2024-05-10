@@ -6,7 +6,6 @@ pipeline "animation"
     .stage "animation_sample"
 
 policy "animation"
-    .include_policy "ant.scene|scene_object"
     .component "animation"
 
 policy "skinning"

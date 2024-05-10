@@ -81,6 +81,8 @@ local function sampling(ani)
     ozz.LocalToModelJob(skeleton, locals, ani.models)
 end
 
+api.frame = skinning.frame
+
 function api.sample(e)
     local obj = e.animation
     sampling(obj)

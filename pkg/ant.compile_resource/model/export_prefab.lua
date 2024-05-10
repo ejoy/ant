@@ -8,11 +8,8 @@ local gltfutil          = require "model.glTF.util"
 local parallel_task     = require "parallel_task"
 
 local function create_entity(t, prefabs)
-    if t.parent then
-        t.mount = {
-            ["/scene/parent"] = t.parent
-        }
-        t.data.scene = t.data.scene or {}
+    if t.mount and next(t.mount) == nil then
+        t.mount = nil
     end
     table.sort(t.policy)
     prefabs[#prefabs+1] = {
@@ -283,6 +280,7 @@ local function create_mesh_node_entity(math3d, gltfscene, parentNodeIndex, nodei
         local rmaterial = refine_material(status, materialtemplate, materialcfg)
         update_material_names(status, materialtemplate, rmaterial)
 
+        local policy = {}
         local data = {
             mesh            = em.meshbinfile or error(("not found meshfile in export data:%d, %d"):format(meshidx+1, primidx)),
             material        = rmaterial.filename,
@@ -290,15 +288,19 @@ local function create_mesh_node_entity(math3d, gltfscene, parentNodeIndex, nodei
             visible_masks   = DEFAULT_MASKS,
             visible         = true,
         }
-
-        local policy = {}
+        local mount = {
+            ["/scene/parent"] = parent,
+        }
 
         if needskinning then
             --local jointsMap = GetJointsMap(gltfscene, prim)
             policy[#policy+1] = "ant.render|skinrender"
             policy[#policy+1] = "ant.animation|skinning"
             data.scene = {}
-            data.skinning = node.skin+1
+            data.skinning = {
+                skin = node.skin+1,
+            }
+            mount["/skinning/animation"] = status.animation_id
         else
             policy[#policy+1] = "ant.render|render"
             data.scene    = {s=srt.s,r=srt.r,t=srt.t}
@@ -310,7 +312,7 @@ local function create_mesh_node_entity(math3d, gltfscene, parentNodeIndex, nodei
             local joint_index = status.skeleton:joint_index(parentNode.name)
             if joint_index and (joint_index ~= 1) then
                 policy[#policy+1] = "ant.modifier|modifier"
-                parent = 1
+                mount["/scene/parent"] = 1
                 data.modifier = { parentNode.name }
             end
         end
@@ -318,35 +320,11 @@ local function create_mesh_node_entity(math3d, gltfscene, parentNodeIndex, nodei
         entity = create_entity({
             policy = policy,
             data   = data,
-            parent = parent,
+            mount  = mount,
             tag    = node.name and { node.name } or nil,
         }, prefabs)
     end
     return entity
-end
-
-local function create_root_entity(status, prefabs)
-    if not status.animation then
-        return create_entity({
-            policy = {
-                "ant.scene|scene_object",
-            },
-            data = {
-                scene = {},
-            },
-        }, prefabs)
-    else
-        return create_entity({
-            policy = {
-                "ant.animation|animation",
-            },
-            data = {
-                scene = {},
-                animation = "animations/animation.ozz",
-            },
-            tag = {"animation"},
-        }, prefabs)
-    end
 end
 
 local function has_mesh(model, nodeIndex, meshnodes)
@@ -444,7 +422,25 @@ local function build_prefabs(status, prefabs, meshnodes, suffix)
     local math3d    = status.math3d
     local gltfscene = status.gltfscene
     local scene     = fetch_scene(gltfscene)
-    local rootid = create_root_entity(status, prefabs)
+    local rootid    = create_entity({
+        policy = {
+            "ant.scene|scene_object",
+        },
+        data = {
+            scene = {},
+        },
+    }, prefabs)
+    if status.animation then
+        status.animation_id = create_entity({
+            policy = {
+                "ant.animation|animation",
+            },
+            data = {
+                animation = "animations/animation.ozz",
+            },
+            tag = { "animation" },
+        }, prefabs)
+    end
     local function ImportNode(parent, nodes, parentNodeIndex)
         for _, nodeIndex in ipairs(nodes) do
             if meshnodes[nodeIndex] then
