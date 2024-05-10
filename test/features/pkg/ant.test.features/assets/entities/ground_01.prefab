@@ -12,6 +12,7 @@ data:
   scene:
     r: {0, 0.7071068286895752, 0, -0.7071068286895752}
     s: {1.3333333730697632, 1, 1.3333333730697632}
-mount: 1
+mount:
+  /scene/parent: 1
 policy:
   ant.render|render

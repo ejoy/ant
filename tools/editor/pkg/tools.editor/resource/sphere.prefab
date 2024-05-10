@@ -11,6 +11,7 @@ data:
     t: {0, 1, 0, 1}
   visible_masks: main_view|selectable|cast_shadow
   visible: true
-mount: 1
+mount:
+  /scene/parent: 1
 policy:
   ant.render|render

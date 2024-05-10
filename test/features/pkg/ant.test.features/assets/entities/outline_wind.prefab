@@ -18,7 +18,8 @@ data:
 policy:
   ant.render|meshskin
   ant.scene|scene_object
-mount: 1
+mount:
+  /scene/parent: 1
 ---
 policy:
     ant.render|render
@@ -28,4 +29,5 @@ data:
     material: /pkg/ant.resources/materials/outline/scale.material
     visible: true
     render_layer: translucent_plane
-mount: 1
+mount:
+  /scene/parent: 1

@@ -9,7 +9,9 @@ local parallel_task     = require "parallel_task"
 
 local function create_entity(t, prefabs)
     if t.parent then
-        t.mount = t.parent
+        t.mount = {
+            ["/scene/parent"] = t.parent
+        }
         t.data.scene = t.data.scene or {}
     end
     table.sort(t.policy)

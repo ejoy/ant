@@ -22,4 +22,5 @@ data:
         w: 2.5
         h: 2.5
 #use scene.parent as attach object
-mount: 1
+mount:
+  /scene/parent: 1

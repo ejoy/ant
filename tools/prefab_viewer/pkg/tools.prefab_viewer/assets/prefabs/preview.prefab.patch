@@ -5,5 +5,6 @@ policy:
   ant.scene|scene_object
 ---
 editor: false
-mount: 2
+mount:
+  /scene/parent: 2
 prefab: /pkg/tools.prefab_viewer/assets/prefabs/miner-1.prefab

@@ -9,7 +9,8 @@ data:
   scene: {}
   skeleton: /pkg/tools.prefab_viewer/assets/glb/miner-1.glb/animations/skeleton.bin
   skinning: true
-mount: 1
+mount:
+  /scene/parent: 1
 policy:
   ant.render|meshskin
   ant.scene|scene_object
@@ -21,7 +22,8 @@ data:
     t: {-1.3385653495788574, 2, 0}
   visible_masks: main_view|selectable|cast_shadow
   visible: true
-mount: 1
+mount:
+  /scene/parent: 1
 policy:
   ant.render|render
 ---

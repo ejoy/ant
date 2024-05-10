@@ -9,10 +9,13 @@ policy:
 data:
   scene:
     s: 0.1
-mount: 1
+mount:
+  /scene/parent: 1
 ---
-mount: 2
+mount:
+  /scene/parent: 2
 prefab: /pkg/ant.resources.binary/meshes/base/sphere.glb/mesh.prefab
 ---
-mount: 1
+mount:
+  /scene/parent: 1
 prefab: $path ./light_point.prefab

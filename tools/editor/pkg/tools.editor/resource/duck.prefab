@@ -7,7 +7,8 @@ policy:
 data:
   scene:
     s: 0.01
-mount: 1
+mount:
+  /scene/parent: 1
 policy:
   ant.scene|scene_object
 ---
@@ -17,6 +18,7 @@ data:
   material: /pkg/tools.editor/resource/Duck.glb/materials/blinn3-fx.material
   mesh: /pkg/tools.editor/resource/Duck.glb/meshes/LOD3spShape_P1.meshbin
   scene: {}
-mount: 2
+mount:
+  /scene/parent: 2
 policy:
   ant.render|render
