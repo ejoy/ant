@@ -22,7 +22,10 @@ local function fd_update(s)
     if s.w then
         flags = flags | EPOLLOUT
     end
-    epfd:event_mod(s.fd, flags)
+    if flags ~= s.event_flags then
+        epfd:event_mod(s.fd, flags)
+        s.event_flags = flags
+    end
 end
 
 local function fd_set_read(s)
@@ -57,8 +60,8 @@ local function create_handle(fd)
 end
 
 local function close(s)
-    epfd:event_del(s.fd)
     local fd = s.fd
+    epfd:event_del(fd)
     fd:close()
     assert(s.shutdown_r)
     assert(s.shutdown_w)
