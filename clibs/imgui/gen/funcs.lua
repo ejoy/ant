@@ -234,7 +234,11 @@ write_arg["ImGuiContext*"] = function(type_meta, context)
 end
 
 write_ret["ImGuiContext*"] = function()
-    writeln("    wrap_ImGuiContext::pointer(L, *_retval);")
+    writeln "    if (_retval != NULL) {"
+    writeln "        wrap_ImGuiContext::pointer(L, *_retval);"
+    writeln "    } else {"
+    writeln "        lua_pushnil(L);"
+    writeln "    }"
     return 1
 end
 

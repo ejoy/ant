@@ -179,7 +179,7 @@ special_arg["ImGuiContext*"] = function(type_meta, status)
 end
 
 special_ret["ImGuiContext*"] = function()
-    writeln("---@return ImGuiContext")
+    writeln("---@return ImGuiContext?")
 end
 
 special_arg["unsigned int*"] = function (type_meta, status)

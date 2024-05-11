@@ -1548,7 +1548,7 @@ function ImGui.StringBuf(str) end
 --   for each static/DLL boundary you are calling from. Read "Context and Memory Allocators" section of imgui.cpp for details.
 --
 ---@param shared_font_atlas? ImFontAtlas
----@return ImGuiContext
+---@return ImGuiContext?
 function ImGui.CreateContext(shared_font_atlas) end
 
 --
@@ -1557,7 +1557,7 @@ function ImGui.CreateContext(shared_font_atlas) end
 ---@param ctx? ImGuiContext
 function ImGui.DestroyContext(ctx) end
 
----@return ImGuiContext
+---@return ImGuiContext?
 function ImGui.GetCurrentContext() end
 
 ---@param ctx ImGuiContext

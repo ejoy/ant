@@ -767,7 +767,11 @@ static int StringBuf(lua_State* L) {
 static int CreateContext(lua_State* L) {
     auto shared_font_atlas = lua_isnoneornil(L, 1)? NULL: *(ImFontAtlas**)lua_touserdata(L, 1);
     auto&& _retval = ImGui::CreateContext(shared_font_atlas);
-    wrap_ImGuiContext::pointer(L, *_retval);
+    if (_retval != NULL) {
+        wrap_ImGuiContext::pointer(L, *_retval);
+    } else {
+        lua_pushnil(L);
+    }
     return 1;
 }
 
@@ -779,7 +783,11 @@ static int DestroyContext(lua_State* L) {
 
 static int GetCurrentContext(lua_State* L) {
     auto&& _retval = ImGui::GetCurrentContext();
-    wrap_ImGuiContext::pointer(L, *_retval);
+    if (_retval != NULL) {
+        wrap_ImGuiContext::pointer(L, *_retval);
+    } else {
+        lua_pushnil(L);
+    }
     return 1;
 }
 
