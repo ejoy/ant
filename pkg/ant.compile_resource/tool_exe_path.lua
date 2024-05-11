@@ -1,4 +1,5 @@
 local lfs = require "bee.filesystem"
+local sys = require "bee.sys"
 local platform = require "bee.platform"
 
 local BASETOOLS<const> = {
@@ -48,7 +49,7 @@ local function check_tool_path_valid(path)
 end
 
 local function find_bindir()
-    local rootpath = lfs.exe_path():parent_path():parent_path()
+    local rootpath = sys.exe_path():parent_path():parent_path()
 
     local releasepath = rootpath / "release"
     if check_tool_path_valid(releasepath) then

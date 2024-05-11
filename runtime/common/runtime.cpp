@@ -76,8 +76,8 @@ if __ANT_RUNTIME__ then
     dofile "/engine/firmware/bootstrap.lua"
 else
     local mainfunc; do
-        local fs = require "bee.filesystem"
-        local progdir = assert(fs.exe_path()):remove_filename():string()
+        local sys = require "bee.sys"
+        local progdir = assert(sys.exe_path()):remove_filename():string()
         local mainlua = progdir.."main.lua"
         local f <close> = assert(io.open(mainlua, "rb"))
         local data = f:read "a"

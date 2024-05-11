@@ -11,7 +11,7 @@ local icamera       = ecs.require "ant.camera|camera"
 local iom           = ecs.require "ant.objcontroller|obj_motion"
 local editor_setting= require "editor_setting"
 local ImGuiAnt      = import_package "ant.imgui"
-local bfs 			= require "bee.filesystem"
+local sys 			= require "bee.sys"
 local global_data	= require "common.global_data"
 local icons         = require "common.icons"
 local math3d        = require "math3d"
@@ -104,7 +104,7 @@ function m:init()
     window.set_title("Editor")
 	local __ANT_EDITOR__ = world.args.ecs.__ANT_EDITOR__
 	global_data:update_project_root(__ANT_EDITOR__)
-    start_fileserver(tostring(bfs.exe_path()), __ANT_EDITOR__)
+    start_fileserver(tostring(sys.exe_path()), __ANT_EDITOR__)
     -- log_widget.init_log_receiver()
     -- console_widget.init_console_sender()
 	--filewatch

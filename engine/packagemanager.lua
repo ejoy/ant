@@ -10,8 +10,8 @@ local dllpath; do
             return name..".dll"
         end
     else
-        local fs = require "bee.filesystem"
-        local procdir = fs.exe_path():remove_filename():string()
+        local sys = require "bee.sys"
+        local procdir = sys.exe_path():remove_filename():string()
         function dllpath(name)
             return procdir..name..".so"
         end

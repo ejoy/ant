@@ -6,6 +6,7 @@
 int luaopen_android(lua_State* L);
 int luaopen_bee_channel(lua_State* L);
 int luaopen_bee_debugging(lua_State* L);
+int luaopen_bee_epoll(lua_State* L);
 int luaopen_bee_filesystem(lua_State* L);
 int luaopen_bee_filewatch(lua_State* L);
 int luaopen_bee_platform(lua_State* L);
@@ -13,6 +14,7 @@ int luaopen_bee_select(lua_State* L);
 int luaopen_bee_serialization(lua_State* L);
 int luaopen_bee_socket(lua_State* L);
 int luaopen_bee_subprocess(lua_State* L);
+int luaopen_bee_sys(lua_State* L);
 int luaopen_bee_thread(lua_State* L);
 int luaopen_bee_time(lua_State* L);
 int luaopen_bee_windows(lua_State* L);
@@ -78,10 +80,12 @@ void ant_loadmodules(lua_State* L) {
     static const luaL_Reg modules[] = {
         { "bee.channel", luaopen_bee_channel },
         { "bee.debugging", luaopen_bee_debugging },
+        { "bee.epoll", luaopen_bee_epoll },
         { "bee.filesystem", luaopen_bee_filesystem },
         { "bee.select", luaopen_bee_select },
         { "bee.serialization", luaopen_bee_serialization },
         { "bee.socket", luaopen_bee_socket },
+        { "bee.sys", luaopen_bee_sys },
         { "bee.thread", luaopen_bee_thread },
         { "bee.platform", luaopen_bee_platform },
         { "bee.time", luaopen_bee_time },

@@ -1,4 +1,5 @@
 local lfs = require "bee.filesystem"
+local sys = require "bee.sys"
 local fastio = require "fastio"
 local datalist = require "datalist"
 local mount = require "mount"
@@ -17,7 +18,7 @@ end
 
 local function filelock(filepath)
 	filepath = filepath / "vfs.lock"
-	local f = lfs.filelock(filepath)
+	local f = sys.filelock(filepath)
 	return f or error ("repo is locking. (" .. filepath:string() .. ")")
 end
 

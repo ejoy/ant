@@ -2,9 +2,9 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local vfs = require "vfs"
 local fs = require "filesystem"
 local lfs = require "bee.filesystem"
+local sys = require "bee.sys"
 local subprocess        = require "bee.subprocess"
 local ImGui             = require "imgui"
 local editor_setting    = require "editor_setting"
@@ -23,7 +23,7 @@ local function choose_project_dir()
 end
 
 local function do_open_proj(proj_path)
-    local exepath = lfs.exe_path():string()
+    local exepath = sys.exe_path():string()
     assert(subprocess.spawn {
         exepath,
         (string.sub(exepath, -7) == "lua.exe") and "tools/editor/main.lua" or "3rd/ant/tools/editor/main.lua",

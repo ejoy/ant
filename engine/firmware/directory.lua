@@ -29,8 +29,8 @@ else
         end
     end)()
     local app_name = (function ()
-        local fs = require "bee.filesystem"
-        return fs.exe_path():stem():string():match "^([^_]+)"
+        local sys = require "bee.sys"
+        return sys.exe_path():stem():string():match "^([^_]+)"
     end)()
     return {
         internal = data_path .. app_name .. "/internal/",
