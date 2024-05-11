@@ -1082,6 +1082,8 @@ function ImStringBuf:Resize(size) end
 
 ---@alias ImWchar ImWchar32
 
+---@class ImGuiContext
+
 ---@class ImGuiIO
 ---@field ConfigFlags ImGui.ConfigFlags            #  = 0              // See ImGuiConfigFlags_ enum. Set by user/application. Gamepad/keyboard navigation options, etc.
 ---@field BackendFlags ImGui.BackendFlags          #  = 0              // See ImGuiBackendFlags_ enum. Set by backend (imgui_impl_xxx files or custom backend) to communicate features supported by the backend.
@@ -1138,6 +1140,7 @@ function ImStringBuf:Resize(size) end
 ---@field MetricsRenderWindows integer             #  Number of visible windows
 ---@field MetricsActiveWindows integer             #  Number of active windows
 ---@field MouseDelta ImVec2                        #  Mouse delta. Note that this is zero if either current or previous position are invalid (-FLT_MAX,-FLT_MAX), so a disappearing/reappearing mouse won't have a huge delta.
+---@field Ctx ImGuiContext                         #  Parent UI context (needs to be set explicitly by parent).
 ---@field MousePos ImVec2                          #  Mouse position, in pixels. Set to ImVec2(-FLT_MAX, -FLT_MAX) if mouse is unavailable (on another screen, etc.)
 ---@field MouseWheel number                        #  Mouse wheel Vertical: 1 unit scrolls about 5 lines text. >0 scrolls Up, <0 scrolls Down. Hold SHIFT to turn vertical scroll into horizontal scroll.
 ---@field MouseWheelH number                       #  Mouse wheel Horizontal. >0 scrolls Left, <0 scrolls Right. Most users don't have a mouse with a horizontal wheel, may not be filled by all backends.
@@ -1268,6 +1271,7 @@ function ImGuiIO.ClearInputKeys() end
 
 
 ---@class ImGuiInputTextCallbackData
+---@field Ctx ImGuiContext              #  Parent UI context
 ---@field EventFlag ImGui.InputTextFlags#  One ImGuiInputTextFlags_Callback*    // Read-only
 ---@field Flags ImGui.InputTextFlags    #  What user passed to InputText()      // Read-only
 ---@field UserData lightuserdata        #  What user passed to InputText()      // Read-only
@@ -1544,12 +1548,20 @@ function ImGui.StringBuf(str) end
 --   for each static/DLL boundary you are calling from. Read "Context and Memory Allocators" section of imgui.cpp for details.
 --
 ---@param shared_font_atlas? ImFontAtlas
+---@return ImGuiContext
 function ImGui.CreateContext(shared_font_atlas) end
 
 --
 -- NULL = destroy current context
 --
-function ImGui.DestroyContext() end
+---@param ctx? ImGuiContext
+function ImGui.DestroyContext(ctx) end
+
+---@return ImGuiContext
+function ImGui.GetCurrentContext() end
+
+---@param ctx ImGuiContext
+function ImGui.SetCurrentContext(ctx) end
 
 --
 -- Main

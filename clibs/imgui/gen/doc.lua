@@ -167,12 +167,19 @@ special_arg["const ImGuiWindowClass*"] = function()
     --NOTICE: Ignore ImGuiWindowClass for now.
 end
 
-special_arg["ImGuiContext*"] = function()
-    --NOTICE: Ignore ImGuiContext for now.
+special_arg["ImGuiContext*"] = function(type_meta, status)
+    status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+    if type_meta.default_value == nil then
+        writeln("---@param %s ImGuiContext", safe_name(type_meta.name))
+    elseif type_meta.default_value == "NULL" then
+        writeln("---@param %s? ImGuiContext", safe_name(type_meta.name))
+    else
+        assert(false)
+    end
 end
 
 special_ret["ImGuiContext*"] = function()
-    --NOTICE: Ignore ImGuiContext for now.
+    writeln("---@return ImGuiContext")
 end
 
 special_arg["unsigned int*"] = function (type_meta, status)

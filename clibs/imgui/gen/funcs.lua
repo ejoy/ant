@@ -221,14 +221,21 @@ write_arg["const ImGuiWindowClass*"] = function()
     --NOTICE: Ignore ImGuiWindowClass for now.
 end
 
-write_arg["ImGuiContext*"] = function()
-    --NOTICE: Ignore ImGuiContext for now.
+write_arg["ImGuiContext*"] = function(type_meta, context)
+    context.idx = context.idx + 1
+    context.arguments[#context.arguments+1] = type_meta.name
+    if type_meta.default_value == nil then
+        writeln("    auto %s = *(ImGuiContext**)lua_touserdata(L, %d);", type_meta.name, context.idx)
+    elseif type_meta.default_value == "NULL" then
+        writeln("    auto %s = lua_isnoneornil(L, %d)? NULL: *(ImGuiContext**)lua_touserdata(L, %d);", type_meta.name, context.idx, context.idx)
+    else
+        assert(false)
+    end
 end
 
 write_ret["ImGuiContext*"] = function()
-    --NOTICE: Ignore ImGuiContext for now.
-    writeln("    (void)_retval;")
-    return 0
+    writeln("    wrap_ImGuiContext::pointer(L, *_retval);")
+    return 1
 end
 
 write_arg["float"] = function(type_meta, context)

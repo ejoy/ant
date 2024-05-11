@@ -1,6 +1,4 @@
 local TodoFunction <const> = {
-    ImGui_GetCurrentContext = true,
-    ImGui_SetCurrentContext = true,
     ImGui_GetStyle = true,
     ImGui_GetDrawData = true,
     ImGui_ShowDemoWindow = true,
@@ -148,7 +146,6 @@ local TodoStruct <const> = {
     ImDrawListSplitter = true,
     ImDrawListSharedData = true,
     ImDrawVert = true,
-    ImGuiContext = true,
     ImGuiTextBuffer = true,
     ImGuiListClipper = true,
     ImGuiPayload = true,

@@ -726,6 +726,9 @@ static util::TableInteger TableBgTarget[] = {
 
 #undef ENUM
 
+namespace wrap_ImGuiContext {
+    void pointer(lua_State* L, ImGuiContext& v);
+}
 namespace wrap_ImGuiIO {
     void pointer(lua_State* L, ImGuiIO& v);
 }
@@ -764,12 +767,25 @@ static int StringBuf(lua_State* L) {
 static int CreateContext(lua_State* L) {
     auto shared_font_atlas = lua_isnoneornil(L, 1)? NULL: *(ImFontAtlas**)lua_touserdata(L, 1);
     auto&& _retval = ImGui::CreateContext(shared_font_atlas);
-    (void)_retval;
-    return 0;
+    wrap_ImGuiContext::pointer(L, *_retval);
+    return 1;
 }
 
 static int DestroyContext(lua_State* L) {
-    ImGui::DestroyContext();
+    auto ctx = lua_isnoneornil(L, 1)? NULL: *(ImGuiContext**)lua_touserdata(L, 1);
+    ImGui::DestroyContext(ctx);
+    return 0;
+}
+
+static int GetCurrentContext(lua_State* L) {
+    auto&& _retval = ImGui::GetCurrentContext();
+    wrap_ImGuiContext::pointer(L, *_retval);
+    return 1;
+}
+
+static int SetCurrentContext(lua_State* L) {
+    auto ctx = *(ImGuiContext**)lua_touserdata(L, 1);
+    ImGui::SetCurrentContext(ctx);
     return 0;
 }
 
@@ -4544,6 +4560,23 @@ static int FindViewportByID(lua_State* L) {
     return 1;
 }
 
+namespace wrap_ImGuiContext {
+
+static int tag_pointer = 0;
+
+void pointer(lua_State* L, ImGuiContext& v) {
+    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_pointer);
+    auto** ptr = (ImGuiContext**)lua_touserdata(L, -1);
+    *ptr = &v;
+}
+
+static void init(lua_State* L) {
+    util::struct_gen(L, "ImGuiContext", {}, {}, {});
+    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag_pointer);
+}
+
+}
+
 namespace wrap_ImGuiIO {
 
 static int AddKeyEvent(lua_State* L) {
@@ -5430,6 +5463,14 @@ struct MouseDelta {
     }
 };
 
+struct Ctx {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        wrap_ImGuiContext::pointer(L, *OBJ.Ctx);
+        return 1;
+    }
+};
+
 struct MousePos {
     static int getter(lua_State* L) {
         auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
@@ -5838,6 +5879,7 @@ static luaL_Reg getters[] = {
     { "MetricsRenderWindows", MetricsRenderWindows::getter },
     { "MetricsActiveWindows", MetricsActiveWindows::getter },
     { "MouseDelta", MouseDelta::getter },
+    { "Ctx", Ctx::getter },
     { "MousePos", MousePos::getter },
     { "MouseWheel", MouseWheel::getter },
     { "MouseWheelH", MouseWheelH::getter },
@@ -5911,6 +5953,14 @@ static int HasSelection(lua_State* L) {
     lua_pushboolean(L, _retval);
     return 1;
 }
+
+struct Ctx {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiInputTextCallbackData**)lua_touserdata(L, lua_upvalueindex(1));
+        wrap_ImGuiContext::pointer(L, *OBJ.Ctx);
+        return 1;
+    }
+};
 
 struct EventFlag {
     static int getter(lua_State* L) {
@@ -6090,6 +6140,7 @@ static luaL_Reg setters[] = {
 };
 
 static luaL_Reg getters[] = {
+    { "Ctx", Ctx::getter },
     { "EventFlag", EventFlag::getter },
     { "Flags", Flags::getter },
     { "UserData", UserData::getter },
@@ -6978,6 +7029,8 @@ static void init(lua_State* L) {
         { "StringBuf", StringBuf },
         { "CreateContext", CreateContext },
         { "DestroyContext", DestroyContext },
+        { "GetCurrentContext", GetCurrentContext },
+        { "SetCurrentContext", SetCurrentContext },
         { "GetIO", GetIO },
         { "NewFrame", NewFrame },
         { "EndFrame", EndFrame },
@@ -7413,6 +7466,7 @@ static void init(lua_State* L) {
     luaL_setfuncs(L, funcs, 0);
     util::set_table(L, flags);
     util::set_table(L, enums);
+    wrap_ImGuiContext::init(L);
     wrap_ImGuiIO::init(L);
     wrap_ImGuiInputTextCallbackData::init(L);
     wrap_ImFontConfig::init(L);
