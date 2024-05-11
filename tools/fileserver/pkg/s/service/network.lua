@@ -1,9 +1,13 @@
 local ltask = require "ltask"
 local socket = require "bee.socket"
-local select = require "bee.select"
-local selector = select.create()
-local SELECT_READ <const> = select.SELECT_READ
-local SELECT_WRITE <const> = select.SELECT_WRITE
+local epoll = require "bee.epoll"
+
+local epfd = epoll.create(512)
+
+local EPOLLIN <const> = epoll.EPOLLIN
+local EPOLLOUT <const> = epoll.EPOLLOUT
+local EPOLLERR <const> = epoll.EPOLLERR
+local EPOLLHUP <const> = epoll.EPOLLHUP
 
 local kMaxReadBufSize <const> = 4 * 1024
 
@@ -13,12 +17,12 @@ local handle = {}
 local function fd_update(s)
     local flags = 0
     if s.r then
-        flags = flags | SELECT_READ
+        flags = flags | EPOLLIN
     end
     if s.w then
-        flags = flags | SELECT_WRITE
+        flags = flags | EPOLLOUT
     end
-    selector:event_mod(s.fd, flags)
+    epfd:event_mod(s.fd, flags)
 end
 
 local function fd_set_read(s)
@@ -53,7 +57,7 @@ local function create_handle(fd)
 end
 
 local function close(s)
-    selector:event_del(s.fd)
+    epfd:event_del(s.fd)
     local fd = s.fd
     fd:close()
     assert(s.shutdown_r)
@@ -176,7 +180,7 @@ function S.bind(protocol, ...)
         shutdown_r = false,
         shutdown_w = true,
     }
-    selector:event_add(fd, 0)
+    epfd:event_add(fd, 0)
     return create_handle(fd)
 end
 
@@ -194,7 +198,7 @@ function S.connect(protocol, ...)
         on_write = ltask.wakeup,
         w = true,
     }
-    selector:event_add(fd, SELECT_WRITE)
+    epfd:event_add(fd, EPOLLOUT)
     status[fd] = s
     ltask.wait(s)
     local ok, err = fd:status()
@@ -244,7 +248,7 @@ function S.listen(h)
         on_write = stream_on_write,
         r = true,
     }
-    selector:event_add(newfd, SELECT_READ)
+    epfd:event_add(newfd, EPOLLIN)
     return create_handle(newfd)
 end
 
@@ -358,16 +362,19 @@ do
     status[ltaskfd] = {
         on_read = waitfunc
     }
-    selector:event_add(ltaskfd, SELECT_READ)
+    epfd:event_add(ltaskfd, EPOLLIN)
 end
 
 ltask.idle_handler(function()
-    for fd, event in selector:wait() do
-        if event & SELECT_READ ~= 0 then
+    for fd, event in epfd:wait() do
+        if event & (EPOLLERR | EPOLLHUP) ~= 0 then
+            event = event & (EPOLLIN | EPOLLOUT)
+        end
+        if event & EPOLLIN ~= 0 then
             local s = status[fd]
             s:on_read()
         end
-        if event & SELECT_WRITE ~= 0 then
+        if event & EPOLLOUT ~= 0 then
             local s = status[fd]
             s:on_write()
         end
