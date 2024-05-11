@@ -670,6 +670,10 @@ function world:enable_imgui()
     self._dispatch_imgui = ImGuiAnt.DispatchEvent
 end
 
+function world:disable_imgui()
+    self._dispatch_imgui = nil
+end
+
 function world:dispatch_imgui(msg)
     if not self._dispatch_imgui then
         return

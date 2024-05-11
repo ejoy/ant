@@ -47,6 +47,7 @@ end
 
 local event_save_layout = world:sub {"save_layout"}
 function m:exit()
+	world:disable_imgui()
 	for _, path in event_save_layout:unpack() do
 		local setting = ImGui.SaveIniSettingsToMemory()
 		local wf = assert(io.open(path, "wb"))
