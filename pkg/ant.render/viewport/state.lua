@@ -26,7 +26,7 @@ end
 
 local function calc_scene_size(refw, refh)
     assert(refh > 0)
-    assert(refw > refh)
+    assert(refw > 0)
     local dr = refw / refh
 
     local h
@@ -35,7 +35,7 @@ local function calc_scene_size(refw, refh)
     elseif LIMIT_RESOLUTION_HEIGHT then
         h = math.min(LIMIT_RESOLUTION_HEIGHT, refh)
     else
-	h = refh
+        h = refh
     end
 
     return math.floor(dr*h+0.5), h
