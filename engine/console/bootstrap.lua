@@ -5,7 +5,8 @@ local REPOPATH = ENTRY:parent_path():string():gsub("/?$", "/")
 
 if ENTRY:parent_path():filename():string() == "editor" then
     __ANT_EDITOR__ = arg[1]
-    assert(fs.is_directory(__ANT_EDITOR__), "Editor open project path:" .. __ANT_EDITOR__ .. " is not a directory.")
+    assert(__ANT_EDITOR__ == nil or fs.is_directory(__ANT_EDITOR__),
+        string.format("Editor open path:\"%s\" is not a directory.", __ANT_EDITOR__))
 end
 
 local boot = dofile "/engine/firmware/ltask.lua"
