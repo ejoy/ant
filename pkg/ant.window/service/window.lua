@@ -96,7 +96,8 @@ end
 
 function WindowEvent.recreate(m)
     bgfx.set_platform_data {
-        nwh = m.nwh
+        nwh = m.nwh,
+		ndt = m.ndt,
     }
     world:dispatch_message {
         type = "size",

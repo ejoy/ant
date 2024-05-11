@@ -19,8 +19,8 @@ void window_set_title(bee::zstring_view title);
 void window_set_maxfps(float fps);
 
 void window_message_set_fetch_func(void (*func)(lua_State*));
-void window_message_init(lua_State* L, void* window, void* nwh, void* context, int w, int h);
-void window_message_recreate(lua_State* L, void* window, void* nwh, void* context, int w, int h);
+void window_message_init(lua_State* L, void* window, void* nwh, void* ndt, int w, int h);
+void window_message_recreate(lua_State* L, void* window, void* nwh, void* ndt, int w, int h);
 void window_message_exit(lua_State* L);
 void window_message_size(lua_State* L, int x, int y);
 void window_message_dropfiles(lua_State* L, std::vector<std::string> const& files);

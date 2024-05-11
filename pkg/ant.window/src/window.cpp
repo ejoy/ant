@@ -214,23 +214,23 @@ static void push_message(lua_State* L, Args&&... args) {
 	MessageFetch(L);
 }
 
-void window_message_init(lua_State* L, void* window, void* nwh, void* context, int w, int h) {
+void window_message_init(lua_State* L, void* window, void* nwh, void* ndt, int w, int h) {
 	push_message(L,
 		"type", "init",
 		"window", window,
 		"nwh", nwh,
-		"context", context,
+		"ndt", ndt,
 		"w", w,
 		"h", h
 	);
 }
 
-void window_message_recreate(lua_State* L, void* window, void* nwh, void* context, int w, int h) {
+void window_message_recreate(lua_State* L, void* window, void* nwh, void* ndt, int w, int h) {
 	push_message(L,
 		"type", "recreate",
 		"window", window,
 		"nwh", nwh,
-		"context", context,
+		"ndt", ndt,
 		"w", w,
 		"h", h
 	);

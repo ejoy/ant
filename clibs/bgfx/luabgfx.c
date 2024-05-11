@@ -275,6 +275,14 @@ getfield(lua_State *L, const char *key) {
 }
 
 static int
+getfield_int(lua_State *L, const char *key) {
+	lua_getfield(L, 1, key);
+	int v = lua_tointeger(L, -1);
+	lua_pop(L, 1);
+	return v;
+}
+
+static int
 lsetPlatformData(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
 	bgfx_platform_data_t bpdt;
@@ -285,6 +293,7 @@ lsetPlatformData(lua_State *L) {
 	bpdt.context = getfield(L, "context");
 	bpdt.backBuffer = getfield(L, "backBuffer");
 	bpdt.backBufferDS = getfield(L, "backBufferDS");
+	bpdt.type = (bgfx_native_window_handle_type_t)getfield_int(L, "type");
 	
 	BGFX(set_platform_data)(&bpdt);
 
@@ -612,6 +621,7 @@ linit(lua_State *L) {
 	init.platformData.context = NULL;
 	init.platformData.backBuffer = NULL;
 	init.platformData.backBufferDS = NULL;
+	init.platformData.type = BGFX_NATIVE_WINDOW_HANDLE_TYPE_DEFAULT;
 
 	if (!lua_isnoneornil(L, 1)) {
 		luaL_checktype(L, 1, LUA_TTABLE);
@@ -661,6 +671,7 @@ linit(lua_State *L) {
 		init.platformData.context = getfield(L, "context");
 		init.platformData.backBuffer = getfield(L, "backBuffer");
 		init.platformData.backBufferDS = getfield(L, "backBufferDS");
+		init.platformData.type = (bgfx_native_window_handle_type_t)getfield_int(L, "type");
 
 		//if (init.debug) {
 			luabgfx_getalloc(&init.allocator);
