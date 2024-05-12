@@ -4494,9 +4494,6 @@ lsetViewName(lua_State *L) {
 	bgfx_view_id_t viewid = luaL_checkinteger(L, 1);
 	size_t len;
 	const char *name = luaL_checklstring(L, 2, &len);
-	if (!name){
-		luaL_error(L, "Invalid view name");
-	}
 	BGFX(set_view_name)(viewid, name, (int32_t)len);
 	return 0;
 }
