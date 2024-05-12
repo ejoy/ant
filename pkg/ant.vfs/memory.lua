@@ -2,7 +2,7 @@ local function new_fs()
 	local openfile = io.open
 	local fs = {}
 	local root = { dir = true }
-	local zip = require "zip"
+	local fastio = require "fastio"
 
 	local function create_dir(path)
 		local t = root
@@ -94,7 +94,7 @@ local function new_fs()
 		if not e or not e.content then
 			return nil, ("Can't read : " .. fullpath)
 		end
-		return zip.reader_new(e.content)
+		return fastio.memfile(e.content)
 	end
 
 	function fs.list(fullpath)

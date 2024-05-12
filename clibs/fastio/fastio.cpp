@@ -117,7 +117,7 @@ static bee::zstring_view getfile(lua_State *L) {
         else {
             luaL_error(L, "unable to decode filename: type(%s)", luaL_typename(L, 1));
         }
-        return nullptr;
+        return { nullptr, 0 };
     }
     size_t len      = 0;
     const char* buf = lua_tolstring(L, 1, &len);
@@ -332,6 +332,14 @@ static int loadlua(lua_State* L) {
     return 1;
 }
 
+static int lmemfile(lua_State *L) {
+	size_t sz;
+	const char *content = luaL_checklstring(L, 1, &sz);
+	struct memory_file *mf = memory_file_cstr(content, sz);
+	lua_pushlightuserdata(L, mf);
+	return 1;
+}
+
 extern "C" int
 luaopen_fastio(lua_State* L) {
     luaL_Reg l[] = {
@@ -347,6 +355,7 @@ luaopen_fastio(lua_State* L) {
         {"tostring", tostring},
         {"free", free},
         {"loadlua", loadlua},
+		{"memfile", lmemfile},
         {NULL, NULL},
     };
     luaL_newlib(L, l);
