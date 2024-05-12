@@ -27,32 +27,29 @@ local function reboot(args)
 end
 
 local function render(init, args, initialized)
-    local config = {
-        ecs = args,
-        window = init.window,
-        nwh = init.nwh,
-        context = init.context,
-        width = init.w,
-        height = init.h,
-    }
     rhwi.init {
-        window  = config.window,
-        nwh     = config.nwh,
-        context = config.context,
-        w       = config.width,
-        h       = config.height,
+        nwh     = init.nwh,
+        ndt     = init.ndt,
+        context = init.context,
+        width   = init.w,
+        height  = init.h,
     }
+    rhwi.set_native_window(init.window)
     rhwi.set_profie(false)
     bgfx.encoder_create "world"
     bgfx.encoder_init()
     assetmgr.init()
     bgfx.encoder_begin()
-    world = new_world(config)
+    world = new_world {
+        ecs    = args,
+        width  = init.w,
+        height = init.h,
+    }
     world:dispatch_message {
         type = "window_init",
         size = {
-            w = config.width,
-            h = config.height,
+            w = init.w,
+            h = init.h,
         },
     }
     world:dispatch_message { type = "update" }
@@ -97,7 +94,8 @@ end
 function WindowEvent.recreate(m)
     bgfx.set_platform_data {
         nwh = m.nwh,
-		ndt = m.ndt,
+        ndt = m.ndt,
+        context = m.context,
     }
     world:dispatch_message {
         type = "size",

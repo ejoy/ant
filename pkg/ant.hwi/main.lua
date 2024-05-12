@@ -23,6 +23,7 @@ local function check_renderer(renderer)
 end
 
 local init_args
+local native_window
 
 local function cvt_flags(flags)
 	local t = {}
@@ -43,10 +44,11 @@ function hw.init(args)
 	local LOG_TRACE <const> = 4
 
 	init_args = {
-		window   = args.window,
 		nwh      = args.nwh,
-		width    = args.w,
-		height   = args.h,
+		ndt      = args.ndt,
+		context  = args.context,
+		width    = args.width,
+		height   = args.height,
 		renderer = check_renderer(args.renderer),
 		loglevel = args.loglevel or LOG_WARN,
 		reset    = args.reset or cvt_flags {
@@ -57,8 +59,12 @@ function hw.init(args)
 	bgfx.init(init_args)
 end
 
+function hw.set_native_window(window)
+	native_window = window
+end
+
 function hw.native_window()
-	return init_args.window
+	return native_window
 end
 
 local DEBUG_FLAGS<const> = {

@@ -48,7 +48,12 @@ static void push_message_arg(lua_State* L, float v) {
 }
 
 static void push_message_arg(lua_State* L, void* v) {
-	lua_pushlightuserdata(L, v);
+	if (v) {
+		lua_pushlightuserdata(L, v);
+	}
+	else {
+		lua_pushnil(L);
+	}
 }
 
 static void push_message_arg(lua_State* L, ant::window::touch_state v) {
