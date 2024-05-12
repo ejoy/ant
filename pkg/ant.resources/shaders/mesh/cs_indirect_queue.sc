@@ -2,7 +2,7 @@
 #include <bgfx_shader.sh>
 
 BUFFER_RO(b_visiblity_buffer, vec4, 0);
-BUFFER_WR(b_indirect_buffer,   uvec4, 1);
+BUFFER_WO(b_indirect_buffer,   uvec4, 1);
 BUFFER_RO(b_indirect_params_buffer, vec4, 2);
 BUFFER_RO(b_obj_buffer, vec4, 3);
 

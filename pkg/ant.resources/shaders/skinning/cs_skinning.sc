@@ -5,7 +5,7 @@ BUFFER_RO(b_skinning_matrices_vb, vec4, 0);
 // p i w [T] t/c
 BUFFER_RO(b_skinning_in_dynamic_vb, vec4, 1);
 // p [T] t/c
-BUFFER_WR(b_skinning_out_dynamic_vb, vec4, 2);
+BUFFER_WO(b_skinning_out_dynamic_vb, vec4, 2);
 
 struct attrib_input{
 	vec3 pos;

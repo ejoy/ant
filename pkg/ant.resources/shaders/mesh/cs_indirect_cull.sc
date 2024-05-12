@@ -1,7 +1,7 @@
 #include <bgfx_compute.sh>
 #include <bgfx_shader.sh>
 
-BUFFER_WR(b_visiblity_buffer, vec4, 0);
+BUFFER_WO(b_visiblity_buffer, vec4, 0);
 BUFFER_RO(b_obj_buffer, vec4, 1);
 BUFFER_RO(b_plane_buffer, vec4, 2);
 

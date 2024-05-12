@@ -142,7 +142,7 @@ local DEF_PBR_UNIFORM <const> = {
 
 local ACCESS_NAMES<const> = {
     r = "BUFFER_RO",
-    w = "BUFFER_WR",
+    w = "BUFFER_WO",
     rw= "BUFFER_RW",
 }
 

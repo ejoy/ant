@@ -1,7 +1,7 @@
 #include <bgfx_compute.sh>
 
 BUFFER_RO(b_instance_frames, uint, 0);
-BUFFER_WR(b_indirect_buffer, uvec4,1);
+BUFFER_WO(b_indirect_buffer, uvec4,1);
 
 uniform vec4 u_mesh_param;
 uniform vec4 u_mesh_param1;

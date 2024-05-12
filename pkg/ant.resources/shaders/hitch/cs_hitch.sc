@@ -1,7 +1,7 @@
 #include <bgfx_compute.sh>
 #include <bgfx_shader.sh>
 
-BUFFER_WR(b_indirect_buffer, uvec4, 0);
+BUFFER_WO(b_indirect_buffer, uvec4, 0);
 uniform vec4 u_mesh_params;
 
 NUM_THREADS(64, 1, 1)
