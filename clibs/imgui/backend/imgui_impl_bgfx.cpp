@@ -56,7 +56,7 @@ void ImGui_ImplBgfx_RenderDrawData(ImGuiViewport* viewport) {
 	const ImVec2& clip_scale = drawData->FramebufferScale;
 
 	bgfx_encoder_t* encoder = BGFX(encoder_begin)(false);
-	BGFX(set_view_name)(ud->viewid, "ImGui");
+	BGFX(set_view_name)(ud->viewid, "ImGui", 6);
 	BGFX(set_view_mode)(ud->viewid, BGFX_VIEW_MODE_SEQUENTIAL);
 
 	float L = drawData->DisplayPos.x;

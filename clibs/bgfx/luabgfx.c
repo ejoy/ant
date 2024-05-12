@@ -21,7 +21,7 @@
 #include <android/log.h>
 #endif
 
-#if BGFX_API_VERSION != 126
+#if BGFX_API_VERSION != 127
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -4492,8 +4492,12 @@ lsetViewRect(lua_State *L) {
 static int
 lsetViewName(lua_State *L) {
 	bgfx_view_id_t viewid = luaL_checkinteger(L, 1);
-	const char *name = luaL_checkstring(L, 2);
-	BGFX(set_view_name)(viewid, name);
+	size_t len;
+	const char *name = luaL_checklstring(L, 2, &len);
+	if (!name){
+		luaL_error(L, "Invalid view name");
+	}
+	BGFX(set_view_name)(viewid, name, (int32_t)len);
 	return 0;
 }
 
