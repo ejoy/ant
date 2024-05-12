@@ -14,6 +14,16 @@ local function get_first_playing_animation(e)
 	end
 end
 
+function iani.names(eid)
+	local e <close> = world:entity(eid, "animation:in")
+	local ret = {}
+	local n = 1
+	for k in pairs(e.animation.status) do
+		ret[n] = k; n = n + 1
+	end
+	return ret
+end
+
 function iani.play(eid, anim_state)
 	local e <close> = world:entity(eid, "animation:in animation_changed?out")
 	if not anim_state.weight then
