@@ -229,7 +229,7 @@ static id init_gesture() {
         w = h;
         h = tmp;
     }
-    window_message_init(g_peekL, (__bridge void*)self.layer, (__bridge void*)self.layer, (__bridge void*)g_device, w, h);
+    window_message_init(g_peekL, (__bridge void*)self.layer, (__bridge void*)self.layer, NULL, (__bridge void*)g_device, w, h);
     lua_callback("init");
 
     g_gesture = init_gesture();
