@@ -1,7 +1,7 @@
 #include <bgfx_compute.sh>
 #include <pbr/ibl/common.sh>
 
-IMAGE2D_WR(s_LUT_write, rg16f, 0);
+IMAGE2D_WO(s_LUT_write, rg16f, 0);
 
 // From the filament docs. Geometric Shadowing function
 // https://google.github.io/filament/Filament.html#toc4.4.2

@@ -27,7 +27,7 @@ uniform vec4 u_params[3];
 #if SAMPLE_SLOW_FALLBACK
     #include "ffx_a.h"
     SAMPLER2D(s_image_input, 0);
-    IMAGE2D_WR(s_image_output, rgba32f, 1);
+    IMAGE2D_WO(s_image_output, rgba32f, 1);
     #if SAMPLE_EASU
         #define FSR_EASU_F 1
         AF4 FsrEasuRF(AF2 p) { AF4 res = textureGather(s_image_input, p, 0); return res; }
@@ -43,7 +43,7 @@ uniform vec4 u_params[3];
     #define A_HALF
     #include "ffx_a.h"
     SAMPLER2D(s_image_input, 0);
-    IMAGE2D_WR(s_image_output, rgba16f, 1);
+    IMAGE2D_WO(s_image_output, rgba16f, 1);
     #if SAMPLE_EASU
         #define FSR_EASU_H 1
         AH4 FsrEasuRH(AF2 p) { AH4 res = AH4(textureGather(s_image_input, p, 0)); return res; }

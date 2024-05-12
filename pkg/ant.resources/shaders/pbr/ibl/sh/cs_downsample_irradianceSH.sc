@@ -6,7 +6,7 @@
 #include "pbr/ibl/common.sh"
 
 IMAGE2D_RO(s_color_input,  rgba32f, 0);
-IMAGE2D_WR(s_color_output, rgba32f, 1);
+IMAGE2D_WO(s_color_output, rgba32f, 1);
 
 NUM_THREADS(WORKGROUP_THREADS, WORKGROUP_THREADS, 1)
 void main()

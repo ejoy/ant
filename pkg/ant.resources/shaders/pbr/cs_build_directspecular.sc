@@ -1,7 +1,7 @@
 #include <bgfx_compute.sh>
 #include <pbr/common.sh>
 #include <pbr/direct_specular.sh>
-IMAGE2D_WR(s_LUT_write, rgba16f, 0);
+IMAGE2D_WO(s_LUT_write, rgba16f, 0);
 
 NUM_THREADS(8, 8, 1)
 void main()

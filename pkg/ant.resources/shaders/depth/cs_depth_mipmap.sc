@@ -2,7 +2,7 @@
 #include <bgfx_compute.sh>
 
 IMAGE2D_RO(s_depth, r16f, 0);
-IMAGE2D_WR(s_depth_next, r16f, 1);
+IMAGE2D_WO(s_depth_next, r16f, 1);
 
 NUM_THREADS(16, 16, 1)
 void main()

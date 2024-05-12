@@ -2,7 +2,7 @@
 #include "common/utils.sh"
 
 SAMPLERCUBE(s_source, 0);
-IMAGE2D_ARRAY_WR(s_result, rgba16f, 1);
+IMAGE2D_ARRAY_WO(s_result, rgba16f, 1);
 
 uniform vec4 u_build_cubemap_mipmap_param;
 

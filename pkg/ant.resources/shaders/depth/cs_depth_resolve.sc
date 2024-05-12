@@ -6,7 +6,7 @@
 #endif //MSAA_COUNT
 
 SAMPLER2DMS(s_depthMSAA, 0);
-IMAGE2D_WR(s_depth, r16f, 1);
+IMAGE2D_WO(s_depth, r16f, 1);
 
 NUM_THREADS(16, 16, 1)
 void main()

@@ -1,7 +1,7 @@
 #include <bgfx_compute.sh>
 
 SAMPLER2D(s_source, 0);
-IMAGE2D_ARRAY_WR(s_cubemap_source, rgba16f, 1);
+IMAGE2D_ARRAY_WO(s_cubemap_source, rgba16f, 1);
 
 #include "common/utils.sh"
 

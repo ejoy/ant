@@ -8,10 +8,10 @@ $input v_texcoord0
 
 #ifdef ENABLE_BENT_NORMAL
 SAMPLER2DARRAY(s_ssao_result, 0);
-IMAGE2D_ARRAY_WR(s_filter_result, rgba8, 1);
+IMAGE2D_ARRAY_WO(s_filter_result, rgba8, 1);
 #else //!ENABLE_BENT_NORMAL
 SAMPLER2D(s_ssao_result, 0);
-IMAGE2D_WR(s_filter_result, rgba8, 1);
+IMAGE2D_WO(s_filter_result, rgba8, 1);
 #endif //ENABLE_BENT_NORMAL
 
 uniform vec4 u_bilateral_kernels[2];

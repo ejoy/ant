@@ -2,7 +2,7 @@
 #include <bgfx_compute.sh>
 
 SAMPLER2D(s_color_input, 0);
-IMAGE2D_WR(s_color_output, rgba16f, 1);
+IMAGE2D_WO(s_color_output, rgba16f, 1);
 
 #include "common/utils.sh"
 #include "postprocess/bloom/bloom.sh"

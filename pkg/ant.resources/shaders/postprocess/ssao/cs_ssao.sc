@@ -16,9 +16,9 @@ $input v_texcoord0
 SAMPLER2D(s_depth, 0);
 
 #ifdef ENABLE_BENT_NORMAL
-IMAGE2D_ARRAY_WR(s_ssao_result, rgba8, 1);
+IMAGE2D_ARRAY_WO(s_ssao_result, rgba8, 1);
 #else
-IMAGE2D_WR(s_ssao_result, rgba8, 1);
+IMAGE2D_WO(s_ssao_result, rgba8, 1);
 #endif //ENABLE_BENT_NORMAL
 
 //code from filament ssao

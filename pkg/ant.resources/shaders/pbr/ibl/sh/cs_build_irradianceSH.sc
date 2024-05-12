@@ -10,7 +10,7 @@
 
 SAMPLERCUBE(s_source, 0);
 
-IMAGE2D_WR(s_irradianceSH, rgba32f, 1);
+IMAGE2D_WO(s_irradianceSH, rgba32f, 1);
 
 struct SH_basic {
     float v[IRRADIANCE_SH_COEFF_NUM];

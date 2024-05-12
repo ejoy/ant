@@ -4,7 +4,7 @@
 #include "common/shadow.sh"
 
 IMAGE2D_RO(s_image_input,  r32f, 0);
-IMAGE2D_WR(s_image_output, r32f, 1);
+IMAGE2D_WO(s_image_output, r32f, 1);
 
 #define _BLUR9_WEIGHT_0 1.0
 #define _BLUR9_WEIGHT_1 0.9
