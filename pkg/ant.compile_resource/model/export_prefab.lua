@@ -6,6 +6,7 @@ local L                 = import_package "ant.render.core".layout
 local depends           = require "depends"
 local gltfutil          = require "model.glTF.util"
 local parallel_task     = require "parallel_task"
+local build_animation   = require "model.build_animation"
 
 local function create_entity(t, prefabs)
     if t.mount and next(t.mount) == nil then
@@ -399,21 +400,6 @@ local function serialize_prefab(status, data)
     return data
 end
 
-local function compile_animation(status, skeleton, name, file)
-    if lfs.path(file):extension() ~= ".anim" then
-        return serialize_path(file)
-    end
-    local anim2ozz = require "model.anim2ozz"
-    local vfs_fastio = require "vfs_fastio"
-    local fastio = require "fastio"
-    local skecontent = skeleton:sub(1,1) == "/"
-         and vfs_fastio.readall_f(status.setting, skeleton)
-         or fastio.readall_f((status.output / "animations" / skeleton):string())
-    depends.add_vpath(status.depfiles, status.setting, file)
-    anim2ozz(status.setting, skecontent, file, (status.output / "animations" / (name..".bin")):string())
-    return serialize.path(name..".bin")
-end
-
 local function fetch_scene(gltfscene)
     return gltfscene.scenes[(gltfscene.scene or 0)+1]
 end
@@ -505,25 +491,6 @@ local function build_prefabs(status, prefabs, meshnodes, suffix)
     end, suffix)
 end
 
-local function build_animation_prefab(status)
-    utility.save_txt_file(status, "animations/animation.ozz", status.animation, function (t)
-        if t.skeleton then
-            if t.animations then
-                for name, file in pairs(t.animations) do
-                    t.animations[name] = compile_animation(status, t.skeleton, name, file)
-                end
-            end
-            if t.skins then
-                for i, file in ipairs(t.skins) do
-                    t.skins[i] = serialize_path(file)
-                end
-            end
-            t.skeleton = serialize_path(t.skeleton)
-        end
-        return t
-    end)
-end
-
 local function init_material_data(status)
     status.material_names = {}
     status.material_cache = setmetatable({}, {__index=function (t, k) local tt = {}; t[k] = tt; return tt end})
@@ -547,7 +514,7 @@ return function (status)
     build_prefabs(status, status.di_prefab, meshnodes, "di")
 
     if status.animation then
-        build_animation_prefab(status)
+        build_animation(status)
     end
     utility.save_txt_file(status, "materials_names.ant", status.material_names, function (data) return data end)
 end

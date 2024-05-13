@@ -3,6 +3,7 @@ local export_meshbin    = require "model.export_meshbin"
 local export_skinbin    = require "model.export_skinbin"
 local export_animation  = require "model.export_animation"
 local export_material   = require "model.export_material"
+local export_only_ani   = require "model.export_only_ani"
 local math3d_pool       = require "model.math3d_pool"
 local gltf              = require "model.glTF.main"
 local patch             = require "model.patch"
@@ -10,6 +11,7 @@ local depends           = require "depends"
 local parallel_task     = require "parallel_task"
 local lfs               = require "bee.filesystem"
 local base64            = require "model.glTF.base64"
+local build_animation   = require "model.build_animation"
 
 local function readall(filename)
     local f <close> = assert(io.open(filename, "rb"))
@@ -52,10 +54,16 @@ return function (lpath, vpath, output, setting, changed)
             export_skinbin(status)
         end
     end
-    export_meshbin(status)
-    export_material(status)
-    export_prefab(status)
-    parallel_task.wait(status.tasks)
+
+	if lfs.path(lpath):stem():extension() == ".ani" then
+        build_animation(status)
+		export_only_ani(status)
+	else
+		export_meshbin(status)
+		export_material(status)
+		export_prefab(status)
+		parallel_task.wait(status.tasks)
+	end
     math3d_pool.free(status.math3d)
     return true, status.depfiles
 end
