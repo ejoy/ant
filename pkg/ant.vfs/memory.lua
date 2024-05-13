@@ -1,8 +1,9 @@
 local function new_fs()
 	local openfile = io.open
 	local fs = {}
-	local root = { dir = true }
+	local root = {}
 	local fastio = require "fastio"
+	local is_dir = { [root] = true }
 
 	local function create_dir(path)
 		local t = root
@@ -10,9 +11,10 @@ local function new_fs()
 			local current = t
 			t = t[name]
 			if t == nil then
-				t = { dir = true }
+				t = {}
+				is_dir[t] = true
 				current[name] = t
-			elseif not t.dir then
+			elseif not is_dir[t] then
 				return
 			end
 		end
@@ -23,7 +25,7 @@ local function new_fs()
 		local t = root
 		for name in path:gmatch "[^/]+" do
 			t = t[name]
-			if t == nil then
+			if not is_dir[t] then
 				return
 			end
 		end
@@ -61,7 +63,7 @@ local function new_fs()
 	end
 
 	local function fetch(fullpath)
-		local path, name = fullpath:match "(.-)/([^/]+)$"
+		local path, name = fullpath:match "(.-)/([^/]+)/?$"
 		if path == nil then
 			return nil, ("Invalid path : " .. fullpath)
 		end
@@ -77,7 +79,9 @@ local function new_fs()
 		if not d then
 			return nil, name
 		end
-		if d[name] then
+		local e = d[name]
+		if e then
+			is_dir[e] = nil
 			d[name] = nil
 		else
 			return nil, ("Can't find : " .. fullpath)
@@ -91,25 +95,39 @@ local function new_fs()
 			return nil, name
 		end
 		local e = d[name]
-		if not e or not e.content then
-			return nil, ("Can't read : " .. fullpath)
+		if not e then
+			if is_dir[e] then
+				return nil, ("Can't read dir : " .. fullpath)
+			else
+				return nil, ("Can't read : " .. fullpath)
+			end
 		end
 		return fastio.memfile(e.content)
 	end
 
-	function fs.list(fullpath)
+	function fs.list(fullpath, orig_dir)
 		local d, name = fetch(fullpath)
 		if not d then
-			return nil, name
+			if orig_dir then
+				return orig_dir
+			else
+				return nil, name
+			end
 		end
 		local e = d[name]
-		e = e and e.dir
-		if not e then
+		if not is_dir[e] then
 			return nil, ("Not a dir : " .. fullpath)
 		end
 		local r = {}
 		for k,v in pairs(e) do
-			r[k] = { type = v.dir and "d" or "f" }
+			r[k] = { type = is_dir[v] and "d" or "f" }
+		end
+		if orig_dir then
+			for k,v in pairs(orig_dir) do
+				if not r[k] then
+					r[k] = v
+				end
+			end
 		end
 		return r
 	end
@@ -123,7 +141,7 @@ local function new_fs()
 		if e == nil then
 			return nil, "No file : " .. name
 		else
-			return e.content and "file" or "dir"
+			return is_dir[e] and "dir" or "file"
 		end
 	end
 
@@ -153,7 +171,7 @@ local function init_memory_vfs()
 
 	function CMD.LIST(path)
 		if CMD_TYPE(path) then
-			return CMD_LIST(path)
+			return fs.list(path, CMD_LIST(path))
 		else
 			return fs.list(path)
 		end

@@ -11,9 +11,20 @@ local content = "Hello World"
 f:write(content)
 f:close()
 
-memfs.update("/testmem/test.txt", "testmem.txt")
+memfs.update("/pkg/testmem/test.txt", "testmem.txt")
 
-local c = vfs.read "/testmem/test.txt"
+local c = vfs.read "/pkg/testmem/test.txt"
 local s = fastio.tostring(c)
 print(s)
 assert(s == content)
+
+
+local fs = require "filesystem"
+for d in fs.pairs("/pkg") do
+	print("dir", d)
+	if d:string() == "/pkg/testmem" then
+		for file in fs.pairs(d) do
+			print("\tfile ", file)
+		end
+	end
+end
