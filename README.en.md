@@ -17,13 +17,6 @@ Ant is an open source game engine developed by Lingxi Interactive Entertainment.
 #### MINGW
 - Download and install [msys2](https://www.msys2.org/)
 - Find the msys2 installation directory and use mingw64.exe to open the msys2 terminal
-- Modify the mirror server in the msys2 terminal
-``` bash
-echo "Server = https://mirrors.tuna.tsinghua.edu.cn/msys2/mingw/i686/" > /etc/pacman.d/mirrorlist.mingw32
-echo "Server = https://mirrors.tuna.tsinghua.edu.cn/msys2/mingw/x86_64/" > /etc/pacman.d/mirrorlist.mingw64
-echo "Server = https://mirrors.tuna.tsinghua.edu.cn/msys2/msys/\$arch/" > /etc/pacman.d/mirrorlist.msys
-```
-
 - Add the path to ming64 to the environment variable
 ``` bash
 echo "export MINGW=/mingw64" >> ~/.bash_profile
