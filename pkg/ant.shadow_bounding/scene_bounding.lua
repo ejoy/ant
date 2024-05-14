@@ -90,7 +90,11 @@ local function build_scene_info(C, sb)
 	end
 
 	local si = sb.scene_info
-	si.zn, si.zf = math.max(F.n, zn), math.min(zf, F.f)
+	if zn > zf then
+		si.zn, si.zf = F.n, F.f
+	else
+		si.zn, si.zf = math.max(F.n, zn), math.min(zf, F.f)
+	end
 
 	if math3d.aabb_isvalid(PSC) then
 		si.PSC = PSC
