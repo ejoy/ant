@@ -29,7 +29,7 @@ local function bake_meshes(meshes)
 end
 
 local function create_animation_obj(pc)
-    local anie = pc[1]
+    local anie = pc[2]
     local function check_animation(e)
         for _, t in ipairs(e.tag) do
             if t == "animation" then
@@ -286,7 +286,7 @@ local function bake_animation_mesh(anio, mesho, bakenum)
         dupilcate_vb2bin = mesho.meshres.vb2.str:rep(bakenum)
     end
 
-    local skin      = aniobj.skins[mesho.skinning]
+    local skin      = aniobj.skins[mesho.skinning.skin]
     local wm        = mesho:load_transform()
     local numvb     = mesho:numv()
 
@@ -354,9 +354,9 @@ local function find_policy(e, policy)
 end
 
 local function create_mesh_obj(pc)
-    --TODO: bake mesh if mesh entity more than one
-    assert(#pc == 2)
-    local meshe = pc[2]
+    --TODO: bake mesh if mesh entity more than two
+    assert(#pc == 3)
+    local meshe = pc[3]
     assert(find_policy(meshe, "ant.render|skinrender") and meshe.data.mesh and meshe.data.skinning)
 
     local o = setmetatable({
