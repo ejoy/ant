@@ -85,7 +85,7 @@ function mod.redirect(conf, http_request)
 
 			function io.read(size)
 				if msg[1] == nil then
-					waiting = coroutine.running()
+					waiting = ltask.running()
 					ltask.wait(waiting)
 					if msg[1] == nil then
 						error(socket_error)
@@ -106,7 +106,7 @@ function mod.redirect(conf, http_request)
 							return r
 						end
 						if msg[1] == nil then
-							waiting = coroutine.running()
+							waiting = ltask.running()
 							ltask.wait(waiting)
 							if msg[1] == nil then
 								error(socket_error)

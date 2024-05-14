@@ -92,7 +92,7 @@ function net.new(selector)
 			return get_fd(obj)
 		end
 		assert(obj.co == nil)
-		obj.co = coroutine.running()
+		obj.co = ltask.running()
 		ltask.wait(obj.co)
 		return get_fd(obj)
 	end
@@ -108,7 +108,7 @@ function net.new(selector)
 		end
 		local id = new_fd(fd)
 		local obj = fds[id]
-		obj.wt = coroutine.running()
+		obj.wt = ltask.running()
 		selector:event_mod(obj.fd, SELECT_WRITE)
 		ltask.wait(obj.wt)
 		return true, id
@@ -125,7 +125,7 @@ function net.new(selector)
 		if content == false then
 			-- block
 			assert(obj.rd == nil)
-			obj.rd = coroutine.running()
+			obj.rd = ltask.running()
 			add_event(obj, SELECT_READ)
 			local rd = obj.rd
 			ltask.wait(rd)
@@ -143,7 +143,7 @@ function net.new(selector)
 		if n == false then
 			-- block
 			assert(obj.wt == nil)
-			obj.wt = coroutine.running()
+			obj.wt = ltask.running()
 			add_event(obj, SELECT_WRITE)
 			ltask.wait(obj.wt)
 			n, err = obj.fd.send(content)

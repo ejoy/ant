@@ -79,7 +79,7 @@ function S.REQUEST()
 			end
 		end
 		-- wait for socket.recv()
-		local token = coroutine.running()
+		local token = ltask.running()
 		waiting_request[#waiting_request+1] = token
 		local s = ltask.wait(token)
 		local data = s.data
