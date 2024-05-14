@@ -24,7 +24,9 @@ float bgfxShadow2DArrayProj(BgfxSampler2DArrayShadow _sampler, vec4 _coord, uint
 float bgfxShadow2DArrayProj(BgfxSampler2DArrayShadow _sampler, vec4 _coord, uint layer)
 {
     vec3 coord = _coord.xyz * rcp(_coord.w);
-    return texture(_sampler, vec3(coord.xy, layer), coord.z);
+	//use glsl texture here, not use bgfx defined 'texture2D'
+	const float clampdepth = saturate(coord.z); //must be in range [0, 1]
+    return texture(_sampler, vec4(coord.xy, layer, clampdepth));
 }
 #endif //!(hlsl&metal)
 
