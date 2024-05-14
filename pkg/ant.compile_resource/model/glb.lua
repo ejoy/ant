@@ -56,6 +56,7 @@ return function (lpath, vpath, output, setting, changed)
     end
 
 	if lfs.path(lpath):stem():extension() == ".ani" then
+		assert (status.animation, "No animation in .ani file")
         build_animation(status)
 		export_only_ani(status)
 	else

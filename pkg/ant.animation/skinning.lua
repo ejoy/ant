@@ -72,7 +72,7 @@ else
 	end
 end
 
-function api.create(filename, skeleton)
+function api.create(filename, skeleton, obj)
 	local skin = assetmgr.resource(filename)
 	local count = skin.jointsRemap
 		and #skin.jointsRemap
@@ -80,13 +80,13 @@ function api.create(filename, skeleton)
 	if count > 64 then
 		error(("skinning matrices are too large, max is 64, %d needed"):format(count))
 	end
-	return {
-		inverseBindMatrices = skin.inverseBindMatrices,
-		jointsRemap = skin.jointsRemap,
-		matrices = ozz.MatrixVector(count),
-		matrices_id = mathpkg.constant.NULL,
-		version = 0,
-	}
+	obj = obj or {}
+	obj.inverseBindMatrices = skin.inverseBindMatrices
+	obj.jointsRemap = skin.jointsRemap
+	obj.matrices = ozz.MatrixVector(count)
+	obj.matrices_id = mathpkg.constant.NULL
+	obj.version = 0
+	return obj
 end
 
 function api.frame()

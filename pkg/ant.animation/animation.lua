@@ -8,11 +8,11 @@ local skinning = ecs.require "skinning"
 local ozz = require "ozz"
 local api = {}
 
-function api.create(filename)
+function api.create(filename, obj)
     local data = assetmgr.resource(filename)
     local skeleton = data.skeleton
+	obj = obj or {}
     local status = {}
-    local skins = {}
     for name, handle in pairs(data.animations) do
         status[name] = {
             handle = handle,
@@ -21,20 +21,21 @@ function api.create(filename)
             weight = 0,
         }
     end
-    if data.skins then
-        for i, skin in ipairs(data.skins) do
-            skins[i] = skinning.create(skin, skeleton)
-        end
-    end
-    local obj = {
-        skeleton = skeleton,
-        status = status,
-        blending_layers = ozz.BlendingJobLayerVector(),
-        blending_threshold = 0.1,
-        locals_pool = {},
-        models = ozz.MatrixVector(skeleton:num_joints()),
-        skins = skins,
-    }
+	obj.skeleton = skeleton
+	obj.status = status
+	obj.blending_layers = ozz.BlendingJobLayerVector()
+	obj.blending_threshold = 0.1
+	obj.locals_pool = {}
+	obj.models = ozz.MatrixVector(skeleton:num_joints())
+    local skins = obj.skins or {}
+	obj.skins = skins
+
+	if data.skins then
+		for i, skin in ipairs(data.skins) do
+			skins[i] = skinning.create(skin, skeleton, skins[i])
+		end
+	end
+
     return obj
 end
 
