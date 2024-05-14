@@ -9,7 +9,7 @@ path: materials/Material_ani_bake.material
 ---
 file: ani_bake.prefab
 op: replace
-path: /2/data/material
+path: /3/data/material
 value: materials/Material_ani_bake.material
 ---
 file: materials/Material_ani_bake.material
