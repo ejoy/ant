@@ -14,21 +14,13 @@ bool is_proj_texcoord_in_range(vec4 texcoord, float minv, float maxv)
 	return is_texcoord_in_range(texcoord.xy/texcoord.w, minv, maxv);
 }
 
-#if BGFX_SHADER_LANGUAGE_HLSL || BGFX_SHADER_LANGUAGE_METAL
+#if BGFX_SHADER_LANGUAGE_HLSL || BGFX_SHADER_LANGUAGE_METAL || BGFX_SHADER_LANGUAGE_SPIRV
 float bgfxShadow2DArrayProj(BgfxSampler2DArrayShadow _sampler, vec4 _coord, uint layer)
 {
     vec3 coord = _coord.xyz * rcp(_coord.w);
 	return _sampler.m_texture.SampleCmp(_sampler.m_sampler, vec3(coord.xy, layer), coord.z);
 }
-#else //spriv
-float bgfxShadow2DArrayProj(BgfxSampler2DArrayShadow _sampler, vec4 _coord, uint layer)
-{
-    vec3 coord = _coord.xyz * rcp(_coord.w);
-	//use glsl texture here, not use bgfx defined 'texture2D'
-	const float clampdepth = saturate(coord.z); //must be in range [0, 1]
-    return texture(_sampler, vec4(coord.xy, layer, clampdepth));
-}
-#endif //!(hlsl&metal)
+#endif //!(hlsl&metal&spirv)
 
 #define shadow2DArrayProj bgfxShadow2DArrayProj
 
