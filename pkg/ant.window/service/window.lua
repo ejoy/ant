@@ -189,6 +189,10 @@ function S.set_maxfps(fps)
     window.set_maxfps(fps)
 end
 
+function S.set_fullscreen(fullscreen)
+    window.set_fullscreen(fullscreen)
+end
+
 window.init(WindowQueue, initargs.window_size)
 
 return S

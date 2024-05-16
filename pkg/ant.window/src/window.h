@@ -17,6 +17,7 @@ bool window_peek_message();
 void window_set_cursor(int cursor);
 void window_set_title(bee::zstring_view title);
 void window_set_maxfps(float fps);
+void window_set_fullscreen(bool fullscreen);
 
 void window_message_set_fetch_func(void (*func)(lua_State*));
 void window_message_init(lua_State* L, void* window, void* nwh, void* ndt, void* context, int w, int h);
