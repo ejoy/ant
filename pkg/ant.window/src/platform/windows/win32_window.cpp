@@ -74,6 +74,7 @@ struct DropManager : public IDropTarget {
 struct WindowData {
 	HWND             hWnd = NULL;
 	ImGuiMouseCursor MouseCursor = ImGuiMouseCursor_Arrow;
+	bool             ShowCursor = true;
 	UINT             KeyboardCodePage = 0;
 	DropManager      DropManager;
 	bool             Minimized = false;
@@ -580,6 +581,9 @@ bool window_init(lua_State* L, const char *size) {
 void window_close() {
 	G.DropManager.Revoke();
 	UnregisterClassW(CLASSNAME, GetModuleHandleW(0));
+	if (!G.ShowCursor) {
+		::ShowCursor(TRUE);
+	}
 }
 
 bool window_peek_message() {
@@ -606,4 +610,11 @@ void window_set_title(bee::zstring_view title) {
 }
 
 void window_set_maxfps(float fps) {
+}
+
+void window_show_cursor(bool show) {
+	if (G.ShowCursor != show) {
+		G.ShowCursor = show;
+		::ShowCursor(show ? TRUE : FALSE);
+	}
 }

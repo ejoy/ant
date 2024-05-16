@@ -15,6 +15,7 @@ bool window_init(lua_State* L, const char* size);
 void window_close();
 bool window_peek_message();
 void window_set_cursor(int cursor);
+void window_show_cursor(bool show);
 void window_set_title(bee::zstring_view title);
 void window_set_maxfps(float fps);
 

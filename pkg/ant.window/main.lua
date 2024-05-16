@@ -46,12 +46,17 @@ local function newproxy(t, k)
         ltask.call(ServiceWindow, "set_cursor", cursor)
     end
 
+    local function show_cursor(show)
+        ltask.call(ServiceWindow, "show_cursor", show)
+    end
+
     local function set_title(title)
         ltask.call(ServiceWindow, "set_title", title)
     end
 
     t.reboot = reboot
     t.set_cursor = set_cursor
+    t.show_cursor = show_cursor
     t.set_title = set_title
     return t[k]
 end
