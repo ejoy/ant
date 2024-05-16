@@ -391,19 +391,5 @@ bool window_peek_message() {
     return true;
 }
 
-void window_set_cursor(int cursor) {
-    //TODO
-}
-
-void window_show_cursor(bool show) {
-}
-
-void window_set_title(bee::zstring_view title) {
-    //TODO
-}
-
-void window_set_maxfps(float fps) {
-}
-
-void window_set_fullscreen(bool fullscreen) {
+void ant::window::set_message(ant::window::set_msg& msg) {
 }

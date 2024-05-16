@@ -604,25 +604,22 @@ bool window_peek_message() {
 	}
 }
 
-void window_set_cursor(int cursor) {
+static void window_set_cursor(int cursor) {
 	G.MouseCursor = (ImGuiMouseCursor)cursor;
 }
 
-void window_set_title(bee::zstring_view title) {
+static void window_set_title(bee::zstring_view title) {
     ::SetWindowTextW(G.hWnd, bee::wtf8::u2w(title).c_str());
 }
 
-void window_set_maxfps(float fps) {
-}
-
-void window_show_cursor(bool show) {
+static void window_show_cursor(bool show) {
 	if (G.ShowCursor != show) {
 		G.ShowCursor = show;
 		::ShowCursor(show ? TRUE : FALSE);
 	}
 }
 
-void window_set_fullscreen(bool fullscreen) {
+static void window_set_fullscreen(bool fullscreen) {
 	if (fullscreen) {
 		if (!G.Fullscreen) {
 			G.Styles = ::GetWindowLongW(G.hWnd, GWL_STYLE);
@@ -648,5 +645,24 @@ void window_set_fullscreen(bool fullscreen) {
 		}
 	}
 	G.Fullscreen = fullscreen;
+}
+
+void ant::window::set_message(ant::window::set_msg& msg) {
+	switch (msg.type) {
+	case ant::window::set_msg::type::cursor:
+		window_set_cursor(msg.cursor);
+		break;
+	case ant::window::set_msg::type::title:
+		window_set_title(msg.title);
+		break;
+	case ant::window::set_msg::type::fullscreen:
+		window_set_fullscreen(msg.fullscreen);
+		break;
+	case ant::window::set_msg::type::show_cursor:
+		window_show_cursor(msg.show_cursor);
+		break;
+	default:
+		break;
+	}
 }
 

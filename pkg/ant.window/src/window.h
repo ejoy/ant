@@ -14,11 +14,6 @@ struct lua_State;
 bool window_init(lua_State* L, const char* size);
 void window_close();
 bool window_peek_message();
-void window_set_cursor(int cursor);
-void window_show_cursor(bool show);
-void window_set_title(bee::zstring_view title);
-void window_set_maxfps(float fps);
-void window_set_fullscreen(bool fullscreen);
 
 void window_message_set_fetch_func(void (*func)(lua_State*));
 void window_message_init(lua_State* L, void* window, void* nwh, void* ndt, void* context, int w, int h);
@@ -200,5 +195,24 @@ BEE_BITMASK_OPERATORS(mouse_buttons)
 	void input_message(lua_State* L, struct msg_gesture_pan const& gesture);
 	void input_message(lua_State* L, struct msg_gesture_swipe const& gesture);
 	void input_message(lua_State* L, struct msg_suspend const& suspend);
-}
 
+	
+	struct set_msg {
+		enum class type {
+			cursor,
+			title,
+			maxfps,
+			fullscreen,
+			show_cursor,
+		};
+		enum type type;
+		union {
+			int cursor;
+			bee::zstring_view title = {};
+			float maxfps;
+			bool fullscreen;
+			bool show_cursor;
+		};
+	};
+	void set_message(set_msg& msg);
+}
