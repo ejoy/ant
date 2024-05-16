@@ -395,6 +395,9 @@ void window_set_cursor(int cursor) {
     //TODO
 }
 
+void window_show_cursor(bool show) {
+}
+
 void window_set_title(bee::zstring_view title) {
     //TODO
 }

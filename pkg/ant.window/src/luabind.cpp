@@ -37,6 +37,13 @@ static int set_cursor(lua_State* L) {
 	return 0;
 }
 
+static int show_cursor(lua_State* L) {
+	bool show = lua_toboolean(L, 1);
+	window_show_cursor(show);
+	lua_pop(L, 1);
+	return 0;
+}
+
 static int set_title(lua_State* L) {
 	auto title = lua_checkstrview(L, 1);
 	window_set_title(title);
@@ -64,6 +71,7 @@ luaopen_window(lua_State *L) {
 		{ "close", close },
 		{ "peek_message", peek_message },
 		{ "set_cursor", set_cursor },
+		{ "show_cursor", show_cursor },
 		{ "set_title", set_title },
 		{ "set_maxfps", set_maxfps },
 		{ "set_fullscreen", set_fullscreen },

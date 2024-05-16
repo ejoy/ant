@@ -181,6 +181,10 @@ function S.set_cursor(cursor)
     window.set_cursor(cursor)
 end
 
+function S.show_cursor(show)
+    window.show_cursor(show)
+end
+
 function S.set_title(title)
     window.set_title(title)
 end

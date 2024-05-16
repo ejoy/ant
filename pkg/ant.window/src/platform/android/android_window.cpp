@@ -26,6 +26,9 @@ bool window_init(lua_State* L, const char *size) {
 void window_close() {
 }
 
+void window_show_cursor(bool show) {
+}
+
 void window_set_fullscreen(bool fullscreen) {
 }
 
