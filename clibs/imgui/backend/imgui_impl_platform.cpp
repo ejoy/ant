@@ -12,6 +12,8 @@ void ImGui_ImplPlatform_NewFrame() { ImGui_ImplWin32_NewFrame(); }
 
 #else
 
+#include <imgui.h>
+
 void ImGui_ImplPlatform_Init(void* window) {
     ImGuiIO& io = ImGui::GetIO();
     io.DisplaySize = ImVec2(0.f, 0.f);
