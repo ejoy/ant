@@ -402,6 +402,9 @@ void window_set_maxfps(float fps) {
     //}
 }
 
+void window_set_fullscreen(bool fullscreen) {
+}
+
 static int lua_traceback(lua_State *L) {
 	const char* msg = lua_tostring(L, 1);
 	if (msg == NULL && !lua_isnoneornil(L, 1)) {

@@ -29,6 +29,9 @@ void window_close() {
 void window_show_cursor(bool show) {
 }
 
+void window_set_fullscreen(bool fullscreen) {
+}
+
 bool window_peek_message() {
     for (;;) {
         if (g_app->destroyRequested) {

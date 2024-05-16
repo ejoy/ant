@@ -54,10 +54,15 @@ local function newproxy(t, k)
         ltask.call(ServiceWindow, "set_title", title)
     end
 
+    local function set_fullscreen(fullscreen)
+        ltask.call(ServiceWindow, "set_fullscreen", fullscreen)
+    end
+
     t.reboot = reboot
     t.set_cursor = set_cursor
     t.show_cursor = show_cursor
     t.set_title = set_title
+    t.set_fullscreen = set_fullscreen
     return t[k]
 end
 
