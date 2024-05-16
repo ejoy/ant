@@ -73,10 +73,13 @@ struct DropManager : public IDropTarget {
 
 struct WindowData {
 	HWND             hWnd = NULL;
+	LONG             Styles = 0;
+	WINDOWPLACEMENT  WindowPlacement;
 	ImGuiMouseCursor MouseCursor = ImGuiMouseCursor_Arrow;
 	UINT             KeyboardCodePage = 0;
 	DropManager      DropManager;
 	bool             Minimized = false;
+	bool             Fullscreen = false;
 };
 static WindowData G;
 
@@ -606,4 +609,32 @@ void window_set_title(bee::zstring_view title) {
 }
 
 void window_set_maxfps(float fps) {
+}
+
+void window_set_fullscreen(bool fullscreen) {
+	if (fullscreen) {
+		if (!G.Fullscreen) {
+			G.Styles = ::GetWindowLongW(G.hWnd, GWL_STYLE);
+			::GetWindowPlacement(G.hWnd, &G.WindowPlacement);
+		}
+	}
+
+	RECT fullrect = { 0 };
+	::SetRect(&fullrect, 0, 0, ::GetSystemMetrics(SM_CXSCREEN), ::GetSystemMetrics(SM_CYSCREEN));
+
+	WINDOWPLACEMENT newPlacement = G.WindowPlacement;
+	newPlacement.showCmd = SW_SHOWNORMAL;
+	newPlacement.rcNormalPosition = fullrect;
+
+	if (fullscreen) {
+		::SetWindowLongW(G.hWnd, GWL_STYLE, WS_VISIBLE);
+		::SetWindowPlacement(G.hWnd, &newPlacement);
+	}
+	else {
+		if (G.Fullscreen) {
+			::SetWindowLongW(G.hWnd, GWL_STYLE, G.Styles);
+			::SetWindowPlacement(G.hWnd, &G.WindowPlacement);
+		}
+	}
+	G.Fullscreen = fullscreen;
 }

@@ -49,6 +49,13 @@ static int set_maxfps(lua_State *L) {
 	return 0;
 }
 
+static int set_fullscreen(lua_State *L) {
+	bool fs = lua_toboolean(L, 1);
+	lua_pop(L, 1);
+	window_set_fullscreen(fs);
+	return 0;
+}
+
 extern "C" int
 luaopen_window(lua_State *L) {
 	luaL_checkversion(L);
@@ -59,6 +66,7 @@ luaopen_window(lua_State *L) {
 		{ "set_cursor", set_cursor },
 		{ "set_title", set_title },
 		{ "set_maxfps", set_maxfps },
+		{ "set_fullscreen", set_fullscreen },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

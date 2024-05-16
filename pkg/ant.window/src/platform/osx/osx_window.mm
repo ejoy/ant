@@ -401,3 +401,6 @@ void window_set_title(bee::zstring_view title) {
 
 void window_set_maxfps(float fps) {
 }
+
+void window_set_fullscreen(bool fullscreen) {
+}
