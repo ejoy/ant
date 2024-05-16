@@ -22,6 +22,14 @@ lm:lua_src "window" {
             "src/platform/osx/*.mm",
         },
     },
+    linux = {
+        sources = {
+            "src/platform/linux/*.cpp",
+        },
+        links = {
+            "X11",
+        },
+    },
     ios = {
         sources = {
             "src/platform/ios/*.mm",

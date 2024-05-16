@@ -3,7 +3,7 @@ local fs = require "bee.filesystem"
 local platform = require "bee.platform"
 
 local Backlist <const> = {
-    window = platform.os == "android" or platform.os == "linux",
+    window = platform.os == "android",
     debugger = lm.luaversion == "lua55",
 }
 

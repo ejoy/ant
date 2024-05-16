@@ -20,6 +20,11 @@ lm:lua_src "font-systemfont" {
             "src/apple/systemfont.mm",
         },
     },
+    linux = {
+        sources = {
+            "src/linux/systemfont.cpp",
+        },
+    },
 }
 
 lm:lua_src "font" {
