@@ -64,9 +64,9 @@ local function run(setting, commands, input, output)
         "--depends",
     }
     print "shader compile:"
-    local success, errmsg = subprocess.spawn(C)
+    local success, errmsg, outmsg = subprocess.spawn(C)
     if success then
-        local INFO = errmsg:upper()
+        local INFO = outmsg:upper()
         for _, term in ipairs {
             "ERROR",
             "FAILED TO BUILD SHADER"

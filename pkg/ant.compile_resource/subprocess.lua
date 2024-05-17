@@ -69,11 +69,9 @@ function m.spawn(commands)
     commands.stdout       = true
     commands.stderr       = "stdout"
     commands.hideWindow   = true
-    local errcode, errmsg = ltask.call(ServiceSubprocess, "spawn", commands)
+    local errcode, outmsg = ltask.call(ServiceSubprocess, "spawn", commands)
     local ok              = false
     local msg             = {}
-    msg[#msg + 1]         = "----------------------------"
-    msg[#msg + 1]         = errmsg
     msg[#msg + 1]         = "----------------------------"
     if errcode == 0 then
         msg[#msg + 1] = "Success"
@@ -84,7 +82,11 @@ function m.spawn(commands)
         msg[#msg + 1] = "Failed"
     end
     msg[#msg + 1] = "----------------------------"
-    return ok, table.concat(msg, "\n")
+    msg[#msg + 1] = cmdstring
+    msg[#msg + 1] = "----------------------------"
+    msg[#msg + 1] = outmsg
+    msg[#msg + 1] = "----------------------------"
+    return ok, table.concat(msg, "\n"), outmsg
 end
 
 return m
