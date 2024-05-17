@@ -176,7 +176,12 @@ local function get_macros(setting, mat, stage)
 end
 
 local function compile_debug_shader(platform, renderer)
-    return platform == "windows" and (renderer:match "direct3d" or renderer:match "vulkan")
+    --TODO: bgfx does not support metal/vulkan compilation as debug
+    if platform == "windows" then
+        if renderer:match "direct3d" then
+            return true
+        end
+    end
 end
 
 local function writefile(filename, data)

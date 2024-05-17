@@ -187,9 +187,9 @@ return function (output, setting, param)
 			return table.concat(t, " ")
 		end
 		buildcmd = to_command(commands)
-		local success, errmsg = subprocess.spawn(commands)
+		local success, errmsg, outmsg = subprocess.spawn(commands)
 		if success then
-			if errmsg:upper():find("ERROR:", 1, true) then
+			if outmsg:upper():find("ERROR:", 1, true) then
 				success = false
 			end
 		end
