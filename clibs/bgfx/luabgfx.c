@@ -130,13 +130,27 @@ memory_tostring(lua_State *L) {
 static int
 memory_read(lua_State *L) {
 	struct memory *mem = (struct memory *)lua_touserdata(L, 1);
-	int index = luaL_checkinteger(L, 2)-1;
-	if (index < 0 || index >= mem->size) {
-		return 0;
+	const int ltype = lua_type(L, 2);
+	if (ltype == LUA_TNUMBER){
+		int index = lua_tointeger(L, 2)-1;
+		if (index < 0 || index >= mem->size) {
+			return 0;
+		}
+		uint8_t * data = (uint8_t *)mem->data;
+		lua_pushinteger(L, data[index]);
+		return 1;
 	}
-	uint8_t * data = (uint8_t *)mem->data;
-	lua_pushinteger(L, data[index]);
-	return 1;
+	
+	if(ltype == LUA_TSTRING) {
+		const char* key = lua_tostring(L, 2);
+		if (strcmp(key, "data") == 0){
+			lua_pushlightuserdata(L, mem->data);
+			return 1;
+		}
+
+		return luaL_error(L, "Invalid key:%s", key);
+	}
+	return luaL_error(L, "Invalid index type");
 }
 
 static int
@@ -211,6 +225,7 @@ memory_release(lua_State *L) {
 	return 0;
 }
 
+//we should consider move the memory to standalone c module
 static struct memory *
 memory_new(lua_State *L) {
 	struct memory *mem = (struct memory *)lua_newuserdatauv(L, sizeof(*mem), 1);
@@ -221,11 +236,12 @@ memory_new(lua_State *L) {
 	if (luaL_newmetatable(L, "BGFX_MEMORY")) {
 		luaL_Reg l[] = {
 			{ "__tostring", memory_tostring },
-			{ "__index", memory_read },
-			{ "__len", memory_size},
+			{ "__index", 	memory_read },
+			{ "__len", 		memory_size},
 			{ "__newindex", memory_write },
-			{ "__gc", memory_release },
-			{ NULL, NULL },
+			{ "__gc", 		memory_release },
+			
+			{ NULL, 		NULL },
 		};
 		luaL_setfuncs(L, l, 0);
 	}
