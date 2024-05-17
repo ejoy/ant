@@ -1,4 +1,7 @@
-#include <stdio.h>
+#include <cstdio>
+#include <thread>
+#include <chrono>
+
 #include <X11/keysymdef.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -8,6 +11,8 @@
 #include <bee/nonstd/unreachable.h>
 #include "imgui.h"
 #include "../../window.h"
+
+#define CONFIG_EVENT_MAX_WAIT_TIME (5) // ms
 
 struct WindowContext
 {
@@ -31,9 +36,28 @@ struct Rect
     int h;
 };
 
+struct ConfigEventState
+{
+    bool received;
+    int64_t received_time;
+    int x;
+    int y;
+    int w;
+    int h;
+};
+
 static WindowContext s_win_ctx;
 static ThreadContext s_thread_ctx;
 static bee::thread_handle s_thread_h;
+static ConfigEventState s_config_event = {};
+
+static int64_t now_ms()
+{
+    struct timeval now;
+    gettimeofday(&now, 0);
+    int64_t t = now.tv_sec * INT64_C(1000) + now.tv_usec / 1000;
+    return t;
+}
 
 static ImGuiKey ToImGuiKey(const KeySym &keysym)
 {
@@ -353,13 +377,35 @@ static void x_run(void *_userData) noexcept
 
     while (true)
     {
+        // process configure event data in lazy mode to avoid frequently calling window_message_size when resizing
+        if (!XPending(ctx->dpy) && s_config_event.received)
+        {
+            auto event_wait_time = now_ms() - s_config_event.received_time;
+            if (event_wait_time > CONFIG_EVENT_MAX_WAIT_TIME)
+            {
+                s_config_event.received = false;
+                s_config_event.received_time = 0;
+                window_message_size(L, s_config_event.w, s_config_event.h);
+            }
+            else
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(CONFIG_EVENT_MAX_WAIT_TIME));
+                continue;
+            }
+        }
+
         XNextEvent(ctx->dpy, &event);
 
         switch (event.type)
         {
         case ConfigureNotify:
         {
-            window_message_size(L, event.xconfigure.width, event.xconfigure.height);
+            s_config_event.received = true;
+            s_config_event.received_time = now_ms();
+            s_config_event.w = event.xconfigure.width;
+            s_config_event.h = event.xconfigure.height;
+            s_config_event.x = event.xconfigure.x;
+            s_config_event.y = event.xconfigure.y;
         }
         break;
 
