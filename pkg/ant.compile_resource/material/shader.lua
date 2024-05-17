@@ -64,9 +64,9 @@ local function run(setting, commands, input, output)
         "--depends",
     }
     print "shader compile:"
-    local success, errmsg = subprocess.spawn(C)
+    local success, errmsg, outmsg = subprocess.spawn(C)
     if success then
-        local INFO = errmsg:upper()
+        local INFO = outmsg:upper()
         for _, term in ipairs {
             "ERROR",
             "FAILED TO BUILD SHADER"
@@ -79,15 +79,6 @@ local function run(setting, commands, input, output)
         end
     end
     if not success then
-		local msg = { 
-			"Command Line :",
-			SHADERC:string(),
-			cmdstring,
-			"-o", (path / "bin"):string(),
-			"--depends",
-			errmsg,
-		}
-		errmsg = table.concat (msg , " ")
         return compile_finish(pathkey, false, errmsg)
     end
     local deps = depends.new()
