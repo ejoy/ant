@@ -1,4 +1,5 @@
 #include <lua.hpp>
+#include <cstdlib>
 #include <cstring>
 #include "fastio.h"
 
