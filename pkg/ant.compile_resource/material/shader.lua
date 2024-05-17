@@ -79,6 +79,15 @@ local function run(setting, commands, input, output)
         end
     end
     if not success then
+		local msg = { 
+			"Command Line :",
+			SHADERC:string(),
+			cmdstring,
+			"-o", (path / "bin"):string(),
+			"--depends",
+			errmsg,
+		}
+		errmsg = table.concat (msg , " ")
         return compile_finish(pathkey, false, errmsg)
     end
     local deps = depends.new()
