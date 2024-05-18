@@ -333,21 +333,20 @@ static void x_default_dim(const WindowContext *ctx, const char *size, Rect &rect
     rect_out.h = window_h;
 }
 
-static void x_init(WindowContext *ctx, const char *size)
+static void x_init(WindowContext *ctx, const char *size, Rect &rect_out)
 {
     XInitThreads();
 
     ctx->dpy = XOpenDisplay((char *)0);
     ctx->screen = DefaultScreen(ctx->dpy);
 
-    Rect rect;
-    x_default_dim(ctx, size, rect);
+    x_default_dim(ctx, size, rect_out);
 
     auto bg_color = BlackPixel(ctx->dpy, ctx->screen);
     auto fg_color = WhitePixel(ctx->dpy, ctx->screen);
 
-    ctx->window = XCreateSimpleWindow(ctx->dpy, DefaultRootWindow(ctx->dpy), rect.x, rect.y,
-                                      rect.w, rect.h, 5, fg_color, bg_color);
+    ctx->window = XCreateSimpleWindow(ctx->dpy, DefaultRootWindow(ctx->dpy), rect_out.x, rect_out.y,
+                                      rect_out.w, rect_out.h, 5, fg_color, bg_color);
 
     const char *wm_deleted_window_name = "WM_DELETE_WINDOW";
     XInternAtoms(ctx->dpy, (char **)&wm_deleted_window_name, 1, False, &s_wm_deleted_window);
@@ -519,9 +518,10 @@ static void x_run(void *_userData) noexcept
 bool window_init(lua_State *L, const char *size)
 {
     auto ctx = &s_win_ctx;
-    x_init(ctx, size);
+    Rect rect_actual;
+    x_init(ctx, size, rect_actual);
     void *win_handle = (void *)(uintptr_t)(ctx->window);
-    window_message_init(L, win_handle, win_handle, ctx->dpy, 0L, 640, 270);
+    window_message_init(L, win_handle, win_handle, ctx->dpy, 0L, rect_actual.w, rect_actual.h);
 
     s_thread_ctx.L = L;
     s_thread_ctx.win_ctx = ctx;
