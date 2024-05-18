@@ -60,6 +60,26 @@ static int64_t now_ms()
     return t;
 }
 
+static ant::window::mouse_button to_ant_mouse_button(unsigned int button)
+{
+    switch (button)
+    {
+        {
+        case Button1:
+            return ant::window::mouse_button::left;
+            break;
+        case Button2:
+            return ant::window::mouse_button::middle;
+            break;
+        case Button3:
+            return ant::window::mouse_button::right;
+            break;
+        default:
+            return ant::window::mouse_button::right; // TODO: maybe we should add other button type in mouse_button enum
+        }
+    }
+}
+
 static ImGuiKey ToImGuiKey(const KeySym &keysym)
 {
     switch (keysym)
@@ -433,55 +453,17 @@ static void x_run(void *_userData) noexcept
         break;
 
         case ButtonPress:
-        {
-            struct ant::window::msg_mouseclick msg;
-            switch (event.xbutton.button)
-            {
-            case Button1:
-                msg.what = ant::window::mouse_button::left;
-                break;
-            case Button2:
-                msg.what = ant::window::mouse_button::middle;
-                break;
-            case Button3:
-                msg.what = ant::window::mouse_button::right;
-                break;
-            default:
-                std::unreachable();
-            }
-            msg.state = ant::window::mouse_state::down;
-            msg.x = event.xbutton.x;
-            msg.y = event.xbutton.y;
-            ant::window::input_message(L, msg);
-            break;
-        }
-        break;
-
         case ButtonRelease:
         {
             struct ant::window::msg_mouseclick msg;
-            switch (event.xbutton.button)
-            {
-            case Button1:
-                msg.what = ant::window::mouse_button::left;
-                break;
-            case Button2:
-                msg.what = ant::window::mouse_button::middle;
-                break;
-            case Button3:
-                msg.what = ant::window::mouse_button::right;
-                break;
-            default:
-                std::unreachable();
-            }
-            msg.state = ant::window::mouse_state::up;
+            msg.what = to_ant_mouse_button(event.xbutton.button);
+            msg.state = event.type == ButtonPress? ant::window::mouse_state::down: ant::window::mouse_state::up;
             msg.x = event.xbutton.x;
             msg.y = event.xbutton.y;
             ant::window::input_message(L, msg);
-            break;
         }
         break;
-
+        
         case KeyPress:
         case KeyRelease:
         {
