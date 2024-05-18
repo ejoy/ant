@@ -50,6 +50,7 @@ static WindowContext s_win_ctx;
 static ThreadContext s_thread_ctx;
 static bee::thread_handle s_thread_h;
 static ConfigEventState s_config_event = {};
+static Atom s_wm_deleted_window;
 
 static int64_t now_ms()
 {
@@ -348,6 +349,10 @@ static void x_init(WindowContext *ctx, const char *size)
     ctx->window = XCreateSimpleWindow(ctx->dpy, DefaultRootWindow(ctx->dpy), rect.x, rect.y,
                                       rect.w, rect.h, 5, fg_color, bg_color);
 
+    const char *wm_deleted_window_name = "WM_DELETE_WINDOW";
+    XInternAtoms(ctx->dpy, (char **)&wm_deleted_window_name, 1, False, &s_wm_deleted_window);
+    XSetWMProtocols(ctx->dpy, ctx->window, &s_wm_deleted_window, 1);
+
     XSetStandardProperties(ctx->dpy, ctx->window, "Ant Engine", "Ant Engine", 0L, NULL, 0, NULL);
     XSelectInput(ctx->dpy, ctx->window, StructureNotifyMask | ExposureMask | ButtonPressMask | ButtonReleaseMask | KeyPressMask | KeyReleaseMask);
     ctx->gc = XCreateGC(ctx->dpy, ctx->window, 0, 0);
@@ -411,8 +416,20 @@ static void x_run(void *_userData) noexcept
 
         case DestroyNotify:
         {
+            window_message_exit(L);
             x_close(ctx);
             return;
+        }
+        break;
+
+        case ClientMessage:
+        {
+            if ((Atom)event.xclient.data.l[0] == s_wm_deleted_window)
+            {
+                window_message_exit(L);
+                x_close(ctx);
+                return;
+            }
         }
         break;
 
