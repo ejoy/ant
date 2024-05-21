@@ -21,6 +21,11 @@ local widget_utils      = require "widget.utils"
 
 local m = ecs.system 'init_system'
 
+local ImGui         = require "imgui"
+local ImGuiBackend  = require "imgui.backend"
+
+local dpi = {min=0.0, max=2.77, value=1, enabled=true}
+
 local function start_fileserver(luaexe, path)
 	local fsa = require "fileserver_adapter"
 	fsa.init(luaexe, path)
@@ -32,11 +37,13 @@ local function init_font()
 	fonts[#fonts+1] = {
 		FontPath = "/pkg/ant.resources.binary/font/Alibaba-PuHuiTi-Regular.ttf",
 		SizePixels = 18,
+		RasterizerDensity = dpi.value,
 		GlyphRanges = { 0x0020, 0xFFFF }
 	}
 	fonts[#fonts+1] = {
 		FontPath = "/pkg/tools.editor/resource/fonts/fa-solid-900.ttf",
 		SizePixels = 16,
+		RasterizerDensity = dpi.value,
 		GlyphRanges = {
 			0xf062, 0xf062, -- ICON_FA_ARROW_UP 			"\xef\x81\xa2"	U+f062
 			0xf063, 0xf063,	-- ICON_FA_ARROW_DOWN 			"\xef\x81\xa3"	U+f063
@@ -153,6 +160,30 @@ end
 
 function m:data_changed()
 
+end
+
+function m:start_frame()
+    -- GetWindowDpiScale/GetMainViewport only availbled in start_frame/end_frame
+    if dpi.enabled then
+        local scale = ImGui.GetWindowDpiScale()
+        if scale == dpi.value then
+            dpi.enabled = false
+        end
+        -- calculate DPI scale
+        dpi.value = math.max(dpi.min, math.min(dpi.max, scale))
+    end
+end
+
+function m:final()
+    -- ImGui says: Can not modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()
+    if dpi.enabled then
+        -- rebuild font atlas
+        init_font()
+        ImGuiBackend.RenderCreateFontsTexture()
+        dpi.enabled = false
+
+        log.warn(string.format('rebuild the font atlas due to the DPI scale changed dpi:1.0->%.2f', dpi.value))
+    end
 end
 
 function m:exit()
