@@ -92,7 +92,7 @@ local function create_entity_by_template(w, group, template, debuginfo)
 end
 
 function world:create_entity(v)
-    policy.verify(self, v.policy, v.data)
+    policy.verify(self, v.policy, v.data, "")
     local debuginfo
     if DEBUG then
         debuginfo = debug.traceback()
@@ -169,8 +169,8 @@ function template_mt:__gc()
     end
 end
 
-local function create_entity_template(w, v)
-    policy.verify(w, v.policy, v.data)
+local function create_entity_template(w, v, symbol)
+    policy.verify(w, v.policy, v.data, symbol)
     return setmetatable({
         _world = w,
         mount = v.mount,
@@ -193,7 +193,7 @@ local function create_template(w, filename)
                     template = create_template(w, v.prefab),
                 }
             else
-                prefab[#prefab+1] = create_entity_template(w, v)
+                prefab[#prefab+1] = create_entity_template(w, v, filename)
             end
         end
     end
