@@ -11,16 +11,10 @@
 #include <bee/nonstd/unreachable.h>
 #include "imgui.h"
 #include "../../window.h"
+#include "../../../../clibs/imgui/backend/imgui_impl_x11.h"
+
 
 #define CONFIG_EVENT_MAX_WAIT_TIME (5) // ms
-
-struct WindowContext
-{
-    Display *dpy{NULL};
-    int screen;
-    Window window;
-    GC gc;
-};
 
 struct ThreadContext
 {
@@ -503,7 +497,7 @@ bool window_init(lua_State *L, const char *size)
     Rect rect_actual;
     x_init(ctx, size, rect_actual);
     void *win_handle = (void *)(uintptr_t)(ctx->window);
-    window_message_init(L, win_handle, win_handle, ctx->dpy, 0L, rect_actual.w, rect_actual.h);
+    window_message_init(L, ctx, win_handle, ctx->dpy, 0L, rect_actual.w, rect_actual.h);
 
     s_thread_ctx.L = L;
     s_thread_ctx.win_ctx = ctx;
