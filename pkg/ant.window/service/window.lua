@@ -197,6 +197,10 @@ function S.set_fullscreen(fullscreen)
     window.set_fullscreen(fullscreen)
 end
 
+function S.get_cmd()
+	return initargs.cmd
+end
+
 window.init(WindowQueue, initargs.window_size)
 
 return S

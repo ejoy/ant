@@ -1,5 +1,6 @@
 import_package "ant.window".start {
     --window_size = "1280x720",
+	cmd = ...,
     feature = {
         "ant.render",
         "ant.test.features",
