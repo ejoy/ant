@@ -295,10 +295,6 @@ function ientity.quad_mesh(rect, xzplane, uvrect)
 	return quad_mesh(rect, xzplane, uvrect)
 end
 
-function ientity.create_quad_entity(rect, material, render_layer)
-	return create_simple_render_entity(material, quad_mesh(rect), {}, nil, render_layer)
-end
-
 local frustum_ib = {
 	-- front
 	0, 1, 2, 3,
@@ -316,6 +312,7 @@ local frustum_ib = {
 
 function ientity.frustum_entity_data(frustum_points, color)
 	local vb = {}
+	-- mc.WHITE {1.0, 1.0, 1.0, 1.0}
 	color = color or {1.0, 1.0, 1.0, 1.0}
 	for i=1, 8 do
 		local p = math3d.tovalue(math3d.array_index(frustum_points, i))
@@ -676,12 +673,14 @@ local function arrow_mesh(headratio, arrowlen, coneradius, cylinderradius)
 			start = 0,
 			num = numv,
 			declname = "p3",
-			handle = bgfx.create_vertex_buffer(vb, layout.handle)
+			handle = bgfx.create_vertex_buffer(vb, layout.handle),
+			owned = true,
 		},
 		ib = {
 			start = 0,
 			num = numi,
-			handle = bgfx.create_index_buffer(ib)
+			handle = bgfx.create_index_buffer(ib),
+			owned = true,
 		}
 	}
 end
@@ -698,6 +697,7 @@ function ientity.create_arrow_entity(headratio, color, material, scene)
 			material = material,
 			visible = true,
 			scene = scene or {},
+            owned_mesh_buffer = true,
 			on_ready = function (e)
 				imaterial.set_property(e, "u_color", math3d.vector(color))
 			end
