@@ -107,6 +107,7 @@ end
 
 local st_sys	= common.test_system "shadow"
 function st_sys:init()
+--	multi_entities()
 	simple_entities()
 end
 
@@ -117,10 +118,7 @@ function st_sys:init_world()
     -- iom.set_position(camera_ref, eyepos)
     -- local dir = math3d.normalize(math3d.sub(mc.ZERO_PT, eyepos))
     -- iom.set_direction(camera_ref, dir)
-end
-
-function st_sys:entity_init()
-	for e in w:select "INIT make_shadow light:in scene:in eid:in" do
+	for e in w:select "make_shadow light:in scene:in eid:in" do
 		PC:add_entity(ientity.create_arrow_entity(0.3, {1, 1, 1, 1}, "/pkg/ant.resources/materials/meshcolor.material", {parent=e.eid}))
 	end
 end
