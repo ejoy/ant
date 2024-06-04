@@ -18,7 +18,7 @@ local allow <const> = {
     on_ready = true,
 }
 
-local function verify(w, policies, data)
+local function verify(w, policies, data, symbol)
     assert(type(policies) == "table")
     local component = {}
     local component_opt = {}
@@ -59,7 +59,7 @@ local function verify(w, policies, data)
         if component[c] == nil and component_opt[c] == nil and allow[c] == nil then
             local decl = w._decl.component[c]
             if decl and decl.type[1] ~= nil then
-                error(("component `%s` is not included in the policy"):format(c))
+                error(("`%s` component `%s` is not included in the policy"):format(symbol, c))
             end
         end
     end

@@ -156,7 +156,7 @@ function render_sys:component_init()
 		ro.mesh_idx		= MESH.alloc()
 	end
 
-	for e in w:select "INIT mesh:in mesh_result?update" do
+	for e in w:select "INIT mesh:in mesh_result:out" do
 		e.mesh_result = assetmgr.resource(e.mesh)
 	end
 end

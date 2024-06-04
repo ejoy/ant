@@ -11,9 +11,12 @@ local mc            = mathpkg.constant
 local iwr           = ecs.require "ant.render|viewport.window_resize"
 local timer         = ecs.require "ant.timer|timer_system"
 --local irp           = ecs.require "ant.objcontroller|pickup.raypick"
+local window        = import_package "ant.window"
+
+local cmd = window.get_cmd()
 
 local common = ecs.require "common"
-common.init_system = "animation_instances"
+common.init_system = cmd[1] or "animation_instances"
 
 local create_instance = ecs.require "util".create_instance
 
