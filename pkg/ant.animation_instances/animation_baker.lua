@@ -135,7 +135,6 @@ local function bake_animation_mesh(anio, mesho, bakenum)
                 start   = 0,
                 num     = new_numv,
                 declname= new_vblayout,
-                owned   = true,
             },
         }
 
@@ -145,7 +144,6 @@ local function bake_animation_mesh(anio, mesho, bakenum)
                 start   = 0,
                 num     = new_numv,
                 declname= mesho.meshres.vb2.declname,
-                owned   = true,
             }
         end
 
@@ -157,7 +155,6 @@ local function bake_animation_mesh(anio, mesho, bakenum)
                 start   = 0,
                 num     = ib.num,
                 flag    = ib.flag,
-                owned   = true,
             }
         end
         meshset[n] = {

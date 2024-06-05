@@ -156,6 +156,9 @@ function render_sys:component_init()
 		ro.mesh_idx		= MESH.alloc()
 	end
 
+	-- The entity created with mesh_result should delete handles by themselves
+	w:filter("owned_mesh_buffer", "INIT mesh_result")
+
 	for e in w:select "INIT mesh:in mesh_result:out" do
 		e.mesh_result = assetmgr.resource(e.mesh)
 	end
@@ -319,6 +322,8 @@ local function clear_render_object(ro)
 end
 
 function render_sys:entity_remove()
+	-- the mesh handle with owned_mesh_buffer should delete with entity
+	-- otherwise the handles would be managed by asset manager
 	for e in w:select "REMOVED owned_mesh_buffer mesh_result:in" do
 		imesh.delete_mesh(e.mesh_result)
 	end

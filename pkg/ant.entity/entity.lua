@@ -46,13 +46,11 @@ local function create_mesh(vbdata, ibdata, aabb)
 	vb.num = #vbdata[2] // #flag
 	vb.declname = correct_layout
 	vb.memory = {flag, vbdata[2]}
-	vb.owned = true
 
 	if ibdata then
 		mesh.ib = {
 			start = 0, num = #ibdata,
 			memory = {"w", ibdata},
-			owned = true,
 		}
 	end
 	return imesh.init_mesh(mesh)
@@ -452,7 +450,6 @@ local function get_skybox_mesh()
 		local desc = {vb={}, ib={}}
 		geodrawer.draw_box({1, 1, 1}, nil, nil, desc)
 		skybox_mesh = create_mesh({"p3", desc.vb}, desc.ib)
-		skybox_mesh.ib.owned, skybox_mesh.vb.owned = true, true
 	end
 
 	return skybox_mesh
@@ -475,7 +472,6 @@ function ientity.create_skybox(material)
 				LUT = {size=256},
 			},
 			skybox = {},
-			owned_mesh_buffer = true,
 			mesh_result = get_skybox_mesh(),
 		}
 	}
@@ -542,7 +538,6 @@ function ientity.create_procedural_sky(settings)
 				}
 			},
 			visible = true,
-			owned_mesh_buffer = true,
 			render_layer = "background",
 			mesh_result = create_sky_mesh(32, 32),
 		}
@@ -573,10 +568,8 @@ function ientity.create_gamma_test_entity()
 						420, 200, 1.0, 0.0,
 						420, 132, 1.0, 1.0,
 					}), layoutmgr.get "p2|t2".handle),
-					owned = true,
                 }
             },
-			owned_mesh_buffer = true,
             scene = {},
             visible = true,
         }
@@ -674,13 +667,11 @@ local function arrow_mesh(headratio, arrowlen, coneradius, cylinderradius)
 			num = numv,
 			declname = "p3",
 			handle = bgfx.create_vertex_buffer(vb, layout.handle),
-			owned = true,
 		},
 		ib = {
 			start = 0,
 			num = numi,
 			handle = bgfx.create_index_buffer(ib),
-			owned = true,
 		}
 	}
 end
@@ -697,7 +688,6 @@ function ientity.create_arrow_entity(headratio, color, material, scene)
 			material = material,
 			visible = true,
 			scene = scene or {},
-            owned_mesh_buffer = true,
 			on_ready = function (e)
 				imaterial.set_property(e, "u_color", math3d.vector(color))
 			end
@@ -771,7 +761,6 @@ function ientity.create_quad_entity(material, srt, rect, uvrect)
         data = {
             material 	= material,
             mesh_result = ientity.quad_mesh(rect, true, uvrect),
-            owned_mesh_buffer = true,
             visible		= true,
             scene 		= srt,
             render_layer= "translucent",

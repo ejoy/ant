@@ -188,7 +188,6 @@ local function create_frustum_entity(eid)
         data = {
             on_ready = onready,
             mesh_result = ientity.create_mesh({"p3", vb}, frustum_ib),
-            owned_mesh_buffer = true,
             material = "/pkg/ant.resources/materials/line_color.material",
             render_layer = "translucent",
             scene = { parent = frustum_root },
@@ -217,7 +216,6 @@ local function create_frustum_entity(eid)
                      hl, 0.0, 0.0,
                 }
             },
-            owned_mesh_buffer = true,
             material = "/pkg/ant.resources/materials/singlecolor.material",
             visible = true,
             scene = {

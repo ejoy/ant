@@ -198,12 +198,12 @@ function ipl.create_linestrip_mesh(points, line_width, color, uv_rotation, loop)
             start = 0,
             num = numlines * 2 * 3,
             handle = strip_ib.handle,
+			memory = true,	-- prevent to delete this handle
         },
         vb = {
             start = 0,
             num = numv,
             handle = bgfx.create_vertex_buffer(vertices, stripline_desc.layout.handle),
-            owned = true,
         },
     }
 end
@@ -270,12 +270,12 @@ function ipl.create_linelist_mesh(pointlist, line_width, color)
             start = 0,
             num = numlines * 2 * 3,
             handle = irender.quad_ib(),
+			memory = true,	-- prevent to delete ib.handle
         },
         vb = {
             start = 0,
             num = numv,
             handle = bgfx.create_vertex_buffer(vertices, linelist_desc.layout.handle),
-            owned = true,
         }
     }
 end

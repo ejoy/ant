@@ -215,7 +215,6 @@ local function draw_lines(lines)
 			scene = {},
 			render_layer = "translucent",
 			visible = true,
-			owned_mesh_buffer = true,
 		}
 	}
 end
@@ -258,7 +257,6 @@ local function draw_box(points, M)
 			scene = {},
 			render_layer = "translucent",
 			visible = true,
-			owned_mesh_buffer = true,
 		}
 	}
 end

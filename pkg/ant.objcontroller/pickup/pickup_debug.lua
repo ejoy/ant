@@ -26,13 +26,11 @@ local pickup_debug_sys = ecs.system "pickup_debug_system"
 
 local function create_view_buffer_entity()
 	local m = ientity.quad_mesh(mu.texture_uv{x=0,y=0,w=120, h=120})
-	m.ib.owned, m.vb.owned = true, true
 	world:create_entity{
 		policy = {
 			"ant.render|simplerender",
 		},
 		data = {
-			owned_mesh_buffer = true,
 			mesh_result = m,
 			material = "/pkg/ant.resources/materials/texquad.material",
 			visible = true,

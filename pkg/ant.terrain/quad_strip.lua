@@ -51,7 +51,6 @@ function qs_sys:entity_init()
             },
             data = {
                 mesh_result = quadstrip_mesh,
-                owned_mesh_buffer = true,
                 material = e.material,
                 visible = true,
                 scene = {

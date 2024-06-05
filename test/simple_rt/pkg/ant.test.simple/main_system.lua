@@ -110,7 +110,6 @@ local function create_scene(is_test)
 			visible     = true,
             visible_masks = is_test and "" or nil,
 			mesh_result	= ientity.plane_mesh(),
-            owned_mesh_buffer = true,
 		}
 	}
 

@@ -43,10 +43,8 @@ function dtt_sys:init()
                         bgfx.memory_buffer("fffff", m),
                         layout.handle
                     ),
-                    owned = true,
                 },
             },
-            owned_mesh_buffer = true,
             on_ready = function (e)
                 local x, y, ww, hh = 0, 0, 1, 1
                 local gen_mipmap = false

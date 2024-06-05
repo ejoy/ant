@@ -52,7 +52,6 @@ function taasys:init()
         vb = {
             start = 0, num = 3,
             handle = fullquad_vbhandle,
-            owned = true,
         }
     }
     taa_first_frame_eid = world:create_entity{
@@ -63,7 +62,6 @@ function taasys:init()
             mesh_result     = fullquad,
             material        = "/pkg/ant.resources/materials/postprocess/taa_first_frame.material",
             visible_masks   = "",
-            owned_mesh_buffer = true,
             taa_first_frame_drawer     = true,
             scene           = {},
         }

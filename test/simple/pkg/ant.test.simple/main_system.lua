@@ -29,7 +29,6 @@ function m:init_world()
 			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
 			visible     = true,
 			mesh_result	= ientity.plane_mesh(),
-            owned_mesh_buffer = true,
 		}
 	}
 
