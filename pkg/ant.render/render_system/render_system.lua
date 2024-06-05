@@ -157,7 +157,8 @@ function render_sys:component_init()
 	end
 
 	-- The entity created with mesh_result should delete handles by themselves
-	w:filter("owned_mesh_buffer", "INIT mesh_result")
+	-- If entity has mesh, mesh_result must be false
+	w:filter("owned_mesh_buffer", "INIT mesh:absent mesh_result", true)
 
 	for e in w:select "INIT mesh:in mesh_result:out" do
 		e.mesh_result = assetmgr.resource(e.mesh)
