@@ -54,6 +54,14 @@ lm:source_set "imgui" {
             "backend/imgui_impl_platform.mm",
         },
     },
+    linux = {
+        sources = {
+            "backend/imgui_impl_x11.cpp",
+        },
+        links = {
+            "X11"
+        },
+    },
 }
 
 lm:source_set "imgui" {
