@@ -1,5 +1,5 @@
 #include <lua.hpp>
-#include <bee/lua/binding.h>
+#include <bee/lua/udata.h>
 #include "../luabind/lua2struct.h"
 
 #include "ozz.h"
