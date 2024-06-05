@@ -17,7 +17,7 @@ local function get_tex_ratio(vr, texinfo)
 end
 
 function starsky_system:component_init()
-    for e in w:select "INIT starsky mesh_result:out owned_mesh_buffer:out" do
+    for e in w:select "INIT starsky mesh_result:out owned_mesh_buffer?out" do
         local mq = w:first "main_queue render_target:in camera_ref:in"
         local vr = mq.render_target.view_rect
         local texinfo =  assetmgr.resource("/pkg/vaststars.resources/textures/sky/star_sky.texture").texinfo
