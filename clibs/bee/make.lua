@@ -105,6 +105,8 @@ lm:lua_src "bee" {
     linux = {
         links = {
             "pthread",
+	    "bfd",
+	    "unwind",
         }
     },
     macos = {
