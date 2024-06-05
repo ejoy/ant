@@ -1,7 +1,7 @@
 #include <lua.hpp>
 #include <string>
 #include <string_view>
-#include <bee/lua/binding.h>
+#include <bee/lua/udata.h>
 
 #import <Foundation/Foundation.h>
 #include "channel.h"

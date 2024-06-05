@@ -212,6 +212,20 @@ static util::TableInteger DragDropFlags[] = {
     ENUM(ImGuiDragDropFlags, AcceptPeekOnly),
 };
 
+static util::TableInteger InputFlags[] = {
+    ENUM(ImGuiInputFlags, None),
+    ENUM(ImGuiInputFlags, Repeat),
+    ENUM(ImGuiInputFlags, RouteActive),
+    ENUM(ImGuiInputFlags, RouteFocused),
+    ENUM(ImGuiInputFlags, RouteGlobal),
+    ENUM(ImGuiInputFlags, RouteAlways),
+    ENUM(ImGuiInputFlags, RouteOverFocused),
+    ENUM(ImGuiInputFlags, RouteOverActive),
+    ENUM(ImGuiInputFlags, RouteUnlessBgFocused),
+    ENUM(ImGuiInputFlags, RouteFromRootWindow),
+    ENUM(ImGuiInputFlags, Tooltip),
+};
+
 static util::TableInteger ConfigFlags[] = {
     ENUM(ImGuiConfigFlags, None),
     ENUM(ImGuiConfigFlags, NavEnableKeyboard),
@@ -587,7 +601,6 @@ static util::TableInteger Mod[] = {
     ENUM(ImGuiMod, Shift),
     ENUM(ImGuiMod, Alt),
     ENUM(ImGuiMod, Super),
-    ENUM(ImGuiMod, Shortcut),
 };
 
 static util::TableInteger Col[] = {
@@ -3965,20 +3978,20 @@ static int SetTabItemClosed(lua_State* L) {
 }
 
 static int DockSpace(lua_State* L) {
-    auto id = (ImGuiID)luaL_checkinteger(L, 1);
-    auto&& _retval = ImGui::DockSpace(id);
+    auto dockspace_id = (ImGuiID)luaL_checkinteger(L, 1);
+    auto&& _retval = ImGui::DockSpace(dockspace_id);
     lua_pushinteger(L, _retval);
     return 1;
 }
 
 static int DockSpaceEx(lua_State* L) {
-    auto id = (ImGuiID)luaL_checkinteger(L, 1);
+    auto dockspace_id = (ImGuiID)luaL_checkinteger(L, 1);
     auto size = ImVec2 {
         (float)luaL_optnumber(L, 2, 0),
         (float)luaL_optnumber(L, 3, 0),
     };
     auto flags = (ImGuiDockNodeFlags)luaL_optinteger(L, 4, lua_Integer(ImGuiDockNodeFlags_None));
-    auto&& _retval = ImGui::DockSpace(id, size, flags);
+    auto&& _retval = ImGui::DockSpace(dockspace_id, size, flags);
     lua_pushinteger(L, _retval);
     return 1;
 }
@@ -4372,6 +4385,21 @@ static int GetKeyName(lua_State* L) {
 static int SetNextFrameWantCaptureKeyboard(lua_State* L) {
     auto want_capture_keyboard = !!lua_toboolean(L, 1);
     ImGui::SetNextFrameWantCaptureKeyboard(want_capture_keyboard);
+    return 0;
+}
+
+static int Shortcut(lua_State* L) {
+    auto key_chord = (ImGuiKeyChord)luaL_checkinteger(L, 1);
+    auto flags = (ImGuiInputFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiInputFlags_None));
+    auto&& _retval = ImGui::Shortcut(key_chord, flags);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int SetNextItemShortcut(lua_State* L) {
+    auto key_chord = (ImGuiKeyChord)luaL_checkinteger(L, 1);
+    auto flags = (ImGuiInputFlags)luaL_optinteger(L, 2, lua_Integer(ImGuiInputFlags_None));
+    ImGui::SetNextItemShortcut(key_chord, flags);
     return 0;
 }
 
@@ -5657,6 +5685,20 @@ struct MouseWheelRequestAxisSwap {
     }
 };
 
+struct MouseCtrlLeftAsRightClick {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.MouseCtrlLeftAsRightClick);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.MouseCtrlLeftAsRightClick = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
 struct PenPressure {
     static int getter(lua_State* L) {
         auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
@@ -5823,6 +5865,7 @@ static luaL_Reg setters[] = {
     { "KeyMods", KeyMods::setter },
     { "WantCaptureMouseUnlessPopupClose", WantCaptureMouseUnlessPopupClose::setter },
     { "MouseWheelRequestAxisSwap", MouseWheelRequestAxisSwap::setter },
+    { "MouseCtrlLeftAsRightClick", MouseCtrlLeftAsRightClick::setter },
     { "PenPressure", PenPressure::setter },
     { "AppFocusLost", AppFocusLost::setter },
     { "AppAcceptingEvents", AppAcceptingEvents::setter },
@@ -5901,6 +5944,7 @@ static luaL_Reg getters[] = {
     { "WantCaptureMouseUnlessPopupClose", WantCaptureMouseUnlessPopupClose::getter },
     { "MousePosPrev", MousePosPrev::getter },
     { "MouseWheelRequestAxisSwap", MouseWheelRequestAxisSwap::getter },
+    { "MouseCtrlLeftAsRightClick", MouseCtrlLeftAsRightClick::getter },
     { "PenPressure", PenPressure::getter },
     { "AppFocusLost", AppFocusLost::getter },
     { "AppAcceptingEvents", AppAcceptingEvents::getter },
@@ -7381,6 +7425,8 @@ static void init(lua_State* L) {
         { "GetKeyPressedAmount", GetKeyPressedAmount },
         { "GetKeyName", GetKeyName },
         { "SetNextFrameWantCaptureKeyboard", SetNextFrameWantCaptureKeyboard },
+        { "Shortcut", Shortcut },
+        { "SetNextItemShortcut", SetNextItemShortcut },
         { "IsMouseDown", IsMouseDown },
         { "IsMouseClicked", IsMouseClicked },
         { "IsMouseClickedEx", IsMouseClickedEx },
@@ -7430,6 +7476,7 @@ static void init(lua_State* L) {
         GEN_FLAGS(HoveredFlags),
         GEN_FLAGS(DockNodeFlags),
         GEN_FLAGS(DragDropFlags),
+        GEN_FLAGS(InputFlags),
         GEN_FLAGS(ConfigFlags),
         GEN_FLAGS(BackendFlags),
         GEN_FLAGS(ButtonFlags),

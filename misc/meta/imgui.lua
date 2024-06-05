@@ -336,6 +336,30 @@ function ImGui.DockNodeFlags(flags) end
 function ImGui.DragDropFlags(flags) end
 
 --
+-- Flags for Shortcut(), SetNextItemShortcut(),
+-- (and for upcoming extended versions of IsKeyPressed(), IsMouseClicked(), Shortcut(), SetKeyOwner(), SetItemKeyOwner() that are still in imgui_internal.h)
+-- Don't mistake with ImGuiInputTextFlags! (which is for ImGui::InputText() function)
+--
+---@class ImGui.InputFlags
+
+---@alias _ImGuiInputFlags_Name
+---| "None"
+---| "Repeat"               #  Enable repeat. Return true on successive repeats. Default for legacy IsKeyPressed(). NOT Default for legacy IsMouseClicked(). MUST BE == 1.
+---| "RouteActive"          #  Route to active item only.
+---| "RouteFocused"         #  Route to windows in the focus stack (DEFAULT). Deep-most focused window takes inputs. Active item takes inputs over deep-most focused window.
+---| "RouteGlobal"          #  Global route (unless a focused window or active item registered the route).
+---| "RouteAlways"          #  Do not register route, poll keys directly.
+---| "RouteOverFocused"     #  Option: global route: higher priority than focused route (unless active item in focused route).
+---| "RouteOverActive"      #  Option: global route: higher priority than active item. Unlikely you need to use that: will interfere with every active items, e.g. CTRL+A registered by InputText will be overridden by this. May not be fully honored as user/internal code is likely to always assume they can access keys when active.
+---| "RouteUnlessBgFocused" #  Option: global route: will not be applied if underlying background/void is focused (== no Dear ImGui windows are focused). Useful for overlay applications.
+---| "RouteFromRootWindow"  #  Option: route evaluated from the point of view of root window rather than current window.
+---| "Tooltip"              #  Automatically display a tooltip when hovering item [BETA] Unsure of right api (opt-in/opt-out)
+
+---@param flags _ImGuiInputFlags_Name[]
+---@return ImGui.InputFlags
+function ImGui.InputFlags(flags) end
+
+--
 -- Configuration flags stored in io.ConfigFlags. Set by user/application.
 --
 ---@class ImGui.ConfigFlags
@@ -663,6 +687,9 @@ ImGui.DataType = {}
 --
 -- A cardinal direction
 --
+--
+-- Forward declared enum type ImGuiDir
+--
 ---@alias ImGui.Dir
 ---| `ImGui.Dir.None`
 ---| `ImGui.Dir.Left`
@@ -673,6 +700,9 @@ ImGui.Dir = {}
 
 --
 -- A sorting direction
+--
+--
+-- Forward declared enum type ImGuiSortDirection
 --
 ---@alias ImGui.SortDirection
 ---| `ImGui.SortDirection.None`
@@ -847,11 +877,10 @@ ImGui.Key = {}
 
 ---@alias ImGui.Mod
 ---| `ImGui.Mod.None`
----| `ImGui.Mod.Ctrl`     #  Ctrl
----| `ImGui.Mod.Shift`    #  Shift
----| `ImGui.Mod.Alt`      #  Option/Menu
----| `ImGui.Mod.Super`    #  Cmd/Super/Windows
----| `ImGui.Mod.Shortcut` #  Alias for Ctrl (non-macOS) _or_ Super (macOS).
+---| `ImGui.Mod.Ctrl`  #  Ctrl (non-macOS), Cmd (macOS)
+---| `ImGui.Mod.Shift` #  Shift
+---| `ImGui.Mod.Alt`   #  Option/Menu
+---| `ImGui.Mod.Super` #  Windows/Super (non-macOS), Ctrl (macOS)
 ImGui.Mod = {}
 
 --
@@ -1056,8 +1085,6 @@ function ImStringBuf:Resize(size) end
 ---@field x number
 ---@field y number
 
----@class ImDrawIdx
-
 ---@class ImGuiID
 
 ---@class ImS8
@@ -1075,6 +1102,8 @@ function ImStringBuf:Resize(size) end
 ---@class ImS64
 
 ---@class ImU64
+
+---@class ImDrawIdx
 
 ---@class ImWchar32
 
@@ -1104,7 +1133,7 @@ function ImStringBuf:Resize(size) end
 ---@field ConfigViewportsNoDecoration boolean      #  = true           // Disable default OS window decoration flag for secondary viewports. When a viewport doesn't want window decorations, ImGuiViewportFlags_NoDecoration will be set on it. Enabling decoration can create subsequent issues at OS levels (e.g. minimum window size).
 ---@field ConfigViewportsNoDefaultParent boolean   #  = false          // Disable default OS parenting to main viewport for secondary viewports. By default, viewports are marked with ParentViewportId = <main_viewport>, expecting the platform backend to setup a parent/child relationship between the OS windows (some backend may ignore this). Set to true if you want the default to be 0, then all viewports will be top-level OS windows.
 ---@field MouseDrawCursor boolean                  #  = false          // Request ImGui to draw a mouse cursor for you (if you are on a platform without a mouse cursor). Cannot be easily renamed to 'io.ConfigXXX' because this is frequently used by backend implementations.
----@field ConfigMacOSXBehaviors boolean            #  = defined(__APPLE__) // OS X style: Text editing cursor movement using Alt instead of Ctrl, Shortcuts using Cmd/Super instead of Ctrl, Line/Text Start and End using Cmd+Arrows instead of Home/End, Double click selects by word instead of selecting whole text, Multi-selection in lists uses Cmd/Super instead of Ctrl.
+---@field ConfigMacOSXBehaviors boolean            #  = defined(__APPLE__) // Swap Cmd<>Ctrl keys + OS X style text editing cursor movement using Alt instead of Ctrl, Shortcuts using Cmd/Super instead of Ctrl, Line/Text Start and End using Cmd+Arrows instead of Home/End, Double click selects by word instead of selecting whole text, Multi-selection in lists uses Cmd/Super instead of Ctrl.
 ---@field ConfigInputTrickleEventQueue boolean     #  = true           // Enable input queue trickling: some types of events submitted during the same frame (e.g. button down + up) will be spread over multiple frames, improving interactions with low framerates.
 ---@field ConfigInputTextCursorBlink boolean       #  = true           // Enable blinking cursor (optional as some users consider it to be distracting).
 ---@field ConfigInputTextEnterKeepActive boolean   #  = false          // [BETA] Pressing Enter will keep item active and select contents (single-line only).
@@ -1150,10 +1179,11 @@ function ImStringBuf:Resize(size) end
 ---@field KeyShift boolean                         #  Keyboard modifier down: Shift
 ---@field KeyAlt boolean                           #  Keyboard modifier down: Alt
 ---@field KeySuper boolean                         #  Keyboard modifier down: Cmd/Super/Windows
----@field KeyMods ImGuiKeyChord                    #  Key mods flags (any of ImGuiMod_Ctrl/ImGuiMod_Shift/ImGuiMod_Alt/ImGuiMod_Super flags, same as io.KeyCtrl/KeyShift/KeyAlt/KeySuper but merged into flags. DOES NOT CONTAINS ImGuiMod_Shortcut which is pretranslated). Read-only, updated by NewFrame()
+---@field KeyMods ImGuiKeyChord                    #  Key mods flags (any of ImGuiMod_Ctrl/ImGuiMod_Shift/ImGuiMod_Alt/ImGuiMod_Super flags, same as io.KeyCtrl/KeyShift/KeyAlt/KeySuper but merged into flags. Read-only, updated by NewFrame()
 ---@field WantCaptureMouseUnlessPopupClose boolean #  Alternative to WantCaptureMouse: (WantCaptureMouse == true && WantCaptureMouseUnlessPopupClose == false) when a click over void is expected to close a popup.
 ---@field MousePosPrev ImVec2                      #  Previous mouse position (note that MouseDelta is not necessary == MousePos-MousePosPrev, in case either position is invalid)
 ---@field MouseWheelRequestAxisSwap boolean        #  On a non-Mac system, holding SHIFT requests WheelY to perform the equivalent of a WheelX event. On a Mac system this is already enforced by the system.
+---@field MouseCtrlLeftAsRightClick boolean        #  (OSX) Set to true when the current click was a ctrl-click that spawned a simulated right click
 ---@field PenPressure number                       #  Touch/Pen pressure (0.0f to 1.0f, should be >0.0f only when MouseDown[0] == true). Helper storage currently unused by Dear ImGui.
 ---@field AppFocusLost boolean                     #  Only modify via AddFocusEvent()
 ---@field AppAcceptingEvents boolean               #  Only modify via SetAppAcceptingEvents()
@@ -1481,7 +1511,7 @@ function ImFontAtlas.GetGlyphRangesVietnamese() end
 --
 -- You can request arbitrary rectangles to be packed into the atlas, for your own purposes.
 -- - After calling Build(), you can query the rectangle position and render your pixels.
--- - If you render colored output, set 'atlas->TexPixelsUseColors = true' as this may help some backends decide of prefered texture format.
+-- - If you render colored output, set 'atlas->TexPixelsUseColors = true' as this may help some backends decide of preferred texture format.
 -- - You can also request your rectangles to be mapped as font glyph (given a font + Unicode point),
 --   so you can render e.g. custom colorful icons and use them as regular glyphs.
 -- - Read docs/FONTS.md for more details about using colorful icons.
@@ -3488,7 +3518,8 @@ function ImGui.MenuItemBoolPtr(label, shortcut, p_selected, enabled) end
 --
 -- Tooltips
 -- - Tooltips are windows following the mouse. They do not take focus away.
--- - A tooltip window can contain items of any types. SetTooltip() is a shortcut for the 'if (BeginTooltip()) { Text(...); EndTooltip(); }' idiom.
+-- - A tooltip window can contain items of any types.
+-- - SetTooltip() is more or less a shortcut for the 'if (BeginTooltip()) { Text(...); EndTooltip(); }' idiom (with a subtlety that it discard any previously submitted tooltip)
 --
 --
 -- begin/append a tooltip window.
@@ -3521,7 +3552,7 @@ function ImGui.SetTooltip(fmt, ...) end
 function ImGui.BeginItemTooltip() end
 
 --
--- set a text-only tooltip if preceeding item was hovered. override any previous call to SetTooltip().
+-- set a text-only tooltip if preceding item was hovered. override any previous call to SetTooltip().
 --
 ---@param fmt string
 ---@param ...  any
@@ -3879,7 +3910,7 @@ function ImGui.SetTabItemClosed(tab_or_docked_window_label) end
 -- - Drag from window menu button (upper-left button) to undock an entire node (all windows).
 -- - When io.ConfigDockingWithShift == true, you instead need to hold SHIFT to enable docking.
 -- About dockspaces:
--- - Use DockSpaceOverViewport() to create an explicit dock node covering the screen or a specific viewport.
+-- - Use DockSpaceOverViewport() to create a window covering the screen or a specific viewport + a dockspace inside it.
 --   This is often used with ImGuiDockNodeFlags_PassthruCentralNode to make it transparent.
 -- - Use DockSpace() to create an explicit dock node _within_ an existing window. See Docking demo for details.
 -- - Important: Dockspaces need to be submitted _before_ any window they can host. Submit it early in your frame!
@@ -3889,19 +3920,19 @@ function ImGui.SetTabItemClosed(tab_or_docked_window_label) end
 --
 -- Implied size = ImVec2(0, 0), flags = 0, window_class = NULL
 --
----@param id ImGuiID
+---@param dockspace_id ImGuiID
 ---@return ImGuiID
-function ImGui.DockSpace(id) end
+function ImGui.DockSpace(dockspace_id) end
 
----@param id ImGuiID
+---@param dockspace_id ImGuiID
 ---@param size_x? number | `0`
 ---@param size_y? number | `0`
 ---@param flags? ImGui.DockNodeFlags | `ImGui.DockNodeFlags { "None" }`
 ---@return ImGuiID
-function ImGui.DockSpaceEx(id, size_x, size_y, flags) end
+function ImGui.DockSpaceEx(dockspace_id, size_x, size_y, flags) end
 
 --
--- Implied viewport = NULL, flags = 0, window_class = NULL
+-- Implied dockspace_id = 0, viewport = NULL, flags = 0, window_class = NULL
 --
 ---@return ImGuiID
 function ImGui.DockSpaceOverViewport() end
@@ -4299,6 +4330,32 @@ function ImGui.GetKeyName(key) end
 function ImGui.SetNextFrameWantCaptureKeyboard(want_capture_keyboard) end
 
 --
+-- Inputs Utilities: Shortcut Testing & Routing [BETA]
+-- - ImGuiKeyChord = a ImGuiKey + optional ImGuiMod_Alt/ImGuiMod_Ctrl/ImGuiMod_Shift/ImGuiMod_Super.
+--       ImGuiKey_C                          // Accepted by functions taking ImGuiKey or ImGuiKeyChord arguments)
+--       ImGuiMod_Ctrl | ImGuiKey_C          // Accepted by functions taking ImGuiKeyChord arguments)
+--   only ImGuiMod_XXX values are legal to combine with an ImGuiKey. You CANNOT combine two ImGuiKey values.
+-- - The general idea is that several callers may register interest in a shortcut, and only one owner gets it.
+--      Parent   -> call Shortcut(Ctrl+S)    // When Parent is focused, Parent gets the shortcut.
+--        Child1 -> call Shortcut(Ctrl+S)    // When Child1 is focused, Child1 gets the shortcut (Child1 overrides Parent shortcuts)
+--        Child2 -> no call                  // When Child2 is focused, Parent gets the shortcut.
+--   The whole system is order independent, so if Child1 makes its calls before Parent, results will be identical.
+--   This is an important property as it facilitate working with foreign code or larger codebase.
+-- - To understand the difference:
+--   - IsKeyChordPressed() compares mods and call IsKeyPressed() -> function has no side-effect.
+--   - Shortcut() submits a route, routes are resolved, if it currently can be routed it calls IsKeyChordPressed() -> function has (desirable) side-effects as it can prevents another call from getting the route.
+-- - Visualize registered routes in 'Metrics/Debugger->Inputs'.
+--
+---@param key_chord ImGuiKeyChord
+---@param flags? ImGui.InputFlags | `ImGui.InputFlags { "None" }`
+---@return boolean
+function ImGui.Shortcut(key_chord, flags) end
+
+---@param key_chord ImGuiKeyChord
+---@param flags? ImGui.InputFlags | `ImGui.InputFlags { "None" }`
+function ImGui.SetNextItemShortcut(key_chord, flags) end
+
+--
 -- Inputs Utilities: Mouse specific
 -- - To refer to a mouse button, you may use named enums in your code e.g. ImGuiMouseButton_Left, ImGuiMouseButton_Right.
 -- - You can also use regular integer: it is forever guaranteed that 0=Left, 1=Right, 2=Middle.
@@ -4389,7 +4446,7 @@ function ImGui.GetMousePos() end
 function ImGui.GetMousePosOnOpeningCurrentPopup() end
 
 --
--- is mouse dragging? (if lock_threshold < -1.0f, uses io.MouseDraggingThreshold)
+-- is mouse dragging? (uses io.MouseDraggingThreshold if lock_threshold < 0.0f)
 --
 ---@param button ImGui.MouseButton
 ---@param lock_threshold? number | `-1.0`
@@ -4397,7 +4454,7 @@ function ImGui.GetMousePosOnOpeningCurrentPopup() end
 function ImGui.IsMouseDragging(button, lock_threshold) end
 
 --
--- return the delta from the initial clicking position while the mouse button is pressed or was just released. This is locked and return 0.0f until the mouse moves past a distance threshold at least once (if lock_threshold < -1.0f, uses io.MouseDraggingThreshold)
+-- return the delta from the initial clicking position while the mouse button is pressed or was just released. This is locked and return 0.0f until the mouse moves past a distance threshold at least once (uses io.MouseDraggingThreshold if lock_threshold < 0.0f)
 --
 ---@param button? ImGui.MouseButton | `ImGui.MouseButton.Left`
 ---@param lock_threshold? number | `-1.0`

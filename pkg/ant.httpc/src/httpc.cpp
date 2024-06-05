@@ -1,7 +1,8 @@
 #include <Windows.h>
 #include <WinInet.h>
 #include <lua.hpp>
-#include <bee/lua/binding.h>
+#include <bee/lua/udata.h>
+#include <bee/nonstd/unreachable.h>
 #include <bee/thread/simplethread.h>
 #include <bee/win/wtf8.h>
 #include <bee/error.h>
