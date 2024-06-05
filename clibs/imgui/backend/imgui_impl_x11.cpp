@@ -34,6 +34,7 @@ void ImGui_ImplX11_Init(void *ctx)
     WindowContext* bd = IM_NEW(WindowContext)();
     io.BackendPlatformUserData = (void*)bd;
     io.BackendPlatformName = "imgui_impl_x11";
+    io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
     
     bd->dpy = win_ctx->dpy;
     bd->window = win_ctx->window;
@@ -42,7 +43,9 @@ void ImGui_ImplX11_Init(void *ctx)
     bd->ticks_per_sec = perf_frequency;
     bd->time = perf_counter;
 
-
+    ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+    main_viewport->PlatformHandle = main_viewport->PlatformHandleRaw = (void *)(uintptr_t)(win_ctx->window);
+    
 }
 void ImGui_ImplX11_Shutdown() 
 {
@@ -51,6 +54,7 @@ void ImGui_ImplX11_Shutdown()
     ImGuiIO& io = ImGui::GetIO();
     io.BackendPlatformName = nullptr;
     io.BackendPlatformUserData = nullptr;
+    io.BackendFlags &= ~(ImGuiBackendFlags_HasMouseCursors);
     IM_DELETE(bd);
 
 }

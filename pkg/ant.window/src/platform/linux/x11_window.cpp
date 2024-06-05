@@ -367,7 +367,7 @@ static void x_init(WindowContext *ctx, const char *size, Rect &rect_out)
     XSetWMProtocols(ctx->dpy, ctx->window, &s_wm_deleted_window, 1);
 
     XSetStandardProperties(ctx->dpy, ctx->window, "Ant Engine", "Ant Engine", 0L, NULL, 0, NULL);
-    XSelectInput(ctx->dpy, ctx->window, StructureNotifyMask | ExposureMask | ButtonPressMask | ButtonReleaseMask | KeyPressMask | KeyReleaseMask);
+    XSelectInput(ctx->dpy, ctx->window, StructureNotifyMask | ExposureMask | PointerMotionMask | ButtonPressMask | ButtonReleaseMask | KeyPressMask | KeyReleaseMask);
     ctx->gc = XCreateGC(ctx->dpy, ctx->window, 0, 0);
 
     XSetBackground(ctx->dpy, ctx->gc, bg_color);
@@ -443,6 +443,20 @@ static void x_run(void *_userData) noexcept
                 x_close(ctx);
                 return;
             }
+        }
+        break;
+
+        case MotionNotify:
+        {
+            struct ant::window::msg_mousemove msg;
+		    msg.what = ant::window::mouse_buttons::none;
+            msg.x = event.xmotion.x;
+            msg.y = event.xmotion.y;
+            ant::window::input_message(L, msg);
+
+            //FIXME: it's kind of hack, but there should be a better way to pass the mouse move event to imgui in the backend implementation.
+            ImGuiIO& io = ImGui::GetIO();
+            io.AddMousePosEvent((float)msg.x, (float)msg.y);
         }
         break;
 
