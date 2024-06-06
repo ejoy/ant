@@ -8,11 +8,6 @@ local function writeln(fmt, ...)
     w:write "\n"
 end
 
-local struct_constructor <const> = {
-    "ImFontConfig",
-    "ImFontAtlas",
-}
-
 local write_arg = {}
 local write_arg_ret = {}
 local write_ret = {}
@@ -523,17 +518,22 @@ end
 
 local function write_funcs()
     local funcs = {}
-    for _, name in ipairs(struct_constructor) do
+    for _, v in ipairs(status.structs) do
+        if v.forward_declaration then
+            goto continue
+        end
+        local name = v.name
         local realname = name:match "^ImGui([%w]+)$" or name:match "^Im([%w]+)$"
         writeln("static int %s(lua_State* L) {", realname)
         --TODO: use bee::lua::newudata
         writeln("    auto _retval = (%s*)lua_newuserdatauv(L, sizeof(%s), 0);", name, name)
         writeln("    new (_retval) %s;", name)
-        writeln("    wrap_%s::pointer(L, *_retval);", name)
+        writeln("    wrap_%s::%s(L, *_retval);", name, v.mode)
         writeln "    return 2;"
         writeln "}"
         writeln ""
         funcs[#funcs+1] = realname
+        ::continue::
     end
     writeln "static int StringBuf(lua_State* L) {"
     writeln "    util::strbuf_create(L, 1);"
@@ -564,7 +564,12 @@ local function write_struct_defines()
                 end
             end
         end
-        if v.mode == "pointer" then
+        if v.reference then
+            write_ret[name.."*"] = function()
+                writeln("    wrap_%s::pointer(L, _retval);", name)
+                return 1
+            end
+        elseif v.mode == "pointer" then
             write_ret[name.."*"] = function()
                 writeln "    if (_retval != NULL) {"
                 writeln("        wrap_%s::pointer(L, *_retval);", name)
@@ -578,37 +583,20 @@ local function write_struct_defines()
                 writeln("    wrap_%s::const_pointer(L, *_retval);", name)
                 return 1
             end
-        elseif v.mode == "reference" then
-            write_ret[name.."*"] = function()
-                writeln("    wrap_%s::pointer(L, _retval);", name)
-                return 1
-            end
         else
             assert(false)
         end
     end
     for _, v in ipairs(status.structs) do
-        local mode = v.mode
-        if mode == "reference" then
-            mode = "pointer"
-        elseif mode == "const_reference" then
-            mode = "const_pointer"
-        end
         writeln("namespace wrap_%s {", v.name)
-        writeln("    void %s(lua_State* L, %s& v);", mode, v.name)
+        writeln("    void %s(lua_State* L, %s& v);", v.mode, v.name)
         writeln "}"
     end
 end
 
 local function write_structs()
     for _, v in ipairs(status.structs) do
-        local mode = v.mode
-        if mode == "reference" then
-            mode = "pointer"
-        elseif mode == "const_reference" then
-            mode = "const_pointer"
-        end
-        types.decode_func(status, v.name, writeln, write_func, mode)
+        types.decode_func(status, v.name, writeln, write_func, v.mode)
     end
 end
 

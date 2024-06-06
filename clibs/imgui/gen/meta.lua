@@ -285,13 +285,12 @@ function m.init(status)
         end
         local name = struct_meta.name
         local mode = Readonly[name] and "const_pointer" or "pointer"
-        if name == "ImGuiIO" then
-            mode = "reference"
-        end
         local struct = {
             name = name,
             mode = mode,
+            reference = name == "ImGuiIO",
             fields = struct_meta.fields,
+            forward_declaration = struct_meta.forward_declaration,
         }
         structs[name] = struct
         structs[#structs+1] = struct

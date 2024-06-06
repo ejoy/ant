@@ -1564,8 +1564,24 @@ function ImGuiViewport.GetWorkCenter() end
 
 
 ---@return userdata
+---@return ImGuiIO
+function ImGui.IO() end
+
+---@return userdata
+---@return ImGuiInputTextCallbackData
+function ImGui.InputTextCallbackData() end
+
+---@return userdata
 ---@return ImFontConfig
 function ImGui.FontConfig() end
+
+---@return userdata
+---@return ImFontAtlas
+function ImGui.FontAtlas() end
+
+---@return userdata
+---@return ImGuiViewport
+function ImGui.Viewport() end
 
 ---@param str? string
 ---@return ImStringBuf

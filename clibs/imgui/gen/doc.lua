@@ -8,10 +8,6 @@ local function writeln(fmt, ...)
     w:write "\n"
 end
 
-local struct_constructor <const> = {
-    "ImFontConfig",
-}
-
 local KEYWORD <const> = {
     ["repeat"] = "arg_repeat",
     ["in"] = "arg_in",
@@ -514,15 +510,15 @@ local function write_structs()
             end
         end
         special_arg["const "..name.."*"] = special_arg[name.."*"]
-        if v.mode == "pointer" then
+        if v.reference then
+            special_ret[name.."*"] = function()
+                writeln("---@return %s", name)
+            end
+        elseif v.mode == "pointer" then
             special_ret[name.."*"] = function()
                 writeln("---@return %s?", name)
             end
         elseif v.mode == "const_pointer" then
-            special_ret[name.."*"] = function()
-                writeln("---@return %s", name)
-            end
-        elseif v.mode == "reference" then
             special_ret[name.."*"] = function()
                 writeln("---@return %s", name)
             end
@@ -544,12 +540,17 @@ writeln ""
 write_flags_and_enums()
 writeln ""
 write_structs()
-for _, name in ipairs(struct_constructor) do
+for _, v in ipairs(status.structs) do
+    if v.forward_declaration then
+        goto continue
+    end
+    local name = v.name
     local realname = name:match "^ImGui([%w]+)$" or name:match "^Im([%w]+)$"
     writeln("---@return userdata")
     writeln("---@return %s", name)
     writeln("function ImGui.%s() end", realname)
     writeln ""
+    ::continue::
 end
 writeln "---@param str? string"
 writeln "---@return ImStringBuf"

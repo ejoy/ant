@@ -758,6 +758,20 @@ namespace wrap_ImGuiViewport {
     void const_pointer(lua_State* L, ImGuiViewport& v);
 }
 
+static int IO(lua_State* L) {
+    auto _retval = (ImGuiIO*)lua_newuserdatauv(L, sizeof(ImGuiIO), 0);
+    new (_retval) ImGuiIO;
+    wrap_ImGuiIO::pointer(L, *_retval);
+    return 2;
+}
+
+static int InputTextCallbackData(lua_State* L) {
+    auto _retval = (ImGuiInputTextCallbackData*)lua_newuserdatauv(L, sizeof(ImGuiInputTextCallbackData), 0);
+    new (_retval) ImGuiInputTextCallbackData;
+    wrap_ImGuiInputTextCallbackData::pointer(L, *_retval);
+    return 2;
+}
+
 static int FontConfig(lua_State* L) {
     auto _retval = (ImFontConfig*)lua_newuserdatauv(L, sizeof(ImFontConfig), 0);
     new (_retval) ImFontConfig;
@@ -769,6 +783,13 @@ static int FontAtlas(lua_State* L) {
     auto _retval = (ImFontAtlas*)lua_newuserdatauv(L, sizeof(ImFontAtlas), 0);
     new (_retval) ImFontAtlas;
     wrap_ImFontAtlas::pointer(L, *_retval);
+    return 2;
+}
+
+static int Viewport(lua_State* L) {
+    auto _retval = (ImGuiViewport*)lua_newuserdatauv(L, sizeof(ImGuiViewport), 0);
+    new (_retval) ImGuiViewport;
+    wrap_ImGuiViewport::const_pointer(L, *_retval);
     return 2;
 }
 
@@ -7076,8 +7097,11 @@ static void init(lua_State* L) {
 
 static void init(lua_State* L) {
     static luaL_Reg funcs[] = {
+        { "IO", IO },
+        { "InputTextCallbackData", InputTextCallbackData },
         { "FontConfig", FontConfig },
         { "FontAtlas", FontAtlas },
+        { "Viewport", Viewport },
         { "StringBuf", StringBuf },
         { "CreateContext", CreateContext },
         { "DestroyContext", DestroyContext },
