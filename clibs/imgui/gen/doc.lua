@@ -224,11 +224,26 @@ special_arg["const void*"] = function (type_meta, status)
 end
 
 special_arg["void*"] = function (type_meta, status)
-    writeln("---@param %s lightuserdata", safe_name(type_meta.name))
-    status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+    if type_meta.default_value == nil then
+        writeln("---@param %s lightuserdata", safe_name(type_meta.name))
+        status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+    elseif type_meta.default_value == "NULL" then
+        writeln("---@param %s lightuserdata?", safe_name(type_meta.name))
+        status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+    else
+        assert(false)
+    end
 end
 
-special_arg["ImGuiInputTextCallback"] = function (type_meta, status)
+special_arg["ImGuiInputTextCallback"] = function (type_meta, context)
+    local ud_meta = context.args[context.i + 1]
+    if ud_meta and ud_meta.type and ud_meta.type.declaration == "void*" then
+        context.i = context.i + 1
+        writeln("---@param %s lightuserdata", safe_name(ud_meta.name))
+        context.arguments[#context.arguments+1] = safe_name(ud_meta.name)
+        return
+    end
+    assert(false)
 end
 
 special_arg["char*"] = function (type_meta, status)

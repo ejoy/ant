@@ -62,10 +62,15 @@ write_arg["const void*"] = function(type_meta, context)
 end
 
 write_arg["void*"] = function(type_meta, context)
-    assert(type_meta.default_value == nil)
     context.idx = context.idx + 1
     context.arguments[#context.arguments+1] = type_meta.name
-    writeln("    auto %s = lua_touserdata(L, %d);", type_meta.name, context.idx)
+    if type_meta.default_value == nil then
+        writeln("    auto %s = lua_touserdata(L, %d);", type_meta.name, context.idx)
+    elseif type_meta.default_value == "NULL" then
+        writeln("    auto %s = lua_isnoneornil(L, %d)? NULL: lua_touserdata(L, %d);", type_meta.name, context.idx, context.idx)
+    else
+        assert(false)
+    end
 end
 
 write_arg["char*"] = function(type_meta, context)

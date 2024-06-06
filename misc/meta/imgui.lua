@@ -4580,10 +4580,29 @@ function ImGui.UpdatePlatformWindows() end
 function ImGui.RenderPlatformWindowsDefault() end
 
 --
+-- call in main loop. will call RenderWindow/SwapBuffers platform functions for each secondary viewport which doesn't have the ImGuiViewportFlags_Minimized flag set. May be reimplemented by user for custom rendering needs.
+--
+---@param platform_render_arg lightuserdata?
+---@param renderer_render_arg lightuserdata?
+function ImGui.RenderPlatformWindowsDefaultEx(platform_render_arg, renderer_render_arg) end
+
+--
+-- call DestroyWindow platform functions for all viewports. call from backend Shutdown() if you need to close platform windows before imgui shutdown. otherwise will be called by DestroyContext().
+--
+function ImGui.DestroyPlatformWindows() end
+
+--
 -- this is a helper for backends.
 --
 ---@param id ImGuiID
 ---@return ImGuiViewport
 function ImGui.FindViewportByID(id) end
+
+--
+-- this is a helper for backends. the type platform_handle is decided by the backend (e.g. HWND, MyWindow*, GLFWwindow* etc.)
+--
+---@param platform_handle lightuserdata
+---@return ImGuiViewport
+function ImGui.FindViewportByPlatformHandle(platform_handle) end
 
 return ImGui

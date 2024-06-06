@@ -4627,9 +4627,28 @@ static int RenderPlatformWindowsDefault(lua_State* L) {
     return 0;
 }
 
+static int RenderPlatformWindowsDefaultEx(lua_State* L) {
+    auto platform_render_arg = lua_isnoneornil(L, 1)? NULL: lua_touserdata(L, 1);
+    auto renderer_render_arg = lua_isnoneornil(L, 2)? NULL: lua_touserdata(L, 2);
+    ImGui::RenderPlatformWindowsDefault(platform_render_arg, renderer_render_arg);
+    return 0;
+}
+
+static int DestroyPlatformWindows(lua_State* L) {
+    ImGui::DestroyPlatformWindows();
+    return 0;
+}
+
 static int FindViewportByID(lua_State* L) {
     auto id = (ImGuiID)luaL_checkinteger(L, 1);
     auto&& _retval = ImGui::FindViewportByID(id);
+    wrap_ImGuiViewport::const_pointer(L, *_retval);
+    return 1;
+}
+
+static int FindViewportByPlatformHandle(lua_State* L) {
+    auto platform_handle = lua_touserdata(L, 1);
+    auto&& _retval = ImGui::FindViewportByPlatformHandle(platform_handle);
     wrap_ImGuiViewport::const_pointer(L, *_retval);
     return 1;
 }
@@ -7663,7 +7682,10 @@ static void init(lua_State* L) {
         { "SaveIniSettingsToMemory", SaveIniSettingsToMemory },
         { "UpdatePlatformWindows", UpdatePlatformWindows },
         { "RenderPlatformWindowsDefault", RenderPlatformWindowsDefault },
+        { "RenderPlatformWindowsDefaultEx", RenderPlatformWindowsDefaultEx },
+        { "DestroyPlatformWindows", DestroyPlatformWindows },
         { "FindViewportByID", FindViewportByID },
+        { "FindViewportByPlatformHandle", FindViewportByPlatformHandle },
         { NULL, NULL },
     };
 

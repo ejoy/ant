@@ -45,9 +45,6 @@ local TodoFunction <const> = {
     ImGui_DebugCheckVersionAndDataLayout = true,
 
     ImGui_GetPlatformIO = true,
-    ImGui_RenderPlatformWindowsDefaultEx = true,
-    ImGui_DestroyPlatformWindows = true,
-    ImGui_FindViewportByPlatformHandle = true,
 
     ImGui_TextUnformatted = true,
     ImGui_TextUnformattedEx = true,
