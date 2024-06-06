@@ -284,12 +284,13 @@ function m.init(status)
             goto continue
         end
         local name = struct_meta.name
-        local modes = Readonly[name]
-            and { "const_pointer" }
-            or { "pointer" }
+        local mode = Readonly[name] and "const_pointer" or "pointer"
+        if name == "ImGuiIO" then
+            mode = "reference"
+        end
         local struct = {
             name = name,
-            modes = modes,
+            mode = mode,
             fields = struct_meta.fields,
         }
         structs[name] = struct

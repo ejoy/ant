@@ -155,35 +155,6 @@ write_arg["ImTextureID"] = function(type_meta, context)
     writeln("    auto %s = util::get_texture_id(L, %d);", type_meta.name, context.idx)
 end
 
-write_ret["ImGuiViewport*"] = function()
-    writeln("    wrap_ImGuiViewport::const_pointer(L, *_retval);")
-    return 1
-end
-
-write_arg["const ImFontConfig*"] = function(type_meta, context)
-    context.idx = context.idx + 1
-    context.arguments[#context.arguments+1] = type_meta.name
-    if type_meta.default_value == nil then
-        writeln("    auto %s = *(const ImFontConfig**)lua_touserdata(L, %d);", type_meta.name, context.idx)
-    elseif type_meta.default_value == "NULL" then
-        writeln("    auto %s = lua_isnoneornil(L, %d)? NULL: *(const ImFontConfig**)lua_touserdata(L, %d);", type_meta.name, context.idx, context.idx)
-    else
-        assert(false)
-    end
-end
-
-write_arg["ImFontAtlas*"] = function(type_meta, context)
-    context.idx = context.idx + 1
-    context.arguments[#context.arguments+1] = type_meta.name
-    if type_meta.default_value == nil then
-        writeln("    auto %s = *(ImFontAtlas**)lua_touserdata(L, %d);", type_meta.name, context.idx)
-    elseif type_meta.default_value == "NULL" then
-        writeln("    auto %s = lua_isnoneornil(L, %d)? NULL: *(ImFontAtlas**)lua_touserdata(L, %d);", type_meta.name, context.idx, context.idx)
-    else
-        assert(false)
-    end
-end
-
 write_arg["ImFont*"] = function(type_meta, context)
     assert(type_meta.default_value == nil)
     context.idx = context.idx + 1
@@ -219,27 +190,6 @@ end
 
 write_arg["const ImGuiWindowClass*"] = function()
     --NOTICE: Ignore ImGuiWindowClass for now.
-end
-
-write_arg["ImGuiContext*"] = function(type_meta, context)
-    context.idx = context.idx + 1
-    context.arguments[#context.arguments+1] = type_meta.name
-    if type_meta.default_value == nil then
-        writeln("    auto %s = *(ImGuiContext**)lua_touserdata(L, %d);", type_meta.name, context.idx)
-    elseif type_meta.default_value == "NULL" then
-        writeln("    auto %s = lua_isnoneornil(L, %d)? NULL: *(ImGuiContext**)lua_touserdata(L, %d);", type_meta.name, context.idx, context.idx)
-    else
-        assert(false)
-    end
-end
-
-write_ret["ImGuiContext*"] = function()
-    writeln "    if (_retval != NULL) {"
-    writeln "        wrap_ImGuiContext::pointer(L, *_retval);"
-    writeln "    } else {"
-    writeln "        lua_pushnil(L);"
-    writeln "    }"
-    return 1
 end
 
 write_arg["float"] = function(type_meta, context)
@@ -451,12 +401,6 @@ write_ret["const ImVec4*"] = function()
     return 4
 end
 
-write_ret["ImGuiIO*"] = function()
-    --NOTICE: It's actually `ImGuiIO&`
-    writeln("    wrap_ImGuiIO::pointer(L, _retval);")
-    return 1
-end
-
 for _, type_name in ipairs {"int", "unsigned int", "size_t", "ImU32", "ImWchar", "ImWchar16", "ImDrawIdx", "ImGuiID", "ImGuiKeyChord"} do
     write_arg[type_name] = function(type_meta, context)
         context.idx = context.idx + 1
@@ -606,17 +550,65 @@ end
 
 local function write_struct_defines()
     for _, v in ipairs(status.structs) do
-        writeln("namespace wrap_%s {", v.name)
-        for _, mode in ipairs(v.modes) do
-            writeln("    void %s(lua_State* L, %s& v);", mode, v.name)
+        local name = v.name
+        for _, nametype in ipairs { "const "..name.."*", name.."*" } do
+            write_arg[nametype] = function(type_meta, context)
+                context.idx = context.idx + 1
+                context.arguments[#context.arguments+1] = type_meta.name
+                if type_meta.default_value == nil then
+                    writeln("    auto %s = *(%s*)lua_touserdata(L, %d);", type_meta.name, nametype, context.idx)
+                elseif type_meta.default_value == "NULL" then
+                    writeln("    auto %s = lua_isnoneornil(L, %d)? NULL: *(%s*)lua_touserdata(L, %d);", type_meta.name, context.idx, nametype, context.idx)
+                else
+                    assert(false)
+                end
+            end
         end
+        if v.mode == "pointer" then
+            write_ret[name.."*"] = function()
+                writeln "    if (_retval != NULL) {"
+                writeln("        wrap_%s::pointer(L, *_retval);", name)
+                writeln "    } else {"
+                writeln "        lua_pushnil(L);"
+                writeln "    }"
+                return 1
+            end
+        elseif v.mode == "const_pointer" then
+            write_ret[name.."*"] = function()
+                writeln("    wrap_%s::const_pointer(L, *_retval);", name)
+                return 1
+            end
+        elseif v.mode == "reference" then
+            write_ret[name.."*"] = function()
+                writeln("    wrap_%s::pointer(L, _retval);", name)
+                return 1
+            end
+        else
+            assert(false)
+        end
+    end
+    for _, v in ipairs(status.structs) do
+        local mode = v.mode
+        if mode == "reference" then
+            mode = "pointer"
+        elseif mode == "const_reference" then
+            mode = "const_pointer"
+        end
+        writeln("namespace wrap_%s {", v.name)
+        writeln("    void %s(lua_State* L, %s& v);", mode, v.name)
         writeln "}"
     end
 end
 
 local function write_structs()
     for _, v in ipairs(status.structs) do
-        types.decode_func(status, v.name, writeln, write_func, v.modes)
+        local mode = v.mode
+        if mode == "reference" then
+            mode = "pointer"
+        elseif mode == "const_reference" then
+            mode = "const_pointer"
+        end
+        types.decode_func(status, v.name, writeln, write_func, mode)
     end
 end
 
