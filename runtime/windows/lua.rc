@@ -1,3 +1,4 @@
 #include <windows.h>
 
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "lua.manifest"
+101 ICON "ant.ico"

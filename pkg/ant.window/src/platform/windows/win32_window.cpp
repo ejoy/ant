@@ -550,15 +550,20 @@ bool window_init(lua_State* L, const char *size) {
 	if (FAILED(OleInitialize(NULL))) {
 		return false;
 	}
+	HICON icon = ::LoadIcon(::GetModuleHandle(NULL), MAKEINTRESOURCE(101));
+	if (icon == NULL) {
+		icon = ::LoadIcon(NULL, IDI_APPLICATION);
+	}
 	WNDCLASSEXW wndclass;
 	memset(&wndclass, 0, sizeof(wndclass));
 	wndclass.cbSize = sizeof(wndclass);
 	wndclass.style = CS_HREDRAW | CS_VREDRAW;// | CS_OWNDC;
 	wndclass.lpfnWndProc = WndProc;
 	wndclass.hInstance = GetModuleHandleW(0);
-	wndclass.hIcon = LoadIconW(NULL, (LPCWSTR)IDI_APPLICATION);
+	wndclass.hIcon = icon;
 	wndclass.hCursor = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
 	wndclass.lpszClassName = CLASSNAME;
+	wndclass.hIconSm = icon;
 	RegisterClassExW(&wndclass);
 
 	RECT rect = createWindowRect(size);
