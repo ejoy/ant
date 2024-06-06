@@ -64,7 +64,6 @@ local function create_light_billboard(light_eid, lighttype)
             visible = true,
             material = "/pkg/tools.editor/resource/materials/billboard_"..lighttype..".material",
             mesh_result = ientity.create_mesh{"p3|t2", vbdata},
-            owned_mesh_buffer = true,
         }
     }
 end
@@ -951,9 +950,10 @@ function m:save(path)
             end
             if #final_template > 0 then
                 utils.write_file(self.glb_filename..".patch", stringify(final_template))
-                assetmgr.unload(gd.virtual_glb_path.."/" .. self.anim_file)
-                assetmgr.unload(self.glb_filename..".patch")
-                assetmgr.unload(self.glb_filename.."/"..self.prefab_name)
+-- TODO: do not use unload, use assetmgr.flush instead				
+--                assetmgr.unload(gd.virtual_glb_path.."/" .. self.anim_file)
+--                assetmgr.unload(self.glb_filename..".patch")
+--                assetmgr.unload(self.glb_filename.."/"..self.prefab_name)
                 world:pub {"Save"}
             end
         end

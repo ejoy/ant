@@ -12,6 +12,4 @@ return {
             jointsRemap = ozz.Uint16Verctor(data.jointsRemap)
         }
     end,
-    unloader = function (res)
-    end
 }

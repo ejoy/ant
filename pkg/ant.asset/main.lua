@@ -4,10 +4,68 @@ local sa			= require "system_attribs"	-- must require after 'texture_mgr.init()'
 
 local assetmgr = {}
 
-local FILELIST = {}
+local function gen_cache()
+	local cache_meta = {}
+	local old_n = 0
+	local new_n = 0
+	local old = {}
+
+	function cache_meta:__index(name)
+		local v = old[name]
+		if v then
+			old[name] = nil
+			old_n = old_n - 1
+			self[name] = v
+			return v
+		end
+	end
+
+	function cache_meta:__newindex(name, v)
+		new_n = new_n + 1
+		rawset(self, name, v)
+	end
+
+	-- flush cache
+	function cache_meta:__call()
+		local ret
+		local cap = new_n * 2 + old_n // 2
+		local total = old_n + new_n - cap
+		if total > 0 then
+			ret = {}
+			for i = 1, total do
+				local k,v = next(old)
+				ret[i] = v
+				old[k] = nil
+				old_n = old_n - 1
+			end
+		end
+		for k,v in pairs(self) do
+			old[k] = v
+			self[k] = nil
+			old_n = old_n + 1
+		end
+		new_n = 0
+		return ret
+	end
+
+	return setmetatable({}, cache_meta)
+end
 
 local function require_ext(ext)
 	return require("ext_" .. ext)
+end
+
+local EXTLIST = setmetatable({}, {
+	__index = function(self, ext)
+		local list = gen_cache(require_ext(ext))
+		self[ext] = list
+		return list
+	end
+})
+
+local function get_cache(fullpath)
+	local ext = fullpath:match "[^.]*$"
+	return EXTLIST[ext], require_ext(ext)
 end
 
 function assetmgr.init()
@@ -19,33 +77,37 @@ function assetmgr.init()
 end
 
 function assetmgr.load(fullpath, block)
+	local FILELIST, api = get_cache(fullpath)
 	local robj = FILELIST[fullpath]
 	if not robj then
-		local ext = fullpath:match "[^.]*$"
-		robj = require_ext(ext).loader(fullpath, block)
+		robj = api.loader(fullpath, block)
 		FILELIST[fullpath] = robj
 	end
 	return robj
-end
-
-function assetmgr.unload(fullpath)
-	local robj = FILELIST[fullpath]
-	if robj == nil then
-		return
-	end
-	local ext = fullpath:match "[^.]*$"
-	require_ext(ext).unloader(robj)
-	FILELIST[fullpath] = nil
 end
 
 function assetmgr.reload(fullpath, block)
+	local FILELIST, api = get_cache(fullpath)
 	local robj = FILELIST[fullpath]
 	if robj then
-		local ext = fullpath:match "[^.]*$"
-		robj = require_ext(ext).reloader(fullpath, robj, block)
+		robj = api.reloader(fullpath, robj, block)
 		FILELIST[fullpath] = robj
 	end
 	return robj
+end
+
+function assetmgr.flush()
+	for ext, cache in pairs(EXTLIST) do
+		local del = cache()	-- flush cache
+		if del then
+			local unload = require_ext(ext).unloader
+			if unload then
+				for _, v in ipairs(del) do
+					unload(v)
+				end
+			end
+		end
+	end
 end
 
 assetmgr.resource = assetmgr.load

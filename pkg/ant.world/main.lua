@@ -1,5 +1,6 @@
 local luaecs = import_package "ant.luaecs"
 local serialize = import_package "ant.serialize"
+local assetmgr = import_package "ant.asset"
 local btime = require "bee.time"
 local inputmgr = require "inputmgr"
 local bgfx = require "bgfx"
@@ -735,6 +736,7 @@ function m.new_world(config)
     inputmgr.init(w)
 
     log.info "world initializing"
+	assetmgr.flush()
     feature.import(w, config.ecs.feature)
     cworld.create(w)
     for _, funcs in pairs(w._clibs_loaded) do

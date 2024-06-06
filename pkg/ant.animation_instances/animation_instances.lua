@@ -155,7 +155,6 @@ function iai.create(prefab, framenum, numinstance, instances)
                             size    = MAX_INSTANCES,
                         }
                     },
-                    owned_mesh_buffer = true,
                     mesh_result     = imesh.init_mesh(result.mesh),
                     animation_instances = {
                         instances   = instances,

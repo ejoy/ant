@@ -7,6 +7,4 @@ return {
     reloader = function (name, _, block)
         return mgr.reload(name, block)
     end,
-    unloader = function ()
-    end,
 }

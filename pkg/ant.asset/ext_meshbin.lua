@@ -79,7 +79,7 @@ end
 local function init(mesh)
     local vb = mesh.vb
     setmetatable(vb, proxy_vb)
-     local vb2 = mesh.vb2
+    local vb2 = mesh.vb2
     if vb2 then
         setmetatable(vb2, proxy_vb)
     end
@@ -91,17 +91,17 @@ local function init(mesh)
 end
 
 local function destroy_handle(v)
-    if v then
-        if v.owned then
-            bgfx.destroy(v.handle)
-            v.owned = nil
-        end
-        v.handle = nil
-    end
+	if v then
+		if not v.memory then
+			bgfx.destroy(v.handle)
+		end
+		v.handle = nil
+	end
 end
 
 local function delete(mesh)
     destroy_handle(mesh.vb)
+    destroy_handle(mesh.vb2)
     destroy_handle(mesh.ib)
 end
 

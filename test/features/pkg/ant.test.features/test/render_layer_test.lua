@@ -7,7 +7,6 @@ local util  = ecs.require "util"
 local PC    = util.proxy_creator()
 
 local irl       = ecs.require "ant.render|render_layer.render_layer"
-local ientity   = ecs.require "ant.entity|entity"
 local imesh     = ecs.require "ant.asset|mesh"
 local imaterial = ecs.require "ant.render|material"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
@@ -32,10 +31,10 @@ function rlt_sys.init_world()
 
     PC:create_entity {
         policy = {
-            "ant.render|simplerender",
+            "ant.render|render",
         },
         data = {
-            mesh_result= ientity.plane_mesh(),
+            mesh = "plane.primitive",
             scene = {t = {-10, 0, 0}, s = 10},
             material = "/pkg/ant.test.features/assets/render_layer_test.material",
             render_layer = "translucent_plane",

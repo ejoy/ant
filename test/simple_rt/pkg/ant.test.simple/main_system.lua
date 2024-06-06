@@ -9,7 +9,6 @@ local util      = ecs.require "ant.render|postprocess.util"
 local queuemgr  = ecs.require "ant.render|queue_mgr"
 local irq       = ecs.require "ant.render|renderqueue"
 local imesh     = ecs.require "ant.asset|mesh"
-local ientity   = ecs.require "ant.entity|entity"
 local hwi       = import_package "ant.hwi"
 local irender   = ecs.require "ant.render|render"
 local mu        = import_package "ant.math".util
@@ -100,7 +99,7 @@ local function create_scene(is_test)
 
     local plane = world:create_entity{
 		policy = {
-			"ant.render|simplerender",
+			"ant.render|render",
 		},
 		data = {
 			scene 		= {
@@ -109,8 +108,7 @@ local function create_scene(is_test)
 			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
 			visible     = true,
             visible_masks = is_test and "" or nil,
-			mesh_result	= ientity.plane_mesh(),
-            owned_mesh_buffer = true,
+			mesh		= "plane.primitive",
 		}
 	}
 
