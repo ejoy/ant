@@ -748,6 +748,9 @@ namespace wrap_ImGuiIO {
 namespace wrap_ImGuiInputTextCallbackData {
     void pointer(lua_State* L, ImGuiInputTextCallbackData& v);
 }
+namespace wrap_ImGuiWindowClass {
+    void pointer(lua_State* L, ImGuiWindowClass& v);
+}
 namespace wrap_ImFontConfig {
     void pointer(lua_State* L, ImFontConfig& v);
 }
@@ -769,6 +772,13 @@ static int InputTextCallbackData(lua_State* L) {
     auto _retval = (ImGuiInputTextCallbackData*)lua_newuserdatauv(L, sizeof(ImGuiInputTextCallbackData), 0);
     new (_retval) ImGuiInputTextCallbackData;
     wrap_ImGuiInputTextCallbackData::pointer(L, *_retval);
+    return 2;
+}
+
+static int WindowClass(lua_State* L) {
+    auto _retval = (ImGuiWindowClass*)lua_newuserdatauv(L, sizeof(ImGuiWindowClass), 0);
+    new (_retval) ImGuiWindowClass;
+    wrap_ImGuiWindowClass::pointer(L, *_retval);
     return 2;
 }
 
@@ -4012,7 +4022,8 @@ static int DockSpaceEx(lua_State* L) {
         (float)luaL_optnumber(L, 3, 0),
     };
     auto flags = (ImGuiDockNodeFlags)luaL_optinteger(L, 4, lua_Integer(ImGuiDockNodeFlags_None));
-    auto&& _retval = ImGui::DockSpace(dockspace_id, size, flags);
+    auto window_class = lua_isnoneornil(L, 5)? NULL: *(const ImGuiWindowClass**)lua_touserdata(L, 5);
+    auto&& _retval = ImGui::DockSpace(dockspace_id, size, flags, window_class);
     lua_pushinteger(L, _retval);
     return 1;
 }
@@ -4027,6 +4038,12 @@ static int SetNextWindowDockID(lua_State* L) {
     auto dock_id = (ImGuiID)luaL_checkinteger(L, 1);
     auto cond = (ImGuiCond)luaL_optinteger(L, 2, lua_Integer(ImGuiCond_None));
     ImGui::SetNextWindowDockID(dock_id, cond);
+    return 0;
+}
+
+static int SetNextWindowClass(lua_State* L) {
+    auto window_class = *(const ImGuiWindowClass**)lua_touserdata(L, 1);
+    ImGui::SetNextWindowClass(window_class);
     return 0;
 }
 
@@ -6242,6 +6259,173 @@ static void init(lua_State* L) {
 
 }
 
+namespace wrap_ImGuiWindowClass {
+
+struct ClassId {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiWindowClass**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.ClassId);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiWindowClass**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ClassId = (ImGuiID)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct ParentViewportId {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiWindowClass**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.ParentViewportId);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiWindowClass**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ParentViewportId = (ImGuiID)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct FocusRouteParentWindowId {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiWindowClass**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.FocusRouteParentWindowId);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiWindowClass**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.FocusRouteParentWindowId = (ImGuiID)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct ViewportFlagsOverrideSet {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiWindowClass**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.ViewportFlagsOverrideSet);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiWindowClass**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ViewportFlagsOverrideSet = (ImGuiViewportFlags)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct ViewportFlagsOverrideClear {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiWindowClass**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.ViewportFlagsOverrideClear);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiWindowClass**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ViewportFlagsOverrideClear = (ImGuiViewportFlags)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct TabItemFlagsOverrideSet {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiWindowClass**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.TabItemFlagsOverrideSet);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiWindowClass**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.TabItemFlagsOverrideSet = (ImGuiTabItemFlags)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct DockNodeFlagsOverrideSet {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiWindowClass**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.DockNodeFlagsOverrideSet);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiWindowClass**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.DockNodeFlagsOverrideSet = (ImGuiDockNodeFlags)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct DockingAlwaysTabBar {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiWindowClass**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.DockingAlwaysTabBar);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiWindowClass**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.DockingAlwaysTabBar = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct DockingAllowUnclassed {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiWindowClass**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.DockingAllowUnclassed);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiWindowClass**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.DockingAllowUnclassed = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+static luaL_Reg setters[] = {
+    { "ClassId", ClassId::setter },
+    { "ParentViewportId", ParentViewportId::setter },
+    { "FocusRouteParentWindowId", FocusRouteParentWindowId::setter },
+    { "ViewportFlagsOverrideSet", ViewportFlagsOverrideSet::setter },
+    { "ViewportFlagsOverrideClear", ViewportFlagsOverrideClear::setter },
+    { "TabItemFlagsOverrideSet", TabItemFlagsOverrideSet::setter },
+    { "DockNodeFlagsOverrideSet", DockNodeFlagsOverrideSet::setter },
+    { "DockingAlwaysTabBar", DockingAlwaysTabBar::setter },
+    { "DockingAllowUnclassed", DockingAllowUnclassed::setter },
+};
+
+static luaL_Reg getters[] = {
+    { "ClassId", ClassId::getter },
+    { "ParentViewportId", ParentViewportId::getter },
+    { "FocusRouteParentWindowId", FocusRouteParentWindowId::getter },
+    { "ViewportFlagsOverrideSet", ViewportFlagsOverrideSet::getter },
+    { "ViewportFlagsOverrideClear", ViewportFlagsOverrideClear::getter },
+    { "TabItemFlagsOverrideSet", TabItemFlagsOverrideSet::getter },
+    { "DockNodeFlagsOverrideSet", DockNodeFlagsOverrideSet::getter },
+    { "DockingAlwaysTabBar", DockingAlwaysTabBar::getter },
+    { "DockingAllowUnclassed", DockingAllowUnclassed::getter },
+};
+
+static int tag_pointer = 0;
+
+void pointer(lua_State* L, ImGuiWindowClass& v) {
+    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_pointer);
+    auto** ptr = (ImGuiWindowClass**)lua_touserdata(L, -1);
+    *ptr = &v;
+}
+
+static void init(lua_State* L) {
+    util::struct_gen(L, "ImGuiWindowClass", {}, setters, getters);
+    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag_pointer);
+}
+
+}
+
 namespace wrap_ImFontConfig {
 
 struct FontData {
@@ -7099,6 +7283,7 @@ static void init(lua_State* L) {
     static luaL_Reg funcs[] = {
         { "IO", IO },
         { "InputTextCallbackData", InputTextCallbackData },
+        { "WindowClass", WindowClass },
         { "FontConfig", FontConfig },
         { "FontAtlas", FontAtlas },
         { "Viewport", Viewport },
@@ -7396,6 +7581,7 @@ static void init(lua_State* L) {
         { "DockSpaceEx", DockSpaceEx },
         { "DockSpaceOverViewport", DockSpaceOverViewport },
         { "SetNextWindowDockID", SetNextWindowDockID },
+        { "SetNextWindowClass", SetNextWindowClass },
         { "GetWindowDockID", GetWindowDockID },
         { "IsWindowDocked", IsWindowDocked },
         { "BeginDragDropSource", BeginDragDropSource },
@@ -7548,6 +7734,7 @@ static void init(lua_State* L) {
     wrap_ImGuiContext::init(L);
     wrap_ImGuiIO::init(L);
     wrap_ImGuiInputTextCallbackData::init(L);
+    wrap_ImGuiWindowClass::init(L);
     wrap_ImFontConfig::init(L);
     wrap_ImFontAtlas::init(L);
     wrap_ImGuiViewport::init(L);

@@ -80,7 +80,6 @@ local TodoFunction <const> = {
     ImGui_ColorConvertHSVtoRGB = true,
 
     ImGui_TableGetSortSpecs = true,
-    ImGui_SetNextWindowClass = true,
     ImGui_DockSpaceOverViewportEx = true,
     ImGui_GetBackgroundDrawList = true,
     ImGui_GetForegroundDrawList = true,
@@ -156,12 +155,16 @@ local TodoStruct <const> = {
     ImGuiPlatformImeData = true,
     ImGuiTableColumnSortSpecs = true,
     ImGuiSizeCallbackData = true,
-    ImGuiWindowClass = true,
 }
 
 local TodoType <const> = {
     ImTextureID = true,
     ImGuiKeyChord = true,
+}
+
+local Reference <const> = {
+    ImGuiIO = true,
+    ImGuiPlatformIO = true,
 }
 
 local BuiltinLuaType <const> = {
@@ -288,7 +291,7 @@ function m.init(status)
         local struct = {
             name = name,
             mode = mode,
-            reference = name == "ImGuiIO",
+            reference = Reference[name],
             fields = struct_meta.fields,
             forward_declaration = struct_meta.forward_declaration,
         }
