@@ -195,23 +195,6 @@ function ientity.create_grid_entity(width, height, unit, linewidth, srt, materia
 	ipl.add_linelist({{0, 0, -hh_len}, {0, 0, hh_len},}, centerwidth, {0.0, 0.0, c, 1.0}, material, srt, render_layer)
 end
 
-
-function ientity.plane_mesh(tex_uv)
-	local u0, v0, u1, v1
-	if tex_uv then
-		u0, v0, u1, v1 = tex_uv[1], tex_uv[2], tex_uv[3], tex_uv[4]
-	else
-		u0, v0, u1, v1 = 0, 0, 1, 1
-	end
-	local vb = {
-		-0.5, 0, 0.5, 0, 1, 0, u0, v0,	--left top
-		 0.5, 0, 0.5, 0, 1, 0, u1, v0,	--right top
-		-0.5, 0,-0.5, 0, 1, 0, u0, v1,	--left bottom
-		 0.5, 0,-0.5, 0, 1, 0, u1, v1,	--right bottom
-	}
-	return create_mesh({"p3|n3|t2", vb}, {0, 1, 2, 1, 3, 2}, {{-0.5, 0, -0.5}, {0.5, 0, 0.5}})
-end
-
 local plane_vb<const> = {
 	-0.5, 0, 0.5, 0, 1, 0,	--left top
 	0.5,  0, 0.5, 0, 1, 0,	--right top
@@ -676,15 +659,13 @@ local function arrow_mesh(headratio, arrowlen, coneradius, cylinderradius)
 	}
 end
 
-ientity.arrow_mesh = arrow_mesh
-
 function ientity.create_arrow_entity(headratio, color, material, scene)
 	return world:create_entity{
 		policy = {
-			"ant.render|simplerender",
+			"ant.render|render",
 		},
 		data = {
-			mesh_result = arrow_mesh(headratio),
+			mesh = "arrow(" .. headratio .. ").primitive",
 			material = material,
 			visible = true,
 			scene = scene or {},

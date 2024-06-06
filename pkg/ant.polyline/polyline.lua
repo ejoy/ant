@@ -24,7 +24,17 @@ local ipl       = {}
     vec3  v_texcoord0;  //xy for uv, w for counter
 ]]
 
-
+-- todo: Need better solution to release this handle
+-- try to use asset manager ?
+local release_handle = {
+	__gc = function(self)
+		local h = self.handle
+		if h then
+			self.handle = nil
+			bgfx.destroy(h)
+		end
+	end
+}
 
 local function create_strip_index_buffer(max_lines)
     local function create_ib_buffer(max_lines)
@@ -46,27 +56,11 @@ local function create_strip_index_buffer(max_lines)
         return bgfx.create_index_buffer(indices)
     end
 
-    return {
+    return setmetatable( {
         offset = 0,
         num_indices = max_lines,
         handle = create_ib_buffer(max_lines),
-        alloc = function (self, numlines)
-            local numindices<const> = numlines * 2 * 3
-            local start = self.offset
-        
-            if start + numindices > self.num_indices then
-                error(("not enough index buffer:%d, %d"):format(start+numindices, self.num_indices))
-            end
-        
-            self.offset = start + numindices
-        
-            return {
-                start = start,
-                num = numindices,
-                handle = self.handle,
-            }
-        end
-    }
+    }, release_handle)
 end
 
 local strip_ib = create_strip_index_buffer(3072)

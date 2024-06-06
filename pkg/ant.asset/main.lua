@@ -100,9 +100,11 @@ function assetmgr.flush()
 	for ext, cache in pairs(EXTLIST) do
 		local del = cache()	-- flush cache
 		if del then
-			local api = require_ext(ext)
-			for _, v in ipairs(del) do
-				api.unloader(v)
+			local unload = require_ext(ext).unloader
+			if unload then
+				for _, v in ipairs(del) do
+					unload(v)
+				end
 			end
 		end
 	end

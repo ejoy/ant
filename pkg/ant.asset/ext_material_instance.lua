@@ -13,11 +13,8 @@ local function loader (filename)
     return m
 end
 
-local function unloader()
-    -- temp memory will be released in render_system
-end
+-- temp memory will be released in render_system, no unloader
 
 return {
     loader = loader,
-    unloader = unloader,
 }
