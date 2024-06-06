@@ -150,10 +150,10 @@ void ant_loadmodules(lua_State* L) {
         { "filedialog", luaopen_filedialog },
 #endif
 #endif
-#if !BX_PLATFORM_LINUX
         { "window", luaopen_window },
-        { "httpc", luaopen_httpc },
         { "font.util", luaopen_font_util },
+#if !BX_PLATFORM_LINUX
+        { "httpc", luaopen_httpc },
 #endif
 #if BX_PLATFORM_IOS
         { "ios", luaopen_ios },
