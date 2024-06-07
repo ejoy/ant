@@ -191,15 +191,14 @@ local function create_texture_item_entity(canvas_eid, show, materialpath, render
                     start = 0,
                     num = 0,
                     handle = bgfx.create_dynamic_vertex_buffer(1, layout.handle, "a"),
-                    owned = true
                 },
                 ib = {
                     start = 0,
                     num = 0,
                     handle = irender.quad_ib(),
+					memory = true,	-- prevent to delete ib.handle
                 }
             },
-            owned_mesh_buffer = true,
             material    = materialpath,
             scene       = {
                 parent = canvas_eid,

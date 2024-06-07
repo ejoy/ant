@@ -1331,6 +1331,17 @@ function ImGuiInputTextCallbackData.ClearSelection() end
 function ImGuiInputTextCallbackData.HasSelection() end
 
 
+---@class ImGuiWindowClass
+---@field ClassId ImGuiID                               #  User data. 0 = Default class (unclassed). Windows of different classes cannot be docked with each others.
+---@field ParentViewportId ImGuiID                      #  Hint for the platform backend. -1: use default. 0: request platform backend to not parent the platform. != 0: request platform backend to create a parent<>child relationship between the platform windows. Not conforming backends are free to e.g. parent every viewport to the main viewport or not.
+---@field FocusRouteParentWindowId ImGuiID              #  ID of parent window for shortcut focus route evaluation, e.g. Shortcut() call from Parent Window will succeed when this window is focused.
+---@field ViewportFlagsOverrideSet ImGui.ViewportFlags  #  Viewport flags to set when a window of this class owns a viewport. This allows you to enforce OS decoration or task bar icon, override the defaults on a per-window basis.
+---@field ViewportFlagsOverrideClear ImGui.ViewportFlags#  Viewport flags to clear when a window of this class owns a viewport. This allows you to enforce OS decoration or task bar icon, override the defaults on a per-window basis.
+---@field TabItemFlagsOverrideSet ImGui.TabItemFlags    #  [EXPERIMENTAL] TabItem flags to set when a window of this class gets submitted into a dock node tab bar. May use with ImGuiTabItemFlags_Leading or ImGuiTabItemFlags_Trailing.
+---@field DockNodeFlagsOverrideSet ImGui.DockNodeFlags  #  [EXPERIMENTAL] Dock node flags to set when a window of this class is hosted by a dock node (it doesn't have to be selected!)
+---@field DockingAlwaysTabBar boolean                   #  Set to true to enforce single floating windows of this class always having their own docking node (equivalent of setting the global io.ConfigDockingAlwaysTabBar)
+---@field DockingAllowUnclassed boolean                 #  Set to true to allow windows of this class to be docked/merged with an unclassed window. // FIXME-DOCK: Move to DockNodeFlags override?
+
 ---@class ImFontConfig
 ---@field FontData lightuserdata      #           // TTF/OTF data
 ---@field FontDataSize integer        #           // TTF/OTF data size
@@ -1564,8 +1575,28 @@ function ImGuiViewport.GetWorkCenter() end
 
 
 ---@return userdata
+---@return ImGuiIO
+function ImGui.IO() end
+
+---@return userdata
+---@return ImGuiInputTextCallbackData
+function ImGui.InputTextCallbackData() end
+
+---@return userdata
+---@return ImGuiWindowClass
+function ImGui.WindowClass() end
+
+---@return userdata
 ---@return ImFontConfig
 function ImGui.FontConfig() end
+
+---@return userdata
+---@return ImFontAtlas
+function ImGui.FontAtlas() end
+
+---@return userdata
+---@return ImGuiViewport
+function ImGui.Viewport() end
 
 ---@param str? string
 ---@return ImStringBuf
@@ -3928,8 +3959,9 @@ function ImGui.DockSpace(dockspace_id) end
 ---@param size_x? number | `0`
 ---@param size_y? number | `0`
 ---@param flags? ImGui.DockNodeFlags | `ImGui.DockNodeFlags { "None" }`
+---@param window_class? ImGuiWindowClass
 ---@return ImGuiID
-function ImGui.DockSpaceEx(dockspace_id, size_x, size_y, flags) end
+function ImGui.DockSpaceEx(dockspace_id, size_x, size_y, flags, window_class) end
 
 --
 -- Implied dockspace_id = 0, viewport = NULL, flags = 0, window_class = NULL
@@ -3943,6 +3975,12 @@ function ImGui.DockSpaceOverViewport() end
 ---@param dock_id ImGuiID
 ---@param cond? ImGui.Cond | `ImGui.Cond.None`
 function ImGui.SetNextWindowDockID(dock_id, cond) end
+
+--
+-- set next window class (control docking compatibility + provide hints to platform backend via custom viewport flags and platform parent/child relationship)
+--
+---@param window_class ImGuiWindowClass
+function ImGui.SetNextWindowClass(window_class) end
 
 ---@return ImGuiID
 function ImGui.GetWindowDockID() end
@@ -4542,10 +4580,29 @@ function ImGui.UpdatePlatformWindows() end
 function ImGui.RenderPlatformWindowsDefault() end
 
 --
+-- call in main loop. will call RenderWindow/SwapBuffers platform functions for each secondary viewport which doesn't have the ImGuiViewportFlags_Minimized flag set. May be reimplemented by user for custom rendering needs.
+--
+---@param platform_render_arg lightuserdata?
+---@param renderer_render_arg lightuserdata?
+function ImGui.RenderPlatformWindowsDefaultEx(platform_render_arg, renderer_render_arg) end
+
+--
+-- call DestroyWindow platform functions for all viewports. call from backend Shutdown() if you need to close platform windows before imgui shutdown. otherwise will be called by DestroyContext().
+--
+function ImGui.DestroyPlatformWindows() end
+
+--
 -- this is a helper for backends.
 --
 ---@param id ImGuiID
 ---@return ImGuiViewport
 function ImGui.FindViewportByID(id) end
+
+--
+-- this is a helper for backends. the type platform_handle is decided by the backend (e.g. HWND, MyWindow*, GLFWwindow* etc.)
+--
+---@param platform_handle lightuserdata
+---@return ImGuiViewport
+function ImGui.FindViewportByPlatformHandle(platform_handle) end
 
 return ImGui

@@ -4,6 +4,7 @@ component "camera_ref".type "int64"
 component "camera_changed"
 
 pipeline "camera"
+    .stage "camera_set"
     .stage "merge_camera_changed"
     .stage "update_camera"
     .stage "update_camera_bounding"

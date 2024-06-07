@@ -1428,7 +1428,6 @@ local function create_bone_entity(joint_name)
 			material	= "/pkg/tools.editor/resource/materials/joint.material",
             render_layer = "translucent",
 			mesh_result	= ientity.create_mesh({"p3|n3|t2", bone_vert}),
-            owned_mesh_buffer = true,
 			visible = true,
             visible_masks = "selectable",
 			on_ready 	= function(e)

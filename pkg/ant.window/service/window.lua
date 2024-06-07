@@ -201,6 +201,11 @@ function S.get_cmd()
 	return initargs.cmd
 end
 
+if initargs.log then
+	-- set log level : 'trace','debug', 'info', 'warn', 'error', 'fatal'
+	log.level = initargs.log
+end
+
 window.init(WindowQueue, initargs.window_size)
 
 return S

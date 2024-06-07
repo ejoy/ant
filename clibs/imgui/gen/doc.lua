@@ -8,10 +8,6 @@ local function writeln(fmt, ...)
     w:write "\n"
 end
 
-local struct_constructor <const> = {
-    "ImFontConfig",
-}
-
 local KEYWORD <const> = {
     ["repeat"] = "arg_repeat",
     ["in"] = "arg_in",
@@ -104,40 +100,10 @@ special_ret["const ImVec4*"] = function ()
     writeln("---@return number")
 end
 
-special_ret["ImGuiIO*"] = function()
-    writeln("---@return ImGuiIO")
-end
-
 special_arg["ImTextureID"] = function (type_meta, status)
     assert(type_meta.default_value == nil)
     writeln("---@param %s ImTextureID", safe_name(type_meta.name))
     status.arguments[#status.arguments+1] = safe_name(type_meta.name)
-end
-
-special_ret["ImGuiViewport*"] = function()
-    writeln("---@return ImGuiViewport")
-end
-
-special_arg["const ImFontConfig*"] = function(type_meta, status)
-    status.arguments[#status.arguments+1] = safe_name(type_meta.name)
-    if type_meta.default_value == nil then
-        writeln("---@param %s ImFontConfig", safe_name(type_meta.name))
-    elseif type_meta.default_value == "NULL" then
-        writeln("---@param %s? ImFontConfig", safe_name(type_meta.name))
-    else
-        assert(false)
-    end
-end
-
-special_arg["ImFontAtlas*"] = function(type_meta, status)
-    status.arguments[#status.arguments+1] = safe_name(type_meta.name)
-    if type_meta.default_value == nil then
-        writeln("---@param %s ImFontAtlas", safe_name(type_meta.name))
-    elseif type_meta.default_value == "NULL" then
-        writeln("---@param %s? ImFontAtlas", safe_name(type_meta.name))
-    else
-        assert(false)
-    end
 end
 
 special_arg["ImFont*"] = function(type_meta, status)
@@ -165,21 +131,6 @@ end
 
 special_arg["const ImGuiWindowClass*"] = function()
     --NOTICE: Ignore ImGuiWindowClass for now.
-end
-
-special_arg["ImGuiContext*"] = function(type_meta, status)
-    status.arguments[#status.arguments+1] = safe_name(type_meta.name)
-    if type_meta.default_value == nil then
-        writeln("---@param %s ImGuiContext", safe_name(type_meta.name))
-    elseif type_meta.default_value == "NULL" then
-        writeln("---@param %s? ImGuiContext", safe_name(type_meta.name))
-    else
-        assert(false)
-    end
-end
-
-special_ret["ImGuiContext*"] = function()
-    writeln("---@return ImGuiContext?")
 end
 
 special_arg["unsigned int*"] = function (type_meta, status)
@@ -273,11 +224,26 @@ special_arg["const void*"] = function (type_meta, status)
 end
 
 special_arg["void*"] = function (type_meta, status)
-    writeln("---@param %s lightuserdata", safe_name(type_meta.name))
-    status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+    if type_meta.default_value == nil then
+        writeln("---@param %s lightuserdata", safe_name(type_meta.name))
+        status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+    elseif type_meta.default_value == "NULL" then
+        writeln("---@param %s lightuserdata?", safe_name(type_meta.name))
+        status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+    else
+        assert(false)
+    end
 end
 
-special_arg["ImGuiInputTextCallback"] = function (type_meta, status)
+special_arg["ImGuiInputTextCallback"] = function (type_meta, context)
+    local ud_meta = context.args[context.i + 1]
+    if ud_meta and ud_meta.type and ud_meta.type.declaration == "void*" then
+        context.i = context.i + 1
+        writeln("---@param %s lightuserdata", safe_name(ud_meta.name))
+        context.arguments[#context.arguments+1] = safe_name(ud_meta.name)
+        return
+    end
+    assert(false)
 end
 
 special_arg["char*"] = function (type_meta, status)
@@ -547,6 +513,33 @@ local function write_structs()
     end
     for _, v in ipairs(status.structs) do
         types.decode_docs(status, v.name, writeln, write_func)
+        local name = v.name
+        special_arg[name.."*"] = function(type_meta, status)
+            status.arguments[#status.arguments+1] = safe_name(type_meta.name)
+            if type_meta.default_value == nil then
+                writeln("---@param %s %s", safe_name(type_meta.name), name)
+            elseif type_meta.default_value == "NULL" then
+                writeln("---@param %s? %s", safe_name(type_meta.name), name)
+            else
+                assert(false)
+            end
+        end
+        special_arg["const "..name.."*"] = special_arg[name.."*"]
+        if v.reference then
+            special_ret[name.."*"] = function()
+                writeln("---@return %s", name)
+            end
+        elseif v.mode == "pointer" then
+            special_ret[name.."*"] = function()
+                writeln("---@return %s?", name)
+            end
+        elseif v.mode == "const_pointer" then
+            special_ret[name.."*"] = function()
+                writeln("---@return %s", name)
+            end
+        else
+            assert(false)
+        end
     end
 end
 
@@ -562,12 +555,17 @@ writeln ""
 write_flags_and_enums()
 writeln ""
 write_structs()
-for _, name in ipairs(struct_constructor) do
+for _, v in ipairs(status.structs) do
+    if v.forward_declaration then
+        goto continue
+    end
+    local name = v.name
     local realname = name:match "^ImGui([%w]+)$" or name:match "^Im([%w]+)$"
     writeln("---@return userdata")
     writeln("---@return %s", name)
     writeln("function ImGui.%s() end", realname)
     writeln ""
+    ::continue::
 end
 writeln "---@param str? string"
 writeln "---@return ImStringBuf"

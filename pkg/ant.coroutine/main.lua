@@ -110,6 +110,6 @@ end -- end corotuine
 
 _ENV.coroutine = coroutine
 
-print("======== REPLACE COROUTINE", coroutine)
+log.debug "replace coroutine with ant.coroutine"
 
 return coroutine

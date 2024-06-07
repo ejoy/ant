@@ -51,7 +51,7 @@ end
 local function shadow_plane()
     return PC:create_entity{
 		policy = {
-			"ant.render|simplerender",
+			"ant.render|render",
 		},
 		data = {
 			scene 		= {
@@ -59,7 +59,7 @@ local function shadow_plane()
 				s = {100, 1, 100},
             },
 			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
-			mesh_result	= ientity.plane_mesh(),
+			mesh		= "plane.primitive",
             visible     = true,
 		}
 	}

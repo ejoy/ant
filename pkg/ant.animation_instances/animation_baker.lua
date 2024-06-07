@@ -106,14 +106,25 @@ local function bake_animation_mesh(anio, mesho, bakenum)
 
     local meshset = {}
 
-    local dupilcate_vb2bin
-    if mesho.meshres.vb2 then
-        dupilcate_vb2bin = mesho.meshres.vb2.str:rep(bakenum)
+    local dupilcate_vb2bin = mesho.meshres.vb2
+    if dupilcate_vb2bin then
+        dupilcate_vb2bin = dupilcate_vb2bin.str:rep(bakenum)
     end
 
     local skin      = aniobj.skins[mesho.skinning.skin]
     local wm        = mesho:load_transform()
     local numvb     = mesho:numv()
+	local ib        = mesho.meshres.ib
+	if ib then
+		-- copy this ib object from resource
+		ib = {
+			handle  = ib.handle,
+			memory  = true,	-- prevent entity delete this handle
+			start   = 0,
+			num     = ib.num,
+			flag    = ib.flag,
+		}
+	end
 
     for n, status in pairs(aniobj.status) do
         local buffers = {}
@@ -135,8 +146,8 @@ local function bake_animation_mesh(anio, mesho, bakenum)
                 start   = 0,
                 num     = new_numv,
                 declname= new_vblayout,
-                owned   = true,
             },
+			ib = ib,
         }
 
         if dupilcate_vb2bin then
@@ -145,21 +156,9 @@ local function bake_animation_mesh(anio, mesho, bakenum)
                 start   = 0,
                 num     = new_numv,
                 declname= mesho.meshres.vb2.declname,
-                owned   = true,
             }
         end
 
-        local ib = mesho.meshres.ib
-        if ib then
-            --could not share this buffer
-            newmeshobj.ib = {
-                memory  = ib.memory,
-                start   = 0,
-                num     = ib.num,
-                flag    = ib.flag,
-                owned   = true,
-            }
-        end
         meshset[n] = {
             mesh                = newmeshobj,
             bakestep_ratio      = bakestep_ratio,

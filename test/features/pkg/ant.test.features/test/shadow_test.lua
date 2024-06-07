@@ -67,11 +67,11 @@ end
 local function plane_entity(srt)
 	return world:create_entity{
 		policy = {
-			"ant.render|simplerender",
+			"ant.render|render",
 		},
 		data = {
 			scene 		= srt,
-            mesh_result = ientity.plane_mesh(),
+            mesh		= "plane.primitive",
 			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
 			visible_masks = "main_view|cast_shadow",
 			cast_shadow = true,

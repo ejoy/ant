@@ -45,9 +45,6 @@ local TodoFunction <const> = {
     ImGui_DebugCheckVersionAndDataLayout = true,
 
     ImGui_GetPlatformIO = true,
-    ImGui_RenderPlatformWindowsDefaultEx = true,
-    ImGui_DestroyPlatformWindows = true,
-    ImGui_FindViewportByPlatformHandle = true,
 
     ImGui_TextUnformatted = true,
     ImGui_TextUnformattedEx = true,
@@ -80,7 +77,6 @@ local TodoFunction <const> = {
     ImGui_ColorConvertHSVtoRGB = true,
 
     ImGui_TableGetSortSpecs = true,
-    ImGui_SetNextWindowClass = true,
     ImGui_DockSpaceOverViewportEx = true,
     ImGui_GetBackgroundDrawList = true,
     ImGui_GetForegroundDrawList = true,
@@ -156,12 +152,16 @@ local TodoStruct <const> = {
     ImGuiPlatformImeData = true,
     ImGuiTableColumnSortSpecs = true,
     ImGuiSizeCallbackData = true,
-    ImGuiWindowClass = true,
 }
 
 local TodoType <const> = {
     ImTextureID = true,
     ImGuiKeyChord = true,
+}
+
+local Reference <const> = {
+    ImGuiIO = true,
+    ImGuiPlatformIO = true,
 }
 
 local BuiltinLuaType <const> = {
@@ -284,13 +284,13 @@ function m.init(status)
             goto continue
         end
         local name = struct_meta.name
-        local modes = Readonly[name]
-            and { "const_pointer" }
-            or { "pointer" }
+        local mode = Readonly[name] and "const_pointer" or "pointer"
         local struct = {
             name = name,
-            modes = modes,
+            mode = mode,
+            reference = Reference[name],
             fields = struct_meta.fields,
+            forward_declaration = struct_meta.forward_declaration,
         }
         structs[name] = struct
         structs[#structs+1] = struct

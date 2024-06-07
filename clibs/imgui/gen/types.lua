@@ -241,7 +241,7 @@ local function decode_func_attris(status, name, writeln, readonly)
     return attris
 end
 
-local function decode_func(status, name, writeln, write_func, modes)
+local function decode_func(status, name, writeln, write_func, mode)
     writeln("namespace wrap_%s {", name)
     writeln ""
     local funcs_meta = status.structs[name].funcs or {}
@@ -249,7 +249,7 @@ local function decode_func(status, name, writeln, write_func, modes)
     for _, func_meta in ipairs(funcs_meta) do
         funcs[#funcs+1] = write_func(func_meta)
     end
-    local readonly = #modes == 1 and modes[1] == "const_pointer"
+    local readonly = mode == "const_pointer"
     local attris = decode_func_attris(status, name, writeln, readonly)
     local funcs_args = "{}"
     local setters_args = "{}"
@@ -281,27 +281,23 @@ local function decode_func(status, name, writeln, write_func, modes)
         writeln ""
         getters_args = "getters"
     end
-    for _, mode in ipairs(modes) do
-        writeln("static int tag_%s = 0;", mode)
-        writeln ""
-        writeln("void %s(lua_State* L, %s& v) {", mode, name)
-        writeln("    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_%s);", mode)
-        writeln("    auto** ptr = (%s**)lua_touserdata(L, -1);", name)
-        writeln "    *ptr = &v;"
-        writeln "}"
-        writeln ""
-    end
+    writeln("static int tag_%s = 0;", mode)
+    writeln ""
+    writeln("void %s(lua_State* L, %s& v) {", mode, name)
+    writeln("    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_%s);", mode)
+    writeln("    auto** ptr = (%s**)lua_touserdata(L, -1);", name)
+    writeln "    *ptr = &v;"
+    writeln "}"
+    writeln ""
     writeln "static void init(lua_State* L) {"
-    for _, mode in ipairs(modes) do
-        if mode == "const_pointer" then
-            writeln("    util::struct_gen(L, %q, %s, {}, %s);", name, funcs_args, getters_args)
-        elseif mode == "pointer" then
-            writeln("    util::struct_gen(L, %q, %s, %s, %s);", name, funcs_args, setters_args, getters_args)
-        else
-            assert(false)
-        end
-        writeln("    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag_%s);", mode)
+    if mode == "const_pointer" then
+        writeln("    util::struct_gen(L, %q, %s, {}, %s);", name, funcs_args, getters_args)
+    elseif mode == "pointer" then
+        writeln("    util::struct_gen(L, %q, %s, %s, %s);", name, funcs_args, setters_args, getters_args)
+    else
+        assert(false)
     end
+    writeln("    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag_%s);", mode)
     writeln "}"
     writeln ""
     writeln "}"

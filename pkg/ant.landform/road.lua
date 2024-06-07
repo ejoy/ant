@@ -202,6 +202,12 @@ local function destroy_handle(h)
     end
 end
 
+function road_sys:entity_init()
+    for e in w:select "INIT road owned_mesh_buffer:out" do
+		e.owned_mesh_buffer = false
+    end
+end
+
 function road_sys:entity_remove()
     for e in w:select "REMOVED road:in" do
         e.road.handle = destroy_handle(e.road.handle)

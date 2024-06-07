@@ -43,14 +43,14 @@ end
 
 local function log_viewrect()
     local vr, dvr = scene_viewrect, device_viewrect
-    log.info("scene viewrect: ",    vr.x, vr.y, vr.w, vr.h)
-    log.info("device viewport: ",   dvr.x, dvr.y, dvr.w, dvr.h)
+    log.debug("scene viewrect: ",    vr.x, vr.y, vr.w, vr.h)
+    log.debug("device viewport: ",   dvr.x, dvr.y, dvr.w, dvr.h)
 
     local scene_scale_ratio<const>  = viewrect_ratio()
-    log.info("scene scale ratio: ", scene_scale_ratio)
+    log.debug("scene scale ratio: ", scene_scale_ratio)
 
-    log.info("scene width/hegiht:",  vr.w/vr.h)
-    log.info("device width/hegiht:", dvr.w/dvr.h)
+    log.debug("scene width/hegiht:",  vr.w/vr.h)
+    log.debug("device width/hegiht:", dvr.w/dvr.h)
 end
 
 local function resize(w, h)

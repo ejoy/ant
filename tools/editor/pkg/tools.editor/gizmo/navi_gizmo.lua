@@ -69,7 +69,6 @@ local function create_navi_obj(material, size, zvalue)
             visible = false,
             material = material,
             mesh_result = ientity.create_mesh{"p3|t2", vbdata},
-            owned_mesh_buffer = true,
         }
     }
 end
