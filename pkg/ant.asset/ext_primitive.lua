@@ -62,7 +62,7 @@ function primitive:arrow(headratio, arrowlen, coneradius, cylinderradius)
 	local vb = bgfx.memory_buffer(layout.stride*numv)
 	local function add_v(idx, x, y, z)
 		local vboffset = layout.stride*idx+1
-		vb[vboffset] = fmt:pack(x, y, z)
+		vb[vboffset] = fmt:pack(x, y, z-arrowlen)
 	end
 
 	add_v(0,0.0, 0.0, arrowlen)
