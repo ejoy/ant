@@ -129,7 +129,7 @@ function action.pan(x, y)
     iom.set_position(ce, math3d.add(cur_lookat, last_ru))
 end
 
-function cc_sys:camera_usage()
+function cc_sys:camera_set()
     if check_stop_camera() then
         return
     end
