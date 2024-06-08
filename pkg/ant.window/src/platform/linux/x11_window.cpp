@@ -13,13 +13,29 @@
 #include "../../window.h"
 #include "../../../../clibs/imgui/backend/imgui_impl_x11.h"
 
-
-#define CONFIG_EVENT_MAX_WAIT_TIME (5) // ms
+const int CONFIG_EVENT_MAX_WAIT_TIME = 5; // ms
+const int XC_INPUT_BUFF_LEN = 16;
 
 struct ThreadContext
 {
     WindowContext *win_ctx;
     lua_State *L;
+};
+
+struct Modifier
+{
+    enum Enum
+    {
+        ModifierNone = 0,
+        LeftAlt = 0x01,
+        RightAlt = 0x02,
+        LeftCtrl = 0x04,
+        RightCtrl = 0x08,
+        LeftShift = 0x10,
+        RightShift = 0x20,
+        LeftSuper = 0x40,
+        RightSuper = 0x80,
+    };
 };
 
 struct Rect
@@ -311,6 +327,17 @@ static ImGuiKey ToImGuiKey(const KeySym &keysym)
     }
 }
 
+void set_modifier(uint8_t &inout_modifiers, Modifier::Enum modifier, bool is_set)
+{
+    inout_modifiers &= ~modifier;
+    inout_modifiers |= is_set ? modifier : 0;
+}
+
+bool any_modifier_set(const uint8_t &modifiers, const uint8_t &test_modifiers)
+{
+    return modifiers & test_modifiers;
+}
+
 static void x_default_dim(const WindowContext *ctx, const char *size, Rect &rect_out)
 {
     auto work_w = DisplayWidth(ctx->dpy, ctx->screen);
@@ -390,6 +417,11 @@ static void x_run(void *_userData) noexcept
     auto *s_thread_ctx = (ThreadContext *)_userData;
     auto L = s_thread_ctx->L;
     auto ctx = s_thread_ctx->win_ctx;
+    uint8_t key_modifiers = 0;
+
+    XIM im = XOpenIM(ctx->dpy, NULL, NULL, NULL);
+    XIC ic = XCreateIC(
+        im, XNInputStyle, 0 | XIMPreeditNothing | XIMStatusNothing, XNClientWindow, ctx->window, NULL);
 
     XEvent event;
 
@@ -429,9 +461,7 @@ static void x_run(void *_userData) noexcept
 
         case DestroyNotify:
         {
-            window_message_exit(L);
-            x_close(ctx);
-            return;
+            goto LABEL_END_OF_THREAD;
         }
         break;
 
@@ -439,9 +469,7 @@ static void x_run(void *_userData) noexcept
         {
             if ((Atom)event.xclient.data.l[0] == s_wm_deleted_window)
             {
-                window_message_exit(L);
-                x_close(ctx);
-                return;
+                goto LABEL_END_OF_THREAD;
             }
         }
         break;
@@ -449,13 +477,13 @@ static void x_run(void *_userData) noexcept
         case MotionNotify:
         {
             struct ant::window::msg_mousemove msg;
-		    msg.what = ant::window::mouse_buttons::none;
+            msg.what = ant::window::mouse_buttons::none;
             msg.x = event.xmotion.x;
             msg.y = event.xmotion.y;
             ant::window::input_message(L, msg);
 
-            //FIXME: it's kind of hack, but there should be a better way to pass the mouse move event to imgui in the backend implementation.
-            ImGuiIO& io = ImGui::GetIO();
+            // FIXME: it's kind of hack, but there should be a better way to pass the mouse move event to imgui in the backend implementation.
+            ImGuiIO &io = ImGui::GetIO();
             io.AddMousePosEvent((float)msg.x, (float)msg.y);
         }
         break;
@@ -465,19 +493,18 @@ static void x_run(void *_userData) noexcept
         {
             struct ant::window::msg_mouseclick msg;
             msg.what = to_ant_mouse_button(event.xbutton.button);
-            msg.state = event.type == ButtonPress? ant::window::mouse_state::down: ant::window::mouse_state::up;
+            msg.state = event.type == ButtonPress ? ant::window::mouse_state::down : ant::window::mouse_state::up;
             msg.x = event.xbutton.x;
             msg.y = event.xbutton.y;
             ant::window::input_message(L, msg);
         }
         break;
-        
+
         case KeyPress:
         case KeyRelease:
         {
             XKeyEvent &xkey = event.xkey;
             KeySym keysym = XLookupKeysym(&xkey, 0);
-            auto key = ToImGuiKey(keysym);
             uint8_t press;
             if (event.type == KeyRelease)
             {
@@ -485,24 +512,86 @@ static void x_run(void *_userData) noexcept
             }
             else
             {
-                press = 1; // TODO: add logic to get value 2
+                press = 1;
             }
 
-            struct ant::window::msg_keyboard msg;
-            // TODO: get actual states
-            msg.press = press;
-            msg.state = ant::window::get_keystate(
-                false,
-                false,
-                false,
-                false,
-                false);
-            msg.key = key;
-            ant::window::input_message(L, msg);
+            switch (keysym)
+            {
+            case XK_Super_L:
+                set_modifier(key_modifiers, Modifier::LeftSuper, press);
+                break;
+            case XK_Super_R:
+                set_modifier(key_modifiers, Modifier::RightSuper, press);
+                break;
+            case XK_Control_L:
+                set_modifier(key_modifiers, Modifier::LeftCtrl, press);
+                break;
+            case XK_Control_R:
+                set_modifier(key_modifiers, Modifier::RightCtrl, press);
+                break;
+            case XK_Shift_L:
+                set_modifier(key_modifiers, Modifier::LeftShift, press);
+                break;
+            case XK_Shift_R:
+                set_modifier(key_modifiers, Modifier::RightShift, press);
+                break;
+            case XK_Alt_L:
+                set_modifier(key_modifiers, Modifier::LeftAlt, press);
+                break;
+            case XK_Alt_R:
+                set_modifier(key_modifiers, Modifier::RightAlt, press);
+                break;
+
+            default:
+            {
+                if (press)
+                {
+                    Status status = 0;
+                    wchar_t buffer[XC_INPUT_BUFF_LEN];
+                    int len = XwcLookupString(ic, &xkey, buffer, XC_INPUT_BUFF_LEN, &keysym, &status);
+
+                    switch (status)
+                    {
+                    case XLookupChars:
+                    case XLookupBoth:
+                        if (0 != len)
+                        {
+                            struct ant::window::msg_inputchar msg;
+                            msg.what = ant::window::inputchar_type::utf16;
+                            msg.code = (uint16_t)buffer[0];
+                            ant::window::input_message(L, msg);
+                        }
+                        break;
+
+                    default:
+                        break;
+                    }
+                }
+
+                struct ant::window::msg_keyboard msg;
+                auto key = ToImGuiKey(keysym);
+                msg.press = press;
+                msg.state = ant::window::get_keystate(
+                    any_modifier_set(key_modifiers, Modifier::LeftCtrl | Modifier::RightCtrl),
+                    any_modifier_set(key_modifiers, Modifier::LeftShift | Modifier::RightShift),
+                    any_modifier_set(key_modifiers, Modifier::LeftAlt | Modifier::RightAlt),
+                    any_modifier_set(key_modifiers, Modifier::LeftSuper | Modifier::RightSuper),
+                    false);
+                msg.key = key;
+                ant::window::input_message(L, msg);
+            }
+            break;
+            }
+            break;
         }
-        break;
         }
     }
+
+LABEL_END_OF_THREAD:
+    window_message_exit(L);
+    XDestroyIC(ic);
+    XCloseIM(im);
+    x_close(ctx);
 }
 
 bool window_init(lua_State *L, const char *size)
