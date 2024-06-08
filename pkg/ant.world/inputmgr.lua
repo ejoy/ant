@@ -65,7 +65,6 @@ local function create(world)
     end
     if platform.os ~= "ios" and platform.os ~= "android" then
         local mg = require "mouse_gesture" (world)
-        event.mousewheel = mg.mousewheel
         function event.mouseclick(e)
             world:set_mouse(e)
             mg.mouseclick(e)
@@ -84,6 +83,11 @@ local function create(world)
                 world:pub { "mouse", "RIGHT", "MOVE", e.x, e.y }
             end
         end
+        function event.mousewheel(e)
+            world:set_mouse(e)
+            world:pub { "mouse", "WHEEL", e.delta }
+            mg.mousewheel(e)
+		end
     end
     return event
 end

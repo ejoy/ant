@@ -33,9 +33,9 @@ local function set_mat(srt, v)
 end
 
 local function set_srt(srt, s, r, t)
-    set_s(srt, s)
-    set_r(srt, r)
-    set_t(srt, t)
+    if s then set_s(srt, s) end
+	if r then set_r(srt, r) end
+    if t then set_t(srt, t) end
 end
 
 local function reset_srt(srt)
@@ -128,7 +128,7 @@ function iobj_motion.set_view(e, pos, dir, updir)
     end
 
     local r = refine_rotation_from_viewdir(scene, dir)
-    set_srt(scene, scene.s, r, pos)
+    set_srt(scene, nil, r, pos)
     set_changed(e)
 end
 
