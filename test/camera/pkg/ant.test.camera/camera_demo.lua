@@ -197,5 +197,6 @@ function m:data_changed()
 				end
 			end
 		end
+		ImGui.End()
 	end
 end
