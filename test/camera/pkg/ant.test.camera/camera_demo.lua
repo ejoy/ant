@@ -7,6 +7,7 @@ local bgfx = require "bgfx"
 local icamera_ctrl = ecs.require "camera_ctrl"
 local iviewport = ecs.require "ant.render|viewport.state"
 local irq = ecs.require "ant.render|renderqueue"
+local imaterial = ecs.require "ant.render|material"
 local math3d = require "math3d"
 local mathpkg = import_package "ant.math"
 local mu, mc = mathpkg.util, mathpkg.constant
@@ -27,13 +28,27 @@ function m:init_world()
 			scene 		= {
 				s = {10, 1, 10},
             },
-			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
+			material 	= "/asset/primitive.material",
 			visible     = true,
 			mesh        = "plane.primitive",
 		}
 	}
-	world:create_instance {
-		prefab = "/pkg/ant.resources.binary/meshes/base/cube.glb/mesh.prefab"
+
+	world:create_entity {
+		policy = {
+			"ant.render|render",
+		},
+		data = {
+			scene       = { t = { 0,1,0} },
+			material 	= "/asset/primitive.material",
+			visible_masks = "main_view|cast_shadow",
+			visible     = true,
+			cast_shadow = true,
+			mesh        = "cube.primitive",
+			on_ready = function (e)
+				imaterial.set_property(e, "u_basecolor_factor", math3d.vector( 1,1,0,1 ))
+			end
+		}
 	}
 
 	icamera_ctrl.distance = 5
