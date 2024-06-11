@@ -303,23 +303,26 @@ local function update_ibl_texture_info()
 end
 
 function ibl_sys:entity_init()
-    for e in w:select "INIT ibl ibl_changed?out" do
+    for e in w:select "INIT ibl:in ibl_changed?out" do
+        assetmgr.resource(e.ibl.source.tex_name)	-- request resource
         e.ibl_changed = true
     end
 end
 
-local function check_ibl_changed()
+function ibl_sys:entity_ready()
     for e in w:select "ibl_changed:update ibl:in" do
-        local texid = assetmgr.resource(e.ibl.source.tex_name).id
-        if not assetmgr.invalid_texture(texid) then
-            local ibl = e.ibl
-            e.ibl_changed = false
-            ibl.source.value = assetmgr.load_texture(ibl.source.tex_name)
-            build_ibl_textures(e.ibl)
-            create_ibl_entities()
-            update_ibl_texture_info()
+        local ibl = e.ibl
+        local texid = assetmgr.resource(ibl.source.tex_name).id
+        if assetmgr.invalid_texture(texid) then
+            -- block load
+            assetmgr.load_texture(ibl.source.tex_name)
         end
-	end
+        ibl_changed = false
+        ibl.source.value = texid
+        build_ibl_textures(ibl)
+        create_ibl_entities()
+        update_ibl_texture_info()
+    end
 end
 
 function ibl_sys:data_changed()
@@ -330,8 +333,6 @@ function ibl_sys:data_changed()
     for _ in exp_mb:each() do
         update_ibl_param()
     end
-
-    check_ibl_changed()
 end
 
 return iibl
