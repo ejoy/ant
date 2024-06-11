@@ -74,17 +74,19 @@ static bool GET_ANT_RUNTIME() {
     wchar_t** argv = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
     if (argv && argc >= 2) {
         if (wcscmp(argv[1], L"-rt") == 0) {
+            LocalFree(argv);
             return true;
         }
     }
-	size_t prog_sz = wcslen(argv[0]);
-	bool is_rt = true;
-	if (prog_sz >=7 && wcscmp(argv[0] + prog_sz - 7, L"ant.exe") == 0) {
-		is_rt = false;
-	} else if (prog_sz >=3 && wcscmp(argv[0] + prog_sz - 3, L"ant") == 0) {
-		is_rt = false;
-	}
-	return is_rt;
+    size_t prog_sz = wcslen(argv[0]);
+    bool is_rt = true;
+    if (prog_sz >=7 && wcscmp(argv[0] + prog_sz - 7, L"ant.exe") == 0) {
+        is_rt = false;
+    } else if (prog_sz >=3 && wcscmp(argv[0] + prog_sz - 3, L"ant") == 0) {
+        is_rt = false;
+    }
+    LocalFree(argv);
+    return is_rt;
 }
 static bool __ANT_RUNTIME__ = GET_ANT_RUNTIME();
 #elif defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__)
@@ -97,13 +99,13 @@ static bool GET_ANT_RUNTIME() {
             return true;
         }
     }
-	size_t prog_sz = strlen(argv[0]);
-	bool is_rt = true;
-	if (prog_sz >=7 && strcmp(argv[0] + prog_sz - 7, "ant.exe") == 0) {
-		is_rt = false;
-	} else if (prog_sz >=3 && strcmp(argv[0] + prog_sz - 3, "ant") == 0) {
-		is_rt = false;
-	}
+    size_t prog_sz = strlen(argv[0]);
+    bool is_rt = true;
+    if (prog_sz >=7 && strcmp(argv[0] + prog_sz - 7, "ant.exe") == 0) {
+        is_rt = false;
+    } else if (prog_sz >=3 && strcmp(argv[0] + prog_sz - 3, "ant") == 0) {
+        is_rt = false;
+    }
     return false;
 }
 static bool __ANT_RUNTIME__ = GET_ANT_RUNTIME();
