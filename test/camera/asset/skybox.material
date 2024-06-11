@@ -1,0 +1,17 @@
+fx:
+    vs: /pkg/ant.resources/shaders/sky/skybox/vs_skybox.sc
+    fs: /pkg/ant.resources/shaders/sky/skybox/fs_skybox.sc
+    setting:
+        lighting: off
+        no_predepth: true
+properties:
+    s_skybox:
+        stage: 0
+        texture: /pkg/ant.resources.test/sky/colorcube2x2.texture
+    u_skybox_param: {1.0, 0.0, 0.0, 0.0}    #intensity, NOTUSE, NOTUSE, NOTUSE
+state:
+    ALPHA_REF: 0
+    CULL: CW
+    DEPTH_TEST: GEQUAL
+    MSAA: true
+    WRITE_MASK: RGBA

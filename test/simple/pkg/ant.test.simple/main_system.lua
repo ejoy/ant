@@ -10,17 +10,13 @@ local m = ecs.system "main_system"
 
 local prefab
 
-local imesh = ecs.require "ant.asset|mesh"
-local ientity = ecs.require "ant.entity|entity"
-
 function m:init_world()
     world:create_instance {
         prefab = "/pkg/ant.test.simple/resource/light.prefab"
     }
-
-    world:create_entity{
+	world:create_entity{
 		policy = {
-			"ant.render|simplerender",
+			"ant.render|render",
 		},
 		data = {
 			scene 		= {
@@ -28,8 +24,7 @@ function m:init_world()
             },
 			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
 			visible     = true,
-			mesh_result	= ientity.plane_mesh(),
-            owned_mesh_buffer = true,
+			mesh        = "plane.primitive",
 		}
 	}
 

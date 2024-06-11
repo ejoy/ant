@@ -1,0 +1,5 @@
+system "main_system"
+    .implement "camera_demo.lua"
+
+system "camera_ctrl"
+    .implement "camera_ctrl.lua"

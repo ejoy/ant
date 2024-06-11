@@ -1,0 +1,14 @@
+fx:
+  shader_type: PBR
+  varyings:
+    a_position: vec3
+    a_normal: vec3
+    a_texcoord0: vec2
+    v_texcoord0: vec2
+    v_posWS: "vec3 TEXCOORD1"
+    v_normal: "vec3 TEXCOORD2"
+properties:
+  u_pbr_factor: {0.2, 0.8, 0, 1}  #metallic, roughness, alpha_cutoff, occlusion strength
+  u_emissive_factor: {0, 0, 0, 0}
+  u_basecolor_factor: {0.8, 0.8, 0.8, 1.0}
+state: /pkg/ant.resources/materials/states/default.state

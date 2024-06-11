@@ -8,6 +8,7 @@ local default_renderer <const> = {
 	macos = "METAL",
 	ios = "METAL",
 	android = "VULKAN",
+	linux = "VULKAN",
 }
 
 local function check_renderer(renderer)

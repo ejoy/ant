@@ -46,13 +46,11 @@ local function create_mesh(vbdata, ibdata, aabb)
 	vb.num = #vbdata[2] // #flag
 	vb.declname = correct_layout
 	vb.memory = {flag, vbdata[2]}
-	vb.owned = true
 
 	if ibdata then
 		mesh.ib = {
 			start = 0, num = #ibdata,
 			memory = {"w", ibdata},
-			owned = true,
 		}
 	end
 	return imesh.init_mesh(mesh)
@@ -195,23 +193,6 @@ function ientity.create_grid_entity(width, height, unit, linewidth, srt, materia
 	local centerwidth<const> = linewidth * 2.0
 	return eid1, ipl.add_linelist({{-hw_len, 0, 0}, {hw_len, 0, 0},}, centerwidth, {c, 0.0, 0.0, 1.0}, material, srt, render_layer),
 	ipl.add_linelist({{0, 0, -hh_len}, {0, 0, hh_len},}, centerwidth, {0.0, 0.0, c, 1.0}, material, srt, render_layer)
-end
-
-
-function ientity.plane_mesh(tex_uv)
-	local u0, v0, u1, v1
-	if tex_uv then
-		u0, v0, u1, v1 = tex_uv[1], tex_uv[2], tex_uv[3], tex_uv[4]
-	else
-		u0, v0, u1, v1 = 0, 0, 1, 1
-	end
-	local vb = {
-		-0.5, 0, 0.5, 0, 1, 0, u0, v0,	--left top
-		 0.5, 0, 0.5, 0, 1, 0, u1, v0,	--right top
-		-0.5, 0,-0.5, 0, 1, 0, u0, v1,	--left bottom
-		 0.5, 0,-0.5, 0, 1, 0, u1, v1,	--right bottom
-	}
-	return create_mesh({"p3|n3|t2", vb}, {0, 1, 2, 1, 3, 2}, {{-0.5, 0, -0.5}, {0.5, 0, 0.5}})
 end
 
 local plane_vb<const> = {
@@ -452,7 +433,6 @@ local function get_skybox_mesh()
 		local desc = {vb={}, ib={}}
 		geodrawer.draw_box({1, 1, 1}, nil, nil, desc)
 		skybox_mesh = create_mesh({"p3", desc.vb}, desc.ib)
-		skybox_mesh.ib.owned, skybox_mesh.vb.owned = true, true
 	end
 
 	return skybox_mesh
@@ -475,7 +455,6 @@ function ientity.create_skybox(material)
 				LUT = {size=256},
 			},
 			skybox = {},
-			owned_mesh_buffer = true,
 			mesh_result = get_skybox_mesh(),
 		}
 	}
@@ -542,7 +521,6 @@ function ientity.create_procedural_sky(settings)
 				}
 			},
 			visible = true,
-			owned_mesh_buffer = true,
 			render_layer = "background",
 			mesh_result = create_sky_mesh(32, 32),
 		}
@@ -573,131 +551,24 @@ function ientity.create_gamma_test_entity()
 						420, 200, 1.0, 0.0,
 						420, 132, 1.0, 1.0,
 					}), layoutmgr.get "p2|t2".handle),
-					owned = true,
                 }
             },
-			owned_mesh_buffer = true,
             scene = {},
             visible = true,
         }
     }
 end
 
---forward to z-axis, as 1 size
-local function arrow_mesh(headratio, arrowlen, coneradius, cylinderradius)
-	arrowlen = arrowlen or 1
-	headratio = headratio or 0.15
-	local headlen<const> = arrowlen * (1.0-headratio)
-	local fmt<const> = "fff"
-	local layout<const> = layoutmgr.get "p3"
-
-	coneradius	= coneradius or 0.1
-	cylinderradius	= cylinderradius or coneradius * 0.5
-	local slicenum<const> 		= 10
-	local deltaradian<const> 	= math.pi*2/slicenum
-
-	local numv<const>			= slicenum*3+3	--3 center points
-	local vb = bgfx.memory_buffer(layout.stride*numv)
-	local function add_v(idx, x, y, z)
-		local vboffset = layout.stride*idx+1
-		vb[vboffset] = fmt:pack(x, y, z)
-	end
-
-	add_v(0,0.0, 0.0, arrowlen)
-	add_v(1,0.0, 0.0, headlen)
-	add_v(2,0.0, 0.0, 0.0)
-
-	local offset=3
-
-	for i=0, slicenum-1 do
-		local r = deltaradian*i
-		local c, s = math.cos(r), math.sin(r)
-		local idx = i+offset
-		add_v(idx,	c*coneradius, s*coneradius, headlen)
-
-		local idx1 = idx+slicenum
-		add_v(idx1,	c*cylinderradius, s*cylinderradius, headlen)
-		
-		local idx2 = idx1+slicenum
-		add_v(idx2, c*cylinderradius, s*cylinderradius, 0.0)
-	end
-
-	local numtri<const>		= slicenum*5	--3 circle + 1 quad
-	local ibstride<const>	= 2
-	local numi<const>		= numtri*3
-	local ib = bgfx.memory_buffer(ibstride*numtri*3)
-	local ibfmt<const> = "HHH"
-	local iboffset = 1
-	local function add_t(i0, i1, i2)
-		ib[iboffset] = ibfmt:pack(i0, i1, i2)
-		iboffset = iboffset + ibstride*3
-	end
-
-	local ic1, ic2, ic3 = 0, 1, 2
-	local cc1 = ic3+1
-	local cc2 = cc1+slicenum
-	local cc3 = cc2+slicenum
-
-	--
-	for i=0, slicenum-1 do
-		--cone
-		do
-			local i2, i3 = cc1+i, cc1+i+1
-			if i == slicenum-1 then
-				i3 = cc1
-			end
-			add_t(ic1, i2, i3)
-			add_t(ic2, i3, i2)
-		end
-
-		do
-			--cylinder quad
-			local v0 = cc2+i
-			local v1 = cc3+i
-			local v2 = v1+1
-			local v3 = v0+1
-
-			if i == slicenum-1 then
-				v2 = cc3
-				v3 = cc2
-			end
-			
-			add_t(v0, v1, v2)
-			add_t(v2, v3, v0)
-
-			add_t(ic3, v2, v1)
-		end
-	end
-	return {
-		vb = {
-			start = 0,
-			num = numv,
-			declname = "p3",
-			handle = bgfx.create_vertex_buffer(vb, layout.handle),
-			owned = true,
-		},
-		ib = {
-			start = 0,
-			num = numi,
-			handle = bgfx.create_index_buffer(ib),
-			owned = true,
-		}
-	}
-end
-
-ientity.arrow_mesh = arrow_mesh
-
 function ientity.create_arrow_entity(headratio, color, material, scene)
 	return world:create_entity{
 		policy = {
-			"ant.render|simplerender",
+			"ant.render|render",
 		},
 		data = {
-			mesh_result = arrow_mesh(headratio),
+			mesh = "arrow(" .. headratio .. ").primitive",
 			material = material,
 			visible = true,
 			scene = scene or {},
-            owned_mesh_buffer = true,
 			on_ready = function (e)
 				imaterial.set_property(e, "u_color", math3d.vector(color))
 			end
@@ -771,7 +642,6 @@ function ientity.create_quad_entity(material, srt, rect, uvrect)
         data = {
             material 	= material,
             mesh_result = ientity.quad_mesh(rect, true, uvrect),
-            owned_mesh_buffer = true,
             visible		= true,
             scene 		= srt,
             render_layer= "translucent",

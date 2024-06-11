@@ -345,7 +345,8 @@ function TextureResource:show()
                 local path = fs.path(payload);
                 if path:extension() == ".png" or path:extension() == ".dds" then
                     self:set_file(tostring(path))
-                    assetmgr.unload(self.path)
+-- TODO: do not use unload, use assetmgr.flush instead				
+--                  assetmgr.unload(self.path)
                 end
             end
             ImGui.EndDragDropTarget()

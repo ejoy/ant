@@ -11,10 +11,6 @@ local function loader(filename)
     return data
 end
 
-local function unloader()
-end
-
 return {
     loader = loader,
-    unloader = unloader,
 }

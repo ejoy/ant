@@ -1,5 +1,6 @@
 local luaecs = import_package "ant.luaecs"
 local serialize = import_package "ant.serialize"
+local assetmgr = import_package "ant.asset"
 local btime = require "bee.time"
 local inputmgr = require "inputmgr"
 local bgfx = require "bgfx"
@@ -538,7 +539,7 @@ local function system_changed(w)
         w._system_changed = nil
         return
     end
-    log.info("System changed.")
+    log.debug "System changed."
     local updatesystems = w._updatesystems
     w._system_changed = nil
     w._initsystems = {}
@@ -561,7 +562,7 @@ local function system_changed(w)
         func()
     end
     if not has_initsystem then
-        log.info("System refreshed.")
+        log.debug "System refreshed."
         return
     end
     for name, s in pairs(initsystems) do
@@ -569,7 +570,7 @@ local function system_changed(w)
     end
     initsystems["ant.world|entity_init_system"] = w._systems["ant.world|entity_init_system"]
     local func = w:pipeline_func("_init", slove_system(initsystems))
-    log.info("System refreshed.")
+    log.debug "System refreshed."
     return func
 end
 
@@ -734,7 +735,8 @@ function m.new_world(config)
     event.init(w)
     inputmgr.init(w)
 
-    log.info "world initializing"
+    log.debug "world initializing"
+	assetmgr.flush()
     feature.import(w, config.ecs.feature)
     cworld.create(w)
     for _, funcs in pairs(w._clibs_loaded) do
@@ -742,7 +744,7 @@ function m.new_world(config)
             debug.setupvalue(f, 1, w._ecs_world)
         end
     end
-    log.info "world initialized"
+    log.debug "world initialized"
     return w
 end
 
