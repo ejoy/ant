@@ -5,6 +5,8 @@ local w = world.w
 local iom = ecs.require "ant.objcontroller|obj_motion"
 local camera_ctrl = ecs.system "camera_ctrl"
 local math3d = require "math3d"
+local mathpkg   = import_package "ant.math"
+local mc    = mathpkg.constant
 
 local camera = {
 	x = 0,
@@ -48,8 +50,8 @@ local function delta_change()
 	end
 end
 
-local pitch = { axis = { 1, 0, 0 } }
-local yaw = { axis = { 0, 1, 0 } }
+local pitch = { axis = mc.XAXIS }
+local yaw = { axis = mc.YAXIS }
 
 local function clamp(what)
 	local min = camera.min[what]
