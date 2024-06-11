@@ -6,9 +6,24 @@ local zip = require "zip"
 local vfsrepo = import_package "ant.vfs"
 local cr = import_package "ant.compile_resource"
 
-local arg = ...
+local function command(args)
+	local result = {}
+	local n = 1
+	for _, arg in ipairs(args) do
+		if arg:sub(1,1) == "-" then
+			result[arg:sub(2)] = true
+		else
+			result[n] = arg; n = n + 1
+		end
+	end
+	return result
+end
+
+local arg = command(...)
+
 local path = arg[1]
 local config_os = arg[2]
+local VERBOSE = arg.v and print or function() end
 
 config_os = config_os or platform.os
 
@@ -75,6 +90,7 @@ end
 local writer = {}
 
 function writer.zip(bundlepath)
+	VERBOSE ("Bundlepath:", bundlepath)
     local zippath = bundlepath / "00.zip"
     local hashpath = bundlepath / "00.hash"
     local m = {}
@@ -182,6 +198,7 @@ do print "step4. pack file and dir."
         if v.dir then
             w.writefile(hash, v.dir)
         else
+			VERBOSE(v.path, hash)
             w.copyfile(hash, v.path)
         end
     end
