@@ -106,7 +106,7 @@ static bool GET_ANT_RUNTIME() {
     } else if (prog_sz >=3 && strcmp(argv[0] + prog_sz - 3, "ant") == 0) {
         is_rt = false;
     }
-    return false;
+    return is_rt;
 }
 static bool __ANT_RUNTIME__ = GET_ANT_RUNTIME();
 #else
