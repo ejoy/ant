@@ -33,7 +33,7 @@ local function object(x, y, r)
 		},
 		data = {
 			scene       = { t = { 0,1,0} },
-			material 	= "/asset/primitive.material",
+			material 	= "/pkg/ant.resources/materials/primitive.material",
 			visible_masks = "main_view|cast_shadow",
 			visible     = true,
 			cast_shadow = true,
@@ -60,7 +60,7 @@ function m:init_world()
 			scene 		= {
 				s = {10, 1, 10},
             },
-			material 	= "/asset/primitive.material",
+			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
 			visible     = true,
 			mesh        = "plane.primitive",
 		}
@@ -72,7 +72,7 @@ function m:init_world()
 		},
 		data = {
 			scene       = { t = { 0,1,0} },
-			material 	= "/asset/primitive.material",
+			material 	= "/pkg/ant.resources/materials/primitive.material",
 			visible_masks = "main_view|cast_shadow",
 			visible     = true,
 			cast_shadow = true,

@@ -11,18 +11,24 @@ local imaterial = ecs.require "ant.render|material"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 local math3d    = require "math3d"
 
-local function create_pbr_entity(pos, color, metallic, roughness)
-    PC:create_instance {
-        prefab = "/pkg/ant.resources.binary/meshes/base/sphere.glb/mesh.prefab",
-        on_ready = function (e)
-            local root<close> = world:entity(e.tag['*'][1], "scene:update")
-            iom.set_position(root, pos)
+local all = {}
 
-            local sphere<close> = world:entity(e.tag['*'][2])
-            imaterial.set_property(sphere, "u_basecolor_factor",    math3d.vector(color))
-            imaterial.set_property(sphere, "u_pbr_factor",          math3d.vector(metallic, roughness, 0.0, 1.0))
-        end
-    }
+local function create_pbr_entity(pos, color, metallic, roughness)
+	local eid = world:create_entity {
+		policy = { "ant.render|render" },
+		data = {
+			scene = {},
+			material	= "/pkg/ant.resources/materials/primitive.material",
+			visible	    = true,
+			mesh		= "sphere(500).primitive",
+			on_ready = function(e)
+				iom.set_position(e, pos)
+				imaterial.set_property(e, "u_basecolor_factor",    math3d.vector(color))
+				imaterial.set_property(e, "u_pbr_factor",          math3d.vector(metallic, roughness, 0.0, 1.0))
+			end
+		}
+	}
+	all[#all+1] = eid
 end
 
 local function pbr_spheres()
@@ -51,5 +57,7 @@ function pbr_test_sys:init()
 end
 
 function pbr_test_sys:exit()
-    PC:clear()
+	for _, eid in ipairs(all) do
+		world:remove_entity(eid)
+	end
 end
