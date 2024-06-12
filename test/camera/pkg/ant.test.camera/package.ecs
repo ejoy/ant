@@ -1,3 +1,5 @@
+component "entity2d"
+
 system "main_system"
     .implement "camera_demo.lua"
 
