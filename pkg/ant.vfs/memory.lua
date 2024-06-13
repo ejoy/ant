@@ -141,7 +141,7 @@ local function new_fs()
 		if e == nil then
 			return nil, "No file : " .. name
 		else
-			return is_dir[e] and "dir" or "file"
+			return is_dir[e] and "d" or "f"
 		end
 	end
 
@@ -162,36 +162,30 @@ local function init_memory_vfs()
 	local CMD_TYPE = CMD.TYPE
 
 	function CMD.READ(path)
-		if CMD_TYPE(path) then
-			return CMD_READ(path)
-		else
-			return fs.read(path)
+		local r = fs.read(path)
+		if r then
+			return r
 		end
+		return CMD_READ(path)
 	end
 
 	function CMD.LIST(path)
-		if CMD_TYPE(path) then
-			return fs.list(path, CMD_LIST(path))
-		else
-			return fs.list(path)
+		local r = fs.list(path)
+		if r then
+			return r
 		end
+		return CMD_LIST(path)
 	end
 
 	function CMD.TYPE(path)
-		return CMD_TYPE(path) or fs.type(path)
+		return fs.type(path) or CMD_TYPE(path)
 	end
 
 	function CMD.MEM_UPDATE(path, localpath)
-		if CMD_TYPE(path) then
-			return nil, ("Can't update file in vfs :" .. path)
-		end
 		return fs.update(path, localpath)
 	end
 
 	function CMD.MEM_REMOVE(path)
-		if CMD_TYPE(path) then
-			return nil, ("Can't remove file in vfs :" .. path)
-		end
 		return fs.remove(path)
 	end
 end

@@ -95,6 +95,10 @@ local function sandbox_env(packagename)
         return func()
     end
 
+	function env.localpath(path)
+		return "/pkg/"..packagename.."/"..path
+	end
+
     env.package = {
         loaded = _LOADED,
         preload = _PRELOAD,
