@@ -14,6 +14,39 @@ local XZ_PLANE <const> = math3d.constant("v4", {0, 1, 0, 0})
 
 local m = ecs.system "main_system"
 
+local gameobject = require "gameobject"
+
+local function object(x, y, r)
+	local proxy = { x = x or 0, y = y or 0, r = r or 0 }
+	
+	local eid
+	
+	local function on_ready(e)
+		proxy.eid = eid
+		gameobject.new(proxy)
+		imaterial.set_property(e, "u_basecolor_factor", math3d.vector( 1,1,0,1 ))
+	end
+	
+	eid = world:create_entity {
+		policy = {
+			"ant.render|render",
+		},
+		data = {
+			scene       = { t = { 0,1,0} },
+			material 	= "/pkg/ant.resources/materials/primitive.material",
+			visible_masks = "main_view|cast_shadow",
+			visible     = true,
+			cast_shadow = true,
+			mesh        = "cube.primitive",
+			on_ready = on_ready,
+		}
+	}
+
+	return proxy
+end
+
+local obj
+
 function m:init_world()
 	bgfx.maxfps(60)
     world:create_instance {
@@ -27,7 +60,7 @@ function m:init_world()
 			scene 		= {
 				s = {10, 1, 10},
             },
-			material 	= "/asset/primitive.material",
+			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
 			visible     = true,
 			mesh        = "plane.primitive",
 		}
@@ -39,18 +72,27 @@ function m:init_world()
 		},
 		data = {
 			scene       = { t = { 0,1,0} },
-			material 	= "/asset/primitive.material",
+			material 	= "/pkg/ant.resources/materials/primitive.material",
 			visible_masks = "main_view|cast_shadow",
 			visible     = true,
 			cast_shadow = true,
 			mesh        = "cube.primitive",
 			on_ready = function (e)
-				imaterial.set_property(e, "u_basecolor_factor", math3d.vector( 1,1,0,1 ))
+				imaterial.set_property(e, "u_basecolor_factor", math3d.vector( 1,0,0,1 ))
 			end
 		}
 	}
+	
+	obj = object(0,0,0)
 
 	icamera_ctrl.distance = 5
+end
+
+local function move_object()
+	local r = obj.r + 1
+	obj.r = r
+	obj.x = 3 * math.sin(math.rad(r))
+	obj.y = 3 * math.cos(math.rad(r))
 end
 
 local kb_mb             = world:sub {"keyboard"}
@@ -178,7 +220,12 @@ function m:frame_update()
 end
 
 function m:data_changed()
+	if not key_press.Space then
+		move_object()
+	end
+	gameobject.flush(w)
 	if ImGui.Begin("Camera", nil, ImGui.WindowFlags {"AlwaysAutoResize", "NoMove", "NoTitleBar"}) then
+		ImGui.LabelText ("Press space to pause",  "(%f,%f) R = %f", obj.x, obj.y, obj.r)
 		ImGui.LabelText ("pan",  "Press W A S D or Left button")
 		ImGui.LabelText ("yaw",  "Press Q E or Right button")
 		ImGui.LabelText ("pitch",  "Press Y H or Right button")

@@ -48,10 +48,16 @@ function S.close(...)
     extern_windows.push("close", ...)
 end
 
+function S.init_canvas()
+	local canvas = require "core.canvas"
+	canvas.init()
+end
+
 S.gesture = document_manager.process_gesture
 S.touch = document_manager.process_touch
 
 local viewid = hwi.viewid_get "uiruntime"
+local canvasid = hwi.viewid_get "uicanvas"
 hwi.init_bgfx()
 bgfx.init()
 
@@ -59,6 +65,11 @@ function S.set_viewport(vr)
     bgfx.set_view_rect(viewid, vr.x, vr.y, vr.w, vr.h)
     document_manager.set_viewport(vr)
 end
+
+document_manager.set_viewid {
+	main = viewid,
+	canvas = canvasid,
+}
 
 rmlui.RmlInitialise {
     viewid = viewid,

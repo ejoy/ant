@@ -44,4 +44,8 @@ Script* GetScript() {
     return &g_context->m_script;
 }
 
+void SetView(int viewid) {
+	g_context->m_render.SetView(viewid);
+}
+
 }

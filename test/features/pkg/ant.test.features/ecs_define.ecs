@@ -24,7 +24,6 @@ DEFINE_TEST "hitch_node"
 DEFINE_TEST "motion_sampler"
 DEFINE_TEST "group"
 DEFINE_TEST "render_layer"
-DEFINE_TEST "canvas"
 DEFINE_TEST "outline"
 DEFINE_TEST "draw_indirect"
 DEFINE_TEST "blur_scene"
@@ -32,6 +31,8 @@ DEFINE_TEST "blur_scene"
 DEFINE_TEST "empty"
 DEFINE_TEST "point_light"
 DEFINE_TEST "viewrect2d"
+
+DEFINE_TEST "render_queue"
 
 -- NOT work right now
 --DEFINE_TEST "decal"

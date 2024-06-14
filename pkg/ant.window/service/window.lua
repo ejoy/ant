@@ -27,15 +27,20 @@ local function reboot(args)
 end
 
 local function render(init, args, initialized)
+	local vsync
+	if args.vsync then
+		vsync = "sv"
+	end
     rhwi.init {
         nwh     = init.nwh,
         ndt     = init.ndt,
         context = init.context,
         width   = init.w,
         height  = init.h,
+		reset   = vsync,
     }
     rhwi.set_native_window(init.window)
-    rhwi.set_profie(false)
+    rhwi.set_profie(args.profile)
     bgfx.encoder_create "world"
     bgfx.encoder_init()
     assetmgr.init()

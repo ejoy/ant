@@ -31,7 +31,8 @@ local release_handle = {
 		local h = self.handle
 		if h then
 			self.handle = nil
-			bgfx.destroy(h)
+			-- todo : destroy ib handle
+			-- bgfx.destroy(h)
 		end
 	end
 }

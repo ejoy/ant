@@ -7,5 +7,6 @@ class Render;
 
 Render* GetRender();
 Script* GetScript();
+void SetView(int viewid);
 
 }

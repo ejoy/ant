@@ -1,0 +1,6 @@
+mount:
+    /engine/ %engine%/engine
+    /pkg/    %engine%/pkg
+    /pkg/ant.test.canvas/	%project%/code
+    /	%project%
+    
