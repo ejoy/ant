@@ -5,8 +5,8 @@
                 font: 300% "阿里巴巴普惠体";
             }
             div {
-                margin-left: 60%;
-                margin-right: 10%;
+                margin-left: 10%;
+                margin-right: 30%;
                 margin-top: 10%;
                 margin-bottom: 20%;
                 gap: 20px;
@@ -17,7 +17,7 @@
                 text-decoration: none;
                 border-radius: 10px;
                 border: 1px white;
-                background-color: black;
+                background-color: blue;
                 background-size: contain;
                 color: white;
                 transform: scale(1.0);
@@ -26,34 +26,10 @@
                 transform: scale(1.1);
             }
         </style>
-        <script type="text/x-lua" >
-            local model = window.createModel {
-                show = false,
-                label = "新游戏"
-            }
-            function model.new(event)
-                window.callMessage("click", "new")
-            end
-            function model.load(event)
-                window.callMessage("click", "load")
-                model.label = "继续游戏"
-            end
-            function model.setting(event)
-                window.callMessage("click", "setting")
-                model.show = not model.show
-            end
-            function model.exit()
-                window.callMessage("click", "exit")
-            end
-        </script>
     </head>
     <body>
         <div>
-            <button id = "new" data-event-click="new()">{{label}}</button>
-            <button data-event-click="load()">载入游戏</button>
-            <button data-event-click="setting()">设置</button>
-            <button data-if="show">隐藏菜单</button>
-            <button data-event-click="exit()">退出</button>
+            <button>测试</button>
         </div>
     </body>
 </html>

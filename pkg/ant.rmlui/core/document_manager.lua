@@ -104,7 +104,7 @@ function m.open(path, name, ...)
 	else
 		w, h = width, height
 	end
-    local doc = rmlui.DocumentCreate(width, height)
+    local doc = rmlui.DocumentCreate(w, h)
     if not doc then
         return
     end
