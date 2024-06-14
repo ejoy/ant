@@ -1,6 +1,3 @@
-feature "canvas"
-    .import "canvas.ecs"
-
 feature "water"
     .import "water.ecs"
 
