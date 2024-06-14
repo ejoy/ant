@@ -13,7 +13,6 @@ import_package "ant.window".start {
         "ant.sky|sky",
         "ant.sky|procedural_sky",
         "ant.splitviews",
-        "ant.terrain|canvas",
         "ant.terrain|water",
         "ant.imgui",
         "ant.pipeline",
