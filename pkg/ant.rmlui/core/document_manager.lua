@@ -22,6 +22,18 @@ local documents = {}
 local hidden = {}
 local pending = {}
 local update
+local default_view
+local canvas_view
+local ignore_canvas = true
+
+function m.set_viewid(viewid)
+	default_view = assert(viewid.main)
+	canvas_view = assert(viewid.canvas)
+end
+
+function m.ignore_canvas(ignore)
+	ignore_canvas = ignore
+end
 
 local function round(x)
     return math.floor(x+0.5)
@@ -85,11 +97,22 @@ local function OnLoadExternalStyle(document, source_path)
 end
 
 function m.open(path, name, ...)
-    local doc = rmlui.DocumentCreate(width, height)
+	local w,h
+	if name == "canvas" then
+		local canvas = require "core.canvas"
+		w, h = canvas.size()
+	else
+		w, h = width, height
+	end
+    local doc = rmlui.DocumentCreate(w, h)
     if not doc then
         return
     end
-    documents[#documents+1] = doc
+	if name == "canvas" then
+		documents.canvas = doc
+	else
+	    documents[#documents+1] = doc
+	end
     notifyDocumentCreate(doc, name)
     local mem, symbol = readfile(path)
     local html = rmlui.DocumentParseHtml(path, fastio.wrap(mem), false)
@@ -148,12 +171,16 @@ function m.close(doc)
     eventListener.dispatch(doc, getBody(doc), "unload", {})
     notifyDocumentDestroy(doc)
     rmlui.DocumentDestroy(doc)
-    for i, d in ipairs(documents) do
-        if d == doc then
-            table.remove(documents, i)
-            break
-        end
-    end
+	if doc == documents.canvas then
+		documents.canvas = nil
+	else
+		for i, d in ipairs(documents) do
+			if d == doc then
+				table.remove(documents, i)
+				break
+			end
+		end
+	end
     hidden[doc] = nil
 end
 
@@ -383,7 +410,17 @@ function m.update(delta)
             rmlui.DocumentUpdate(doc, delta)
         end
     end
-    rmlui.RenderFrame()
+	if not ignore_canvas then
+		local canvas_doc = documents.canvas
+		if canvas_doc then
+			rmlui.RenderSetView(canvas_view)
+--			print ("RenderSetView", canvas_view)
+			datamodel.update(canvas_doc)
+			rmlui.DocumentUpdate(canvas_doc, delta)
+			rmlui.RenderSetView(default_view)
+		end
+	end
+	rmlui.RenderFrame()
     update = nil
 end
 

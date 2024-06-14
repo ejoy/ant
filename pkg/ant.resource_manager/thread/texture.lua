@@ -72,8 +72,10 @@ local function loadAtlas(name)
 end
 
 local function loadTexture(name)
-	local protocol, path, config = name:match "(%w+):(.*)%s(.*)"
+	local protocol, fullpath = name:match "/?(%w+):(.*)"
 	if protocol then
+		local path, config = fullpath:match "(.-)%s(.*)$"
+		path = path or fullpath
 		return loadExt(protocol, path, config, name)
 	end
     if name:find ".atlas" then

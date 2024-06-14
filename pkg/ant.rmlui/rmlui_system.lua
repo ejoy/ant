@@ -20,6 +20,10 @@ function rmlui_sys:exit()
     end
 end
 
+function rmlui_sys:init_system()
+	ltask.call(ServiceRmlUi, "init_canvas")
+end
+
 local iRmlUi = {}
 
 function iRmlUi.open(name, url, ...)

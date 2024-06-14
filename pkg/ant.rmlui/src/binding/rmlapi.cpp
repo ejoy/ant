@@ -594,6 +594,13 @@ lRenderFrame(lua_State* L) {
 }
 
 static int
+lRenderSetView(lua_State *L) {
+	int viewid = luaL_checkinteger(L, 1);
+	Rml::SetView(viewid);
+	return 0;
+}
+
+static int
 lRenderSetTexture(lua_State* L) {
 	Rml::TextureData texture_data;
 	if (lua_gettop(L) >= 4) {
@@ -715,6 +722,7 @@ luaopen_rmlui(lua_State* L) {
 		{ "TextDelete", lTextDelete },
 		{ "RenderBegin", lRenderBegin },
 		{ "RenderFrame", lRenderFrame },
+		{ "RenderSetView", lRenderSetView },
 		{ "RenderSetTexture", lRenderSetTexture },
 		{ "RenderSetLatticeTexture", lRenderSetLatticeTexture },
 		{ "RenderSetTextureAtlas", lRenderSetTextureAtlas },
