@@ -2,6 +2,9 @@ debug:
   show_bounding: false
 scene:
   resolution_limits: false	# 1280x720
+canvas:
+  width: 1024
+  height: 1024
 graphic:
   ao:
     radius              : 3.0     # Ambient Occlusion radius in meters, between 0 and ~10.

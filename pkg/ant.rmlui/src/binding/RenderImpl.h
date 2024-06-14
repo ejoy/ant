@@ -80,6 +80,9 @@ public:
 	void GenerateString(FontFaceHandle handle, LineList& lines, const Color& color, Geometry& geometry) override;
     void GenerateRichString(FontFaceHandle handle, LineList& lines, std::vector<std::vector<layout>> layouts, std::vector<uint32_t>& codepoints, Geometry& textgeometry, std::vector<std::unique_ptr<Geometry>> & imagegeometries, std::vector<image>& images, int& cur_image_idx, float line_height) override;
     float PrepareText(FontFaceHandle handle,const std::string& string,std::vector<uint32_t>& codepoints,std::vector<int>& groupmap,std::vector<group>& groups,std::vector<image>& images,std::vector<layout>& line_layouts,int start,int num) override;
+	void SetView(int viewid) {
+		context.viewid = (uint16_t)viewid;
+	}
 private:
     void submitScissorRect(bgfx_encoder_t* encoder);
     void setScissorRect(bgfx_encoder_t* encoder, const glm::u16vec4 *r);

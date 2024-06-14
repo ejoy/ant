@@ -74,6 +74,7 @@ add_view "pickup"
 add_view "pickup_blit"	--40
 add_view "mem_texture"
 add_view "uiruntime"
+add_view "uicanvas"
 
 local remapping_need_update = true
 
