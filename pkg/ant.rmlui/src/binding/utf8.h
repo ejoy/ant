@@ -311,7 +311,7 @@ namespace utf8 {
         constexpr auto const& data = make_it_static<toutf8_array(codepoint)>();
         for (size_t i = 0; i < data.size(); ++i) {
             if (data[i] == 0) {
-                return std::string_view { data.data(), i - 1 };
+                return std::string_view { data.data(), i };
             }
         }
         return std::string_view { data.data(), data.size() };
