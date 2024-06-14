@@ -33,6 +33,8 @@ DEFINE_TEST "empty"
 DEFINE_TEST "point_light"
 DEFINE_TEST "viewrect2d"
 
+DEFINE_TEST "render_queue"
+
 -- NOT work right now
 --DEFINE_TEST "decal"
 
