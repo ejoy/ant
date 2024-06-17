@@ -26,6 +26,7 @@ local math3d    = require "math3d"
 local fbmgr     = require "framebuffer_mgr"
 local queuemgr  = ecs.require "queue_mgr"
 
+local fg		= ecs.require "ant.render|framegraph"
 local icamera   = ecs.require "ant.camera|camera"
 local irq       = ecs.require "renderqueue"
 local imaterial = ecs.require "ant.render|material"
@@ -160,6 +161,10 @@ function shadow_sys:init()
 	for ii=1, ics.split_num do
 		local vr = {x=0, y=0, w=SM_SIZE, h=SM_SIZE}
 		create_csm_entity(ii, vr, create_fb(rb_arrays, ii))
+		fg.register_pass("csm" .. ii, {
+			init = function () end,	--TODO
+			run = function () end,	--TODO
+		})
 	end
 
 	imaterial.system_attrib_update("s_shadowmap",		fbmgr.get_rb(rb_arrays).handle)

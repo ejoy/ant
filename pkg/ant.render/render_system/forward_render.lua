@@ -22,6 +22,7 @@ local setting		= import_package "ant.settings"
 local ENABLE_PRE_DEPTH<const>	= not setting:get "graphic/disable_pre_z"
 local ENABLE_FXAA<const> 		= setting:get "graphic/postprocess/fxaa/enable"
 local ENABLE_TAA<const>			= setting:get "graphic/postprocess/taa/enable"
+local ENABLE_SHADOW<const>		= setting:get "graphic/shadow/enable"
 
 local INV_Z<const> = setting:get "graphic/inv_z"
 local CLEAR_DEPTH_VALUE<const>  = INV_Z and 0 or 1
@@ -58,17 +59,6 @@ end
 
 local function create_predepth_queue(vr, cameraref)
 	local fbidx = fbmgr.create{rbidx = create_depth_rb(vr.w, vr.h)}
-	fg.register_pass("pre_depth", {
-		init = function (self)
-			self.input = nil
-			self.output = fbidx
-		end,
-		run = function (self)
-			--nothing todo in here, submit code in render.cpp
-		end,
-		begin = function (self) end,
-		finish = function (self) end,
-	})
 	local predepth_viewid<const> = hwi.viewid_get "pre_depth"
 	fbmgr.bind(predepth_viewid, fbidx)
 
@@ -122,16 +112,6 @@ end
 
 local function create_main_queue(vr, cameraref)
 	local fbidx = create_main_fb(vr)
-	fg.register_pass("main_view", {
-		init = function (self)
-			local pdp = fg.pass "pre_depth"
-			self.input = pdp.output
-			self.output = fbidx
-		end,
-		run = function (self)
-			--same with predepth
-		end,
-	})
 	world:create_entity {
 		policy = {
 			"ant.render|watch_screen_buffer",
@@ -155,6 +135,34 @@ local function create_main_queue(vr, cameraref)
 	}
 end
 
+local function init_fraem_graph()
+	local depends = {}
+	if ENABLE_PRE_DEPTH then
+		depends[#depends+1] = "pre_depth"
+		fg.register_pass("pre_depth", {
+			init = function() end,
+			run = function ()
+				--TODO: submit code should be here, but right now, code submot in render.cpp, we should move submit code here???
+			end,
+		})
+	end
+
+	if ENABLE_SHADOW then
+		depends[#depends+1] = "csm1"
+		depends[#depends+1] = "csm2"
+		depends[#depends+1] = "csm3"
+		depends[#depends+1] = "csm4"
+	end
+	fg.register_pass("main_view", {
+		depends = depends,
+		init = function ()
+		end,
+		run = function ()
+			--same with predepth
+		end,
+	})
+end
+
 function fr_sys:init()
 	local vr = iviewport.viewrect
 	local camera = icamera.create{
@@ -172,6 +180,8 @@ function fr_sys:init()
 		create_predepth_queue(vr, camera)
 	end
 	create_main_queue(vr, camera)
+
+	init_fraem_graph()
 end
 
 local mq_vr_changed = world:sub{"view_rect_changed", "main_queue"}

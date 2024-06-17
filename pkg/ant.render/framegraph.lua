@@ -6,7 +6,6 @@ local fg = {}
 --beside this, framegraph should also resolve the render_target depend job, make one pass start after the depend pass
 --we should remove some code in api level, but right now, we can use it in postprocess(postprocess queue only have some submits, and all this submit are done in lua level)
 --but those postprocess stages depend on pre_depth/main_view passes, so we should setup here and let postprocess pass depend on them
---and there are no render pass concept right now(it's on developing), so begin/finish function defined in pass are not use
 
 local PASSES = {}
 
@@ -18,7 +17,7 @@ function fg.register_pass(name, passinfo)
     assert(passinfo.init)
     assert(passinfo.run)
 
-    local dependname = passinfo.depend
+    local dependname = passinfo.depends
     if dependname then
         local _ = PASSES[dependname] or error(("Invalid depend pass:%s"):format(dependname))
     end
@@ -48,8 +47,8 @@ end
 
 local function insert_depend(n, p, depends, passes)
     local inserthit
-    if p.depend then
-        for _, dp in ipairs(p.depend) do
+    if p.depends then
+        for _, dp in ipairs(p.depends) do
             local pp = passes[dp] or error(("Invalid depend:%s"):format(dp))
             inserthit = insert_depend(dp, pp, depends, passes)
             check_insert_item(n, depends, inserthit)
@@ -68,7 +67,7 @@ local function check_cycle_depend(d, marks, passes)
         marks[d] = true
         local p = passes[d]
         if p then
-            return check_cycle_depend(p.depend, marks, passes)
+            return check_cycle_depend(p.depends, marks, passes)
         end
     end
 end
@@ -98,18 +97,16 @@ function fg.run()
 
     for _, n in ipairs(DEPEND_LISTS) do
         local p = PASSES[n]
-        p:begin()
         p:run()
-        p:finish()
     end
 end
 
 
 if true then
     assert(check_cycle_depend("n1", {}, {
-        n1 = {depend = "n2"},
-        n2 = {depend = "n3"},
-        n3 = {depend = "n1"}
+        n1 = {depends = {"n2"}},
+        n2 = {depends = {"n3"}},
+        n3 = {depends = {"n1"}},
     }), "cycle depend")
     
     --[[
@@ -125,13 +122,13 @@ if true then
     
 --[[     local l = solve_depends{
         n1 = {
-            depend = {"n2"},
+            depends = {"n2"},
         },
         n2 = {
-            depend = {"n3"},
+            depends = {"n3"},
         },
         n4 = {
-            depend = {"n2"},
+            depends = {"n2"},
         },
         n3 = {}
     }
@@ -140,22 +137,22 @@ if true then
 
     local l = solve_depends{
         n1 = {
-            depend = {"n2", "n4"},
+            depends = {"n2", "n4"},
         },
         n2 = {
-            depend = {"n3"},
+            depends = {"n3"},
         },
         n3 = {
-            depend = {"n6"},
+            depends = {"n6"},
         },
         n4 = {
-            depend = {"n6"},
+            depends = {"n6"},
         },
         n5 = {
-            depend = {"n2"},
+            depends = {"n2"},
         },
         n6 = {
-            depend = {}
+            depends = {}
         }
     }
 
