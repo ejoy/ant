@@ -82,9 +82,13 @@ function canvas.size()
 	return canvas_size.width, canvas_size.height
 end
 
+local init
 function canvas.init()
-	local textmgr = ltask.queryservice "ant.resource_manager|resource"
-	ltask.call(textmgr, "register", "canvas", ltask.self())
+	if not init then
+		init = true
+		local textmgr = ltask.queryservice "ant.resource_manager|resource"
+		ltask.call(textmgr, "register", "canvas", ltask.self())
+	end
 end
 
 return canvas
