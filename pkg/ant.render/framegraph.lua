@@ -17,10 +17,12 @@ function fg.register_pass(name, passinfo)
     assert(passinfo.init)
     assert(passinfo.run)
 
-    local dependname = passinfo.depends
-    if dependname then
-        local _ = PASSES[dependname] or error(("Invalid depend pass:%s"):format(dependname))
-    end
+    -- local depends = passinfo.depends
+    -- if depends then
+    --     for _, d in ipairs(depends) do
+    --         local _ = PASSES[d] or error(("Invalid depend pass:%s"):format(d))
+    --     end
+    -- end
     PASSES[name] = passinfo
 end
 
@@ -59,23 +61,31 @@ end
 
 local DEPEND_LISTS
 
-local function check_cycle_depend(d, marks, passes)
-    if d then
-        if marks[d] then
-            return true
-        end
-        marks[d] = true
-        local p = passes[d]
-        if p then
-            return check_cycle_depend(p.depends, marks, passes)
+local function _check_cycle_depend(p, marks, passes)
+    local depends = p.depends
+    if depends then
+        for _, d in ipairs(depends) do
+            if marks[d] then
+                return true
+            end
+            marks[d] = true
+
+            local pp = passes[d]
+            if pp then
+                return _check_cycle_depend(pp, marks, passes)
+            end
         end
     end
+end
+
+local function check_cycle_depend(n, passes)
+    return _check_cycle_depend(assert(passes[n]), {}, passes)
 end
 
 local function solve_depends(passes)
     local dependlist = {}
     for n, p in pairs(passes) do
-        assert(not check_cycle_depend(n, {}, passes), "detect cycle depend")
+        assert(not check_cycle_depend(n, passes), "detect cycle depend")
         insert_depend(n, p, dependlist, passes)
     end
     return dependlist
@@ -103,7 +113,7 @@ end
 
 
 if true then
-    assert(check_cycle_depend("n1", {}, {
+    assert(check_cycle_depend("n1", {
         n1 = {depends = {"n2"}},
         n2 = {depends = {"n3"}},
         n3 = {depends = {"n1"}},
