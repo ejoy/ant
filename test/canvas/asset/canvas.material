@@ -21,6 +21,7 @@ properties:
 state:
   ALPHA_REF: 0
   CULL: CCW
-  DEPTH_TEST: GREATER
+  DEPTH_TEST: ALWAYS
   MSAA: true
   WRITE_MASK: RGBAZ
+  BLEND: ALPHA
