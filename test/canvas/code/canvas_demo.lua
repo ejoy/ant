@@ -26,6 +26,7 @@ function m:init_world()
             },
 			material 	= "/asset/canvas.material",
 			visible     = true,
+            render_layer = "translucent",
 			-- rect (0,0,0.8,0.8) of canvas
 			mesh        = "plane(0,0,0.8,0.8).primitive",
 		}
