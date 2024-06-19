@@ -30,6 +30,16 @@ function fg.pass(n)
     return assert(PASSES[n])
 end
 
+function fg.add_depend(n, d)
+    local _ = PASSES[d] or error(("Invalid depend pass name:%s"):format(d))
+    local p = PASSES[n] or error(("Pass: %s is not regist"):format(n))
+
+    if not p.depends then
+        p.depends = {}
+    end
+    p.depends[#p.depends+1] = d
+end
+
 local function find_depend(n, depends)
     for i, d in ipairs(depends) do
         if d == n then
@@ -98,7 +108,7 @@ local function init_passes(list, passes)
 end
 
 function fg.compile()
-    DEPEND_LISTS = solve_depends()
+    DEPEND_LISTS = solve_depends(PASSES)
     init_passes(DEPEND_LISTS, PASSES)
 end
 

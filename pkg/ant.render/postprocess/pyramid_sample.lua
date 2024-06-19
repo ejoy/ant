@@ -11,22 +11,22 @@ local util      = ecs.require "postprocess.util"
 local ips = {}
 
 local RB_FLAGS<const> = sampler {
-    RT="RT_ON",
-    MIN="LINEAR",
-    MAG="LINEAR",
-    U="CLAMP",
-    V="CLAMP",
+    RT  ="RT_ON",
+    MIN ="LINEAR",
+    MAG ="LINEAR",
+    U   ="CLAMP",
+    V   ="CLAMP",
     BLIT="BLIT_COMPUTEWRITE"
 }
 
 local function create_rb(vr)
     return fbmgr.create_rb{
-        w = vr.w,
-        h = vr.h,
-        format = "RGBA16F",
-        layers=1,
-        mipmap=true,
-        flags = RB_FLAGS,
+        w       = vr.w,
+        h       = vr.h,
+        format  = "RGBA16F",
+        layers  = 1,
+        mipmap  = true,
+        flags   = RB_FLAGS,
     }
 end
 
@@ -91,20 +91,13 @@ local function create_sample_queues(ps, mqvr)
     end
 end
 
-local SCENE_COLOR_PROPERTY = {
-    stage   = 0,
-    mip     = 0,
-    access  = "r",
-    type    = 'i',
-    value   = nil,
-}
-
 local function create_drawers(ps)
     local ds, us = ps.downsample, ps.upsample
     assert(#ds == #us)
     local mipcount<const> = #ds
     for i=1, mipcount do
-        ds[i].drawer = world:create_entity{
+        local d, u = ds[i], us[i]
+        d.drawer = world:create_entity{
             policy = {"ant.render|simplerender",},
             data = {
                 mesh_result       = irender.full_quad(),
@@ -113,7 +106,9 @@ local function create_drawers(ps)
                 scene             = {},
             }
         }
-        us[i].drawer = world:create_entity{
+        d.mip = i-1
+
+        u.drawer = world:create_entity{
             policy = {"ant.render|simplerender",},
             data = {
                 mesh_result       = irender.full_quad(),
@@ -122,6 +117,7 @@ local function create_drawers(ps)
                 scene             = {},
             }
         }
+        u.mip = mipcount-1 - d.mip
     end
 end
 
@@ -176,43 +172,35 @@ function ips.create(pyramid_sample, mqvr)
     return create_pyramid_sample(pyramid_sample)
 end
 
-local function do_sample(sample_params, samplers, inputhandle, next_mip)
-    for _, s in ipairs(samplers) do
-        local fb = assert(fbmgr.get_byviewid(s.viewid))
-        local outputhandle = fb[1].handle
+function ips.update_smaple_handles(e, scene_color_handle)
+    local function update_sample_handle(samples, inputhandle)
+        for i=1, #samples do
+            local d = samples[i]
+            d.handle = inputhandle
+    
+            local fb = fbmgr.get_byviewid(d.viewid)
+            inputhandle = fbmgr.get_rb(fb, 1).handle
+        end
 
-        local drawer = world:entity(s.drawer, "filter_material:in")
-        local fm = drawer.filter_material
-        local mi = fm.DEFAULT_MATERIAL
-        local mip = next_mip()
-        sample_params[1] = mip
-
-        SCENE_COLOR_PROPERTY.value, SCENE_COLOR_PROPERTY.mip = inputhandle, mip
-        mi.s_scene_color = SCENE_COLOR_PROPERTY
-        mi.u_bloom_param = sample_params
-        inputhandle = outputhandle
-
-        irender.draw(s.render_arg, s.drawer)
+        return inputhandle
     end
-    return inputhandle
+
+    update_sample_handle(e.pyramid_sample.upsample, 
+        update_sample_handle(e.pyramid_sample.downsample, scene_color_handle))
 end
 
-function ips.do_pyramid_sample(e, input_handle)
+local function do_sample(samplers, param_modifier)
+    for _, s in ipairs(samplers) do
+        local drawer = world:entity(s.drawer, "filter_material:in")
+        param_modifier:update(s, drawer.filter_material.DEFAULT_MATERIAL, s.mip)
+        irender.draw(s.render_arg, s.drawer)
+    end
+end
+
+function ips.do_pyramid_sample(e, param_modifier)
     local ps = e.pyramid_sample
-    local sample_params = ps.sample_params
-    local mip = 0
-
-    local current_handle = do_sample(sample_params, ps.downsample, input_handle, function () 
-        local m = mip
-        mip = m+1
-        return m
-    end)
-
-    do_sample(sample_params, ps.upsample, current_handle, function ()
-        local m = mip
-        mip = m-1
-        return m
-    end)
+    do_sample(ps.downsample,    param_modifier)
+    do_sample(ps.upsample,      param_modifier)
 end
 
 return ips
