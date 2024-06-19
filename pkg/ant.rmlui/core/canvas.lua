@@ -29,7 +29,6 @@ local function create_framebuffer()
 	bgfx.set_view_frame_buffer(canvas_id, assert(fbmgr.get(canvas_fb).handle))
 	bgfx.set_view_mode(canvas_id, "s")
     bgfx.set_view_rect(canvas_id, 0, 0, canvas_size.width, canvas_size.height)
-	bgfx.set_view_clear(canvas_id, "C", 0x000000ff)
 	
 --	print ("Bind to ", canvas_id)
 

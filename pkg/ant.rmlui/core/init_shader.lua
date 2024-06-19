@@ -19,6 +19,8 @@ local progs = {}
 local uniforms = {}
 local tasks = {}
 
+-- Read programs in .material, and ignore render states
+-- The render state is a macro RENDER_STATE defined in ant.rmlui/src/binding/RenderImpl.cpp
 for k, v in pairs(shaders) do
     tasks[#tasks+1] = {function ()
         local shader = ltask.call(ServiceResource, "material_create", v)
