@@ -82,10 +82,9 @@ local function update_properties(material)
     
     local scenehandle = ifg.get_last_output("tonemapping", 1)
     material.s_scene_color = scenehandle
-    local bloomhandle = ifg.get_last_output("tonemapping", 2)
-    if bloomhandle then
-        assert(ENABLE_BLOOM)
-        material.s_bloom_color = bloomhandle
+    if ENABLE_BLOOM then
+        local bloomhandle = ifg.get_last_output("tonemapping", 2)
+        material.s_bloom_color = assert(bloomhandle)
     end
 end
 
