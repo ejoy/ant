@@ -592,6 +592,7 @@ void window_close() {
 	if (!G.ShowCursor) {
 		::ShowCursor(TRUE);
 	}
+	::TerminateProcess(::GetCurrentProcess(), 0);
 }
 
 bool window_peek_message() {
