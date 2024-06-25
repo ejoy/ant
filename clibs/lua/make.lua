@@ -11,9 +11,6 @@ lm:source_set "lua_source" {
         lm.AntDir .. "/3rd/bee.lua/3rd/lua/onelua.c",
     },
     defines = "MAKE_LIB",
-    windows = {
-        defines = "LUA_BUILD_AS_DLL",
-    },
     linux = {
         defines = "LUA_USE_POSIX",
     },

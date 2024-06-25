@@ -131,12 +131,12 @@ if lm.os ~= "ios" and lm.os ~= "android" then
         deps = {
             "ant",
             "tools",
-			"lua54",
         }
     }
 end
 
 lm:default {
     "ant",
+    lm.os == "windows" and "lua54",
     lm.compiler == "msvc" and lm.sanitize and "copy_asan",
 }
