@@ -75,6 +75,7 @@ int luaopen_window(lua_State* L);
 int luaopen_window_ios(lua_State* L);
 int luaopen_zip(lua_State* L);
 int luaopen_cell_core(lua_State *L);
+int luaopen_luaforward(lua_State *L);
 
 void ant_loadmodules(lua_State* L) {
     static const luaL_Reg modules[] = {
@@ -165,6 +166,7 @@ void ant_loadmodules(lua_State* L) {
 #if BX_PLATFORM_WINDOWS
         { "bee.windows", luaopen_bee_windows },
 #endif
+		{ "luaforward", luaopen_luaforward },
         { NULL, NULL },
     };
 

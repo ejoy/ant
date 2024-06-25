@@ -131,6 +131,7 @@ if lm.os ~= "ios" and lm.os ~= "android" then
         deps = {
             "ant",
             "tools",
+			"lua54",
         }
     }
 end

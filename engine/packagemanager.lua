@@ -5,18 +5,19 @@ local platform = require "bee.platform"
 local AllowDll <const> = platform.os ~= "ios"
 
 local dllpath; do
-    if platform.os == "windows" then
-        function dllpath(name)
-            return name..".dll"
-        end
-    else
-        local sys = require "bee.sys"
-        local procdir = sys.exe_path():remove_filename():string()
-        function dllpath(name)
-            return procdir..name..".so"
-        end
-    end
+	local ext = platform.os == "windows" and ".dll" or ".so"
+	local path = os.getenv "ANTGAME"
+	if path then
+		path = path:gsub("[/\\]?$", "\\")
+	else
+		local sys = require "bee.sys"
+		path = sys.exe_path():remove_filename():string()
+	end
+	function dllpath(name)
+		return path..name..ext
+	end
 end
+
 local registered = {}
 
 local function sandbox_env(packagename)
@@ -61,7 +62,8 @@ local function sandbox_env(packagename)
         end
         if AllowDll then
             local funcname = "luaopen_"..name:gsub('%.', '_')
-            local func = package.loadlib(dllpath(name:match('^[^.]*')), funcname)
+            local lib = dllpath(name:match('^[^.]*'))
+            local func, err = package.loadlib(lib, funcname)
             if func ~= nil then
                 local r = func()
                 if r == nil then
@@ -102,6 +104,7 @@ local function sandbox_env(packagename)
     env.package = {
         loaded = _LOADED,
         preload = _PRELOAD,
+		loadlib = package.loadlib,
     }
     return setmetatable(env, {__index=_G})
 end

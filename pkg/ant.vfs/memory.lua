@@ -46,6 +46,7 @@ local function new_fs()
 			end
 			entry = {
 				content = f:read "a",
+				symbol = localpath,
 			}
 			f:close()
 			d[name] = entry
@@ -57,6 +58,7 @@ local function new_fs()
 				return nil, ("Can't open : " .. localpath)
 			end
 			entry.content = f:read "a"
+			entry.symbol = localpath
 			f:close()
 		end
 		return true
@@ -102,7 +104,7 @@ local function new_fs()
 				return nil, ("Can't read : " .. fullpath)
 			end
 		end
-		return fastio.memfile(e.content)
+		return fastio.memfile(e.content), e.symbol
 	end
 
 	function fs.list(fullpath, orig_dir)
@@ -162,9 +164,9 @@ local function init_memory_vfs()
 	local CMD_TYPE = CMD.TYPE
 
 	function CMD.READ(path)
-		local r = fs.read(path)
+		local r, symbol = fs.read(path)
 		if r then
-			return r
+			return r, symbol
 		end
 		return CMD_READ(path)
 	end
