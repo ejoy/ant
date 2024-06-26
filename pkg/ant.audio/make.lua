@@ -20,7 +20,8 @@ lm:lua_src "audio" {
     },
     windows = {
         deps = "copy_fmod",
-        sources = "src/luafmod.cpp",
+        sources = "src/empty_luafmod.c",
+--        sources = "src/luafmod.cpp",
         includes = {
             lm.AntDir .. "/3rd/fmod/windows/core/inc",
             lm.AntDir .. "/3rd/fmod/windows/studio/inc",

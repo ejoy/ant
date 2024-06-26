@@ -100,7 +100,6 @@ local key_press = {}
 
 local mouse_mb          = world:sub {"mouse"}
 local mouse_lastx, mouse_lasty
-local mouse_status
 
 local GuiValue = {
 	{ name = "distance_speed", 0.5 , min = 0.01, max = 2 },
@@ -180,22 +179,11 @@ function m:frame_update()
 			elseif state == "MOVE" then
 				local delta_x = x - mouse_lastx
 				local delta_y = y - mouse_lasty
-				if not mouse_status then
-					if delta_x * delta_x * 2 > delta_y * delta_y then
-						mouse_status = "yaw"
-					else
-						mouse_status = "pitch"
-					end
-				end
-				if mouse_status == "yaw" then
-					icamera_ctrl.delta.yaw = delta_x * rot_speed / 4
-				elseif mouse_status == "pitch" then
-					icamera_ctrl.delta.pitch = delta_y * rot_speed / 4
-				end
+				icamera_ctrl.delta.yaw = delta_x * rot_speed / 4
+				icamera_ctrl.delta.pitch = delta_y * rot_speed / 4
 				mouse_lastx, mouse_lasty = x, y
 			else
 				mouse_lastx, mouse_lasty = nil, nil
-				mouse_status = nil
 			end
 		elseif btn == "LEFT" then
 			if state == "DOWN" then
