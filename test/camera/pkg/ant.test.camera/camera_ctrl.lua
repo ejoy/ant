@@ -64,7 +64,7 @@ local function clamp(what)
 	end
 end
 
-function camera_ctrl:camera_set()
+function camera_ctrl:start_frame()
 	local main_queue = w:first "main_queue camera_ref:in render_target:in"
 	local main_camera <close> =	world:entity(main_queue.camera_ref, "camera:in")
 	
