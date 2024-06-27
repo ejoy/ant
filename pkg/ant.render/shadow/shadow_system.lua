@@ -307,46 +307,43 @@ end
 local function shadow_changed()
 	local C = irq.main_camera_changed()
 	local D = w:first "make_shadow scene_changed directional_light"
-	if C or D then
-		return true, C, D
-	end
-end
-
-function shadow_sys:update_camera()
-	local changed, C, D = shadow_changed()
-	if changed then
+	local sbe = w:first "scene_bounding_changed"
+	if C or D or sbe then
 		if C then
 			w:extend(C, "camera:in scene:in")
 		else
 			C = irq.main_camera_entity "camera:in scene:in"
 		end
-	
+
 		if D then
 			w:extend(D, "scene:in")
 		else
 			D = w:first "make_shadow directional_light scene:in"
 		end
-		
-		if D then
-			local sb = w:first "shadow_bounding:in".shadow_bounding
-			init_light_info(C, D, sb.light_info)
+
+		if sbe then
+			w:extend(sbe, "shadow_bounding:in")
+		else
+			sbe = w:first "shadow_bounding:in"
 		end
+
+		return true, C, D, sbe.shadow_bounding
+	end
+end
+
+function shadow_sys:update_camera()
+	local changed, C, D, sb = shadow_changed()
+	if changed then
+		init_light_info(C, D, sb.light_info)
 	end
 end
 
 function shadow_sys:update_camera_depend()
-	local changed, C = shadow_changed()
+	local changed, C, D, sb = shadow_changed()
 	if not changed then
 		return
 	end
 
-	if C then
-		w:extend(C, "scene:in camera:in")
-	else
-		C = irq.main_camera_entity "camera:in scene:in"
-	end
-
-	local sb = w:first "shadow_bounding:in".shadow_bounding
 	local si, li = sb.scene_info, sb.light_info
 	if not li.Lv then
 		return

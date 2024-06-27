@@ -4,6 +4,8 @@ system "shadow_bounding_system"
 policy "shadow_bounding"
     .component "shadow_bounding"
 
+component "scene_bounding_changed"
+
 component "shadow_bounding".type "lua"
 
 feature "scene_bounding"
