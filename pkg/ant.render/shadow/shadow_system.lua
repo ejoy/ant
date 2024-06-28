@@ -333,7 +333,7 @@ end
 
 function shadow_sys:update_camera()
 	local changed, C, D, sb = shadow_changed()
-	if changed then
+	if changed and D then
 		init_light_info(C, D, sb.light_info)
 	end
 end
