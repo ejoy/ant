@@ -14,7 +14,3 @@ editor.user.setting
 editor.user.ini
 /tools/rmlviewer/mod
 **/crash.log
-
-clibs/luaforward/lua_api_register.c
-clibs/luaforward/lua_api_register.h
-clibs/luaforward/lua_forward.c

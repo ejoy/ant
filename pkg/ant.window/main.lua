@@ -1,9 +1,6 @@
 local ltask = require "ltask"
 
 local function start(config)
-	local engine = import_package "ant.engine"
-	engine.export_capi.lua()
-
     local function spawn_window()
         local ServiceWindow = ltask.spawn_service {
             unique = true,

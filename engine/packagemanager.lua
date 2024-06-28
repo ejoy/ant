@@ -104,7 +104,6 @@ local function sandbox_env(packagename)
     env.package = {
         loaded = _LOADED,
         preload = _PRELOAD,
-		loadlib = package.loadlib,
     }
     return setmetatable(env, {__index=_G})
 end
