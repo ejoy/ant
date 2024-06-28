@@ -1,3 +1,5 @@
+#define LUA_CORE
+
 #include "lua_api_register.h"
 #include <lua.h>
 #include <lauxlib.h>
@@ -42,7 +44,7 @@ luaL_error(lua_State *L, const char *fmt, ...) {
 	return lua_error(L);
 }
 
-LUAMOD_API const char *
+LUA_API const char *
 luaapi_init(struct lua_api * api) {
 	if (api->version != LUA_VERSION_NUM)
 		return "Invalid Lua API version";
