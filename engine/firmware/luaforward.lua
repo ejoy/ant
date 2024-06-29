@@ -10,12 +10,8 @@ local function export_lua()
 
 	local init_func, err = package.loadlib(localpath, "luaapi_init")
 	if init_func then
-		return luaforward.register(init_func)
-	else
-		return function (f, ...)
-			return f(...)
-		end
+		luaforward.register(init_func)
 	end
 end
 
-return export_lua()
+export_lua()

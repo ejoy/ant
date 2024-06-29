@@ -13,11 +13,10 @@ lregister(lua_State *L) {
 
 		$API_STRUCT$
 	};
-	lua_CFunction call = reg(api);
-	if (call == NULL)
-		return luaL_error(L, "Init luaforward error");
-	lua_pushcfunction(L, call);
-	return 1;
+	const char * err = reg(api);
+	if (err)
+		return luaL_error(L, err);
+	return 0;
 }
 
 int
