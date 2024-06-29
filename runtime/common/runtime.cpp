@@ -57,6 +57,7 @@ do
         end
         assert(load(expr, "=(expr)", "t", env))()
     end
+    dofile "/engine/firmware/luaforward.lua"
     local i = 1
     while true do
         if arg[i] == nil then

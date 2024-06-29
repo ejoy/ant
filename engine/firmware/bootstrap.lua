@@ -1,5 +1,3 @@
-dofile "/engine/firmware/luaforward.lua"
-
 do
     local function LoadFile(path, env)
         local fastio = require "fastio"

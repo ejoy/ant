@@ -1,5 +1,3 @@
-dofile "/engine/firmware/luaforward.lua"
-
 local fs = require "bee.filesystem"
 
 local ENTRY = fs.absolute(arg[0])
