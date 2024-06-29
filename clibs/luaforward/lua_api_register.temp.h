@@ -10,6 +10,6 @@ struct lua_api {
 	$API_DECL$
 };
 
-typedef const char * (*lua_api_register)(struct lua_api);
+typedef lua_CFunction (*lua_api_register)(struct lua_api);
 
 #endif

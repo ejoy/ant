@@ -57,14 +57,14 @@ do
         end
         assert(load(expr, "=(expr)", "t", env))()
     end
-    dofile "/engine/firmware/luaforward.lua"
+    local call = dofile "/engine/firmware/luaforward.lua"
     local i = 1
     while true do
         if arg[i] == nil then
             break
         elseif arg[i] == '-e' then
             assert(arg[i + 1], "'-e' needs argument")
-            LoadDbg(arg[i + 1])
+            call(LoadDbg, arg[i + 1])	-- call LoadDbg from lua forward dll
             table.remove(arg, i)
             table.remove(arg, i)
             break

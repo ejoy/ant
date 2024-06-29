@@ -44,11 +44,18 @@ luaL_error(lua_State *L, const char *fmt, ...) {
 	return lua_error(L);
 }
 
-LUA_API const char *
+static int
+call(lua_State *L) {
+	int top = lua_gettop(L);
+	lua_call(L, top - 1, LUA_MULTRET);
+	return lua_gettop(L);
+}
+
+LUA_API lua_CFunction
 luaapi_init(struct lua_api * api) {
 	if (api->version != LUA_VERSION_NUM)
-		return "Invalid Lua API version";
+		return NULL;
 	API = *api;
 
-	return NULL;
+	return call;
 }
