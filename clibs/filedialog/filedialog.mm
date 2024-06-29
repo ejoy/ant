@@ -31,11 +31,11 @@ static void dlgSetFileTypes(lua_State* L, NSSavePanel* dialog, int idx) {
             luaL_checktype(L, -1, LUA_TTABLE);
             lua_geti(L, -1, 2);
             NSString* type = lua_nsstring(L, -1);
-            [types addObject:type];
+            [types addObject:[UTType typeWithFilenameExtension:type]];
             lua_pop(L, 1);
             lua_pop(L, 1);
         }
-        [dialog setAllowedFileTypes:types];
+        [dialog setAllowedContentTypes:types];
     }
     lua_pop(L, 1);
 }
