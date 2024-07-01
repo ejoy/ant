@@ -331,13 +331,6 @@ local function shadow_changed()
 	end
 end
 
-function shadow_sys:update_camera()
-	local changed, C, D, sb = shadow_changed()
-	if changed and D then
-		init_light_info(C, D, sb.light_info)
-	end
-end
-
 function shadow_sys:update_camera_depend()
 	local changed, C, D, sb = shadow_changed()
 	if not changed then
@@ -345,12 +338,12 @@ function shadow_sys:update_camera_depend()
 	end
 
 	local si, li = sb.scene_info, sb.light_info
-	if not li.Lv then
-		return
-	end
+	init_light_info(C, D, sb.light_info)
 	si.sceneaabbLS = build_sceneaabbLS(si, li)
 	local CF = C.camera.frustum
 	si.view_near, si.view_far = CF.n, CF.f
+
+	print("near", si.view_near, "far", si.view_far)
 	local zn, zf = assert(si.zn), assert(si.zf)
 	local _ = (zn >= 0 and zf > zn) or error(("Invalid near and far after cliped, zn must >= 0 and zf > zn, where zn: %2f, zf: %2f"):format(zn, zf))
 	--split bounding zn, zf
@@ -371,6 +364,10 @@ function shadow_sys:update_camera_depend()
     end
 
 	commit_csm_matrices_attribs()
+end
+
+function shadow_sys:camera_usage()
+	w:clear "scene_bounding_changed"
 end
 
 local function which_material(e, matres)
