@@ -259,11 +259,7 @@ return function (status)
 
     local function add_texture_format(texture_desc, need_compress)
         if need_compress then
-            texture_desc.compress = {
-                    android = "ASTC6x6",
-                    ios = "ASTC6x6",
-                    windows = texture_desc.normalmap and "BC5" or "BC3",
-                }
+            texture_desc.compress = true
         else
             texture_desc.format = "RGBA8"
         end

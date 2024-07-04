@@ -24,11 +24,7 @@ function iatlas.generate_atlas_file(atlas)
         srgb            = true
     }
     local texture_content = {
-        compress = {
-            android = "ASTC6x6",
-            ios = "ASTC6x6",
-            windows = "BC3"
-        },
+        compress = true,
         width  = atlas.w,
         height = atlas.h,
         colorspace = "sRGB",

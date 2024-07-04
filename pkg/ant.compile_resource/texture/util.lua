@@ -27,14 +27,26 @@ local function add_option(commands, name, value)
 	end
 end
 
+local default_compress = {
+	ios = "ASTC4x4",
+	macos = "ASTC4x4",
+	windows = "BC3",
+}
+
+local normap_default_compress = setmetatable({
+	windows = "BC5"
+}, { __index = default_compress })
+
 local function which_format(setting, param)
 	local compress = param.compress
 	if compress then
 		local os = setting.os
-		if os == "ios" or os == "macos" then
-			return "ASTC4x4"
+		local default = param.normalmap and normap_default_compress or default_compress
+		if compress == true then
+			return default[os]
+		else
+			return compress[os] or default[os]
 		end
-		return compress[os]
 	end
 
 	return param.format
