@@ -45,6 +45,17 @@ function primitive.plane(u0, v0, u1, v1)
 	return create_mesh({"p3|n3|t2", vb}, {0, 1, 2, 1, 3, 2}, {{-0.5, 0, -0.5}, {0.5, 0, 0.5}})
 end
 
+function primitive.quad()
+	local u0, v0, u1, v1 = 0, 0, 1, 1
+	local vb = {
+		-0.5, 1, 0, 0, 0, 1, u0, v0,	--left top
+		 0.5, 1, 0, 0, 0, 1, u1, v0,	--right top
+		-0.5, 0, 0, 0, 0, 1, u0, v1,	--left bottom
+		 0.5, 0, 0, 0, 0, 1, u1, v1,	--right bottom
+	}
+	return create_mesh({"p3|n3|t2", vb}, {0, 1, 2, 1, 3, 2}, {{-0.5, 0, 0}, {0.5, 1, 0, 0}})
+end
+
 local cube_ib = {
 	 0,  1,  2,
 	 1,  3,  2,
