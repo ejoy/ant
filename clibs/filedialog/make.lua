@@ -15,5 +15,8 @@ lm:lua_src "filedialog" {
     },
     macos = {
         sources =  "filedialog.mm",
+        frameworks = {
+            "UniformTypeIdentifiers"
+        }
     }
 }
