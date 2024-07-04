@@ -343,7 +343,7 @@ function shadow_sys:update_camera_depend()
 	local CF = C.camera.frustum
 	si.view_near, si.view_far = CF.n, CF.f
 
-	print("near", si.view_near, "far", si.view_far)
+	-- print("near", si.view_near, "far", si.view_far)
 	local zn, zf = assert(si.zn), assert(si.zf)
 	local _ = (zn >= 0 and zf > zn) or error(("Invalid near and far after cliped, zn must >= 0 and zf > zn, where zn: %2f, zf: %2f"):format(zn, zf))
 	--split bounding zn, zf
