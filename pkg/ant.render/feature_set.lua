@@ -1,6 +1,7 @@
 local FEATURES<const> = {
     DRAW_INDIRECT   = 0x00000001,
     GPU_SKINNING    = 0x00000002,
+    SHADOW_ALPHA_MASK=0x00000004,
 }
 
 local FS = {}
@@ -8,7 +9,7 @@ local FS = {}
 local FEATURE_FLAGS_CACHE = setmetatable({}, {__index=function (t, names)
     local f = 0
     for n in names:gmatch "[%w_]+" do
-        local v = FEATURES[n] or error(("Invalid feature name:%s"):format(k))
+        local v = FEATURES[n] or error(("Invalid feature name:%s"):format(n))
         f = f | v
     end
     t[names] = f

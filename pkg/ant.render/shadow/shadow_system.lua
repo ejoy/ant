@@ -24,6 +24,8 @@ local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 
 local fbmgr     = require "framebuffer_mgr"
+local fs		= require "filesystem"
+
 local queuemgr  = ecs.require "queue_mgr"
 
 local fg		= ecs.require "ant.render|framegraph"
@@ -32,6 +34,8 @@ local irq       = ecs.require "renderqueue"
 local imaterial = ecs.require "ant.render|material"
 local ivm		= ecs.require "ant.render|visible_mask"
 local irender	= ecs.require "ant.render|render"
+
+local featureset = ecs.require "ant.render|feature_set"
 
 local INV_Z<const> = setting:get "graphic/inv_z"
 local CLEAR_DEPTH_VALUE<const> = INV_Z and 0 or 1
@@ -115,10 +119,7 @@ local function create_csm_entity(index, vr, fbidx)
 	}
 end
 
-
-local shadow_material
-local di_shadow_material
-local gpu_skinning_material
+local FEATURE_MATERIALS = {}
 function shadow_sys:init()
 	queuemgr.register_queue "clear_sm"
 	local midx = queuemgr.material_index "csm1_queue"
@@ -126,9 +127,10 @@ function shadow_sys:init()
 	assert(midx == queuemgr.material_index "csm3_queue")
 	assert(midx == queuemgr.material_index "csm4_queue")
 
-	shadow_material 			= assetmgr.resource "/pkg/ant.resources/materials/predepth.material"
-	di_shadow_material 			= assetmgr.resource "/pkg/ant.resources/materials/predepth_di.material"
-	gpu_skinning_material 		= assetmgr.resource "/pkg/ant.resources/materials/predepth_skin.material"
+	FEATURE_MATERIALS[featureset.flag ""]               = assetmgr.resource "/pkg/ant.resources/materials/predepth.material"
+    FEATURE_MATERIALS[featureset.flag "GPU_SKINNING"]   = assetmgr.resource "/pkg/ant.resources/materials/predepth_skin.material"
+    FEATURE_MATERIALS[featureset.flag "DRAW_INDIRECT"]  = assetmgr.resource "/pkg/ant.resources/materials/predepth_di.material"
+    FEATURE_MATERIALS[featureset.flag "SHADOW_ALPHA_MASK"]=assetmgr.resource "/pkg/ant.resources/materials/predepth_alphamask.material"
 
 	--this rb will remove when world is exit
 	local rb_arrays = fbmgr.create_rb{
@@ -374,20 +376,17 @@ local function which_material(e, matres)
 	if matres.fx.depth then
 		return matres
 	end
-    w:extend(e, "skinning?in draw_indirect?in")
-	if e.draw_indirect then
-        return di_shadow_material
-    else
-        return e.skinning and gpu_skinning_material or shadow_material
-    end
-end
 
+    local FS = assert(e.feature_set, "Need feature set")
+    local flag = featureset.flag_from_featureset(FS)
+    return assert(FEATURE_MATERIALS[flag], "Invalid featureset")
+end
 
 --front face is 'CW', when building shadow we need to remove front face, it's 'CW'
 local CULL_REVERSE<const> = {
 	CCW		= "CW",
 	CW		= "CCW",
-	NONE	= "CW",
+	NONE	= "NONE",
 }
 
 local function create_shadow_state(srcstate, dststate)
@@ -398,6 +397,27 @@ local function create_shadow_state(srcstate, dststate)
 	d.DEPTH_TEST = INV_Z and "GREATER" or "LESS"
 
 	return bgfx.make_state(d)
+end
+
+local function update_shadow_alpha_mask(e, mi)
+	if e.feature_set.SHADOW_ALPHA_MASK then
+		local res = assetmgr.resource(e.material)
+		local alphamask = res.properties.s_basecolor or res.properties.s_alphamask
+		if alphamask then
+			local texpath = fs.path(alphamask.texture)
+			if texpath:is_relative() then
+				texpath = fs.path(e.material):parent_path() / texpath
+			end
+
+			texpath = texpath:lexically_normal()
+			print("texpath", texpath:string())
+			local texid = assetmgr.resource(texpath:string()).id
+			assert(not assetmgr.invalid_texture(texid))
+			mi.s_alphamask = texid
+		else
+			log.warn("entity need 's_basecolor'/'s_alphamask' as ")
+		end
+	end
 end
 
 function shadow_sys:entity_ready()
@@ -412,12 +432,15 @@ function shadow_sys:entity_ready()
 			local midx = queuemgr.material_index "csm1_queue"
 
 			if mt.fx.setting.cast_shadow == "on" then
-				w:extend(e, "filter_material:in")
+				w:extend(e, "filter_material:in feature_set:in")
 				local dstres = which_material(e, mt)
 				local fm = e.filter_material
-				local mi = RM.create_instance(dstres.depth.object)
+				local res = dstres.depth or dstres
+				local mi = RM.create_instance(res.object)
 				local Dmi = fm.DEFAULT_MATERIAL
 				mi:set_state(create_shadow_state(Dmi:get_state(), dstres.state))
+				update_shadow_alpha_mask(e, mi)
+
 				fm[midx] = mi
 				R.set(ro.rm_idx, midx, mi:ptr())
 				castshadow = hasaabb

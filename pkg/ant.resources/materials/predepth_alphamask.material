@@ -1,0 +1,19 @@
+fx:
+  vs: /pkg/ant.resources/shaders/depth/vs_depth.sc
+  fs: /pkg/ant.resources/shaders/depth/fs_depth_alpha_mask.sc
+  varyings:
+    a_position: vec3
+    a_texcoord0: vec2
+    v_texcoord0: vec2
+  setting: /pkg/ant.resources/settings/nolighting.ant
+  macros:
+    ALPHAMODE_MASK=1
+properties:
+  s_alphamask:
+    stage: 0
+    texture: /pkg/ant.resources/textures/default.texture
+state:
+  ALPHA_REF: 0
+  CULL: NONE
+  MSAA: true
+  WRITE_MASK: Z

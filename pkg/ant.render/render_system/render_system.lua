@@ -138,7 +138,9 @@ end
 
 function render_sys:opt_component_init()
 	for e in w:select "INIT feature_set:update" do
-		e.feature_set = {}
+		if type(e.feature_set) ~= "table" then
+			e.feature_set = {}
+		end
 	end
 
 	for e in w:select "INIT filter_material:update" do

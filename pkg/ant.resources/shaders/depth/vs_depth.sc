@@ -1,18 +1,24 @@
-
+#ifdef ALPHAMODE_MASK
+#define INPUT_TEXCOORD0 a_texcoord0
+#else //!ALPHAMODE_MASK
+#define INPUT_TEXCOORD0
+#endif //ALPHAMODE_MASK
 
 #ifdef DRAW_INDIRECT
-
-$input a_position i_data0 i_data1 i_data2
-
+$input a_position INPUT_TEXCOORD0 i_data0 i_data1 i_data2
 #else //!DRAW_INDIRECT
 
 #ifdef GPU_SKINNING
-$input a_position a_indices a_weight
+$input a_position INPUT_TEXCOORD0 a_indices a_weight
 #else //!GPU_SKINNING
-$input a_position
+$input a_position INPUT_TEXCOORD0
 #endif //GPU_SKINNING
 
 #endif //DRAW_INDIRECT
+
+#ifdef ALPHAMODE_MASK
+$output v_texcoord0
+#endif //ALPHAMODE_MASK
 
 #include <bgfx_shader.sh>
 #include "common/transform.sh"
@@ -31,4 +37,8 @@ void main()
 #endif //DRAW_INDIRECT
 
 	transform_worldpos(wm, a_position, gl_Position);
+
+#ifdef ALPHAMODE_MASK
+	v_texcoord0 = a_texcoord0;
+#endif //ALPHAMODE_MASK
 }
