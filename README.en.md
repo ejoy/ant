@@ -12,7 +12,7 @@ Ant is an open source game engine developed by Lingxi Interactive Entertainment.
 ### Build a Compilation Environment
 
 #### MSVC
-- Install Visual Studio
+- Install Visual Studio 2022 version 17.5 or later to ensure support for [C11 Atomics](https://devblogs.microsoft.com/visualstudio/visual-studio-2022-17-5-released/#atomics). Otherwise, you will encounter the error `stdatomic.h no such file or directory` during compilation.
 
 #### MINGW
 - Download and install [msys2](https://www.msys2.org/)
