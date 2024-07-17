@@ -13,7 +13,7 @@ Ant 是由灵犀互娱开发的开源游戏引擎。现阶段仅将代码仓库�
 
 #### 1.1 Windows
 ##### 1.1.1 MSVC
-- 安装 Visual Studio
+- 安装 Visual Studio version 22 17.5 或以上版本，因为依赖对 [C11 Atomics](https://devblogs.microsoft.com/visualstudio/visual-studio-2022-17-5-released/#atomics) 的支持，不然编译时会出现 `stdatomic.h no such file or directory` 错误。
 
 ##### 1.1.2 MINGW
 - 下载并安装 [msys2](https://www.msys2.org/)
