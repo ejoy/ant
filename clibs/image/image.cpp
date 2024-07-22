@@ -359,7 +359,7 @@ lencode_image(lua_State *L){
     }
 
     if (!err.isOk()){
-        luaL_error(L, err.getMessage().getPtr());
+        luaL_error(L, err.getMessage().getCPtr());
     }
 
     if (new_ic){
@@ -400,8 +400,6 @@ lconvert(lua_State *L){
 
     bx::DefaultAllocator defaultAllocator;
     AlignedAllocator allocator(&defaultAllocator, 16);
-    bimg::ImageContainer ic;
-    ic.m_allocator = &allocator;
     bx::Error err;
     auto img = bimg::imageParse(&allocator, buf, (uint32_t)bufsize, fmt, &err);
     if (img){
@@ -610,7 +608,7 @@ lpack2cubemap(lua_State *L){
     bx::DefaultAllocator defaultAllocator;
     AlignedAllocator allocator(&defaultAllocator, 16);
     bimg::ImageContainer* ic = nullptr;
-    for (int i=0; i<n; ++i){
+    for (int i=0; i<(int)n; ++i){
         lua_geti(L, 1, i+1);{
             bx::Error err;
             auto memory = getmemory(L, -1);
@@ -910,7 +908,7 @@ lcvt2file(lua_State *L){
 
     auto ic = bimg::imageParse(&defaultAllocator, memory.data(), (uint32_t)memory.size(), bimg::getFormat(src_datafmt), &err);
     if (!ic){
-        luaL_error(L, "Parse image file failed:%s", err.getMessage().getPtr());
+        luaL_error(L, "Parse image file failed:%s", err.getMessage().getCPtr());
     }
     bx::MemoryBlock mb(&defaultAllocator);
     if (0 == write2memory(L, mb, ic, fmt)){
@@ -921,7 +919,7 @@ lcvt2file(lua_State *L){
     return 1;
 }
 
-static
+static inline
 uint32_t cvt2rgbe(bx::WriterI* _writer, uint32_t _width, uint32_t _height, uint32_t _depth, uint32_t _srcPitch, const void* _src, bimg::TextureFormat::Enum _format, bx::Error* _err){
     uint32_t filesize = 0;
     bimg::UnpackFn unpack = bimg::getUnpack(_format);
@@ -951,7 +949,7 @@ uint32_t cvt2rgbe(bx::WriterI* _writer, uint32_t _width, uint32_t _height, uint3
     return filesize;
 }
 
-static
+static inline
 uint32_t cvt2rgb10A2(bx::WriterI* _writer, uint32_t _width, uint32_t _height, uint32_t _depth, uint32_t _srcPitch, const void* _src, bimg::TextureFormat::Enum _format, bx::Error* _err){
     uint32_t filesize = 0;
     bimg::UnpackFn unpack = bimg::getUnpack(_format);

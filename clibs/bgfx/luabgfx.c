@@ -21,7 +21,7 @@
 #include <android/log.h>
 #endif
 
-#if BGFX_API_VERSION != 127
+#if BGFX_API_VERSION != 128
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -725,36 +725,35 @@ push_supported(lua_State *L, uint64_t supported) {
 		uint64_t caps;
 		const char *name;
 	} flags[] = {
-		CAPSNAME(ALPHA_TO_COVERAGE)     // Alpha to coverage is supported.
-		CAPSNAME(BLEND_INDEPENDENT)     // Blend independent is supported.
-		CAPSNAME(COMPUTE)               // Compute shaders are supported.
-		CAPSNAME(CONSERVATIVE_RASTER)   // Conservative rasterization is supported.
-		CAPSNAME(DRAW_INDIRECT)         // Draw indirect is supported.
-		CAPSNAME(FRAGMENT_DEPTH)        // Fragment depth is accessible in fragment shader.
-		CAPSNAME(FRAGMENT_ORDERING)     // Fragment ordering is available in fragment shader.
-		CAPSNAME(GRAPHICS_DEBUGGER)     // Graphics debugger is present.
-		CAPSNAME(HDR10)                 // HDR10 rendering is supported.
-		CAPSNAME(HIDPI)                 // HiDPI rendering is supported.
-		CAPSNAME(IMAGE_RW)              // Image Read/Write is supported.
-		CAPSNAME(INDEX32)               // 32-bit indices are supported.
-		CAPSNAME(INSTANCING)            // Instancing is supported.
-		CAPSNAME(OCCLUSION_QUERY)       // Occlusion query is supported.
-		CAPSNAME(RENDERER_MULTITHREADED)// Renderer is on separate thread.
-		CAPSNAME(SWAP_CHAIN)            // Multiple windows are supported.
-		CAPSNAME(TEXTURE_2D_ARRAY)      // 2D texture array is supported.
-		CAPSNAME(TEXTURE_3D)            // 3D textures are supported.
-		CAPSNAME(TEXTURE_BLIT)          // Texture blit is supported.
-		CAPSNAME(TEXTURE_COMPARE_ALL)   // All texture compare modes are supported.
-		CAPSNAME(TEXTURE_COMPARE_LEQUAL)// Texture compare less equal mode is supported.
-		CAPSNAME(TEXTURE_CUBE_ARRAY)    // Cubemap texture array is supported.
-		CAPSNAME(TEXTURE_DIRECT_ACCESS) // CPU direct access to GPU texture memory.
-		CAPSNAME(TEXTURE_READ_BACK)     // Read-back texture is supported.
-		CAPSNAME(VERTEX_ATTRIB_HALF)    // Vertex attribute half-float is supported.
-		CAPSNAME(VERTEX_ATTRIB_UINT10)  // Vertex attribute 10_10_10_2 is supported.
-		CAPSNAME(VERTEX_ID)             // Rendering with VertexID only is supported.
-		CAPSNAME(PRIMITIVE_ID)          // PrimitiveID is available in fragment shader.
-		CAPSNAME(VIEWPORT_LAYER_ARRAY)  // Viewport layer is available in vertex shader.
-		CAPSNAME(DRAW_INDIRECT_COUNT)   // Draw indirect with indirect count is supported.
+		CAPSNAME(ALPHA_TO_COVERAGE)        // Alpha to coverage is supported.
+		CAPSNAME(BLEND_INDEPENDENT)        // Blend independent is supported.
+		CAPSNAME(COMPUTE)                  // Compute shaders are supported.
+		CAPSNAME(CONSERVATIVE_RASTER)      // Conservative rasterization is supported.
+		CAPSNAME(DRAW_INDIRECT)            // Draw indirect is supported.
+		CAPSNAME(FRAGMENT_DEPTH)           // Fragment depth is available in fragment shader.
+		CAPSNAME(FRAGMENT_ORDERING)        // Fragment ordering is available in fragment shader.
+		CAPSNAME(GRAPHICS_DEBUGGER)        // Graphics debugger is present.
+		CAPSNAME(HDR10)                    // HDR10 rendering is supported.
+		CAPSNAME(HIDPI)                    // HiDPI rendering is supported.
+		CAPSNAME(IMAGE_RW)                 // Image Read/Write is supported.
+		CAPSNAME(INDEX32)                  // 32-bit indices are supported.
+		CAPSNAME(INSTANCING)               // Instancing is supported.
+		CAPSNAME(OCCLUSION_QUERY)          // Occlusion query is supported.
+		CAPSNAME(RENDERER_MULTITHREADED)   // Renderer is on separate thread.
+		CAPSNAME(SWAP_CHAIN)               // Multiple windows are supported.
+		CAPSNAME(TEXTURE_2D_ARRAY)         // 2D texture array is supported.
+		CAPSNAME(TEXTURE_3D)               // 3D textures are supported.
+		CAPSNAME(TEXTURE_BLIT)             // Texture blit is supported.
+		CAPSNAME(TEXTURE_COMPARE_RESERVED) //
+		CAPSNAME(TEXTURE_COMPARE_LEQUAL)   // Texture compare less equal mode is supported.
+		CAPSNAME(TEXTURE_CUBE_ARRAY)       // Cubemap texture array is supported.
+		CAPSNAME(TEXTURE_DIRECT_ACCESS)    // CPU direct access to GPU texture memory.
+		CAPSNAME(TEXTURE_READ_BACK)        // Read-back texture is supported.
+		CAPSNAME(VERTEX_ATTRIB_HALF)       // Vertex attribute half-float is supported.
+		CAPSNAME(VERTEX_ATTRIB_UINT10)     // Vertex attribute 10_10_10_2 is supported.
+		CAPSNAME(VERTEX_ID)                // Rendering with VertexID only is supported.
+		CAPSNAME(VIEWPORT_LAYER_ARRAY)     // Viewport layer is available in vertex shader.
+		CAPSNAME(TEXTURE_COMPARE_ALL)      // All texture compare modes are supported.
 	};
 	int n = sizeof(flags) / sizeof(flags[0]);
 	lua_createtable(L, 0, n);

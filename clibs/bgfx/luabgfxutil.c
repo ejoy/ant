@@ -57,7 +57,7 @@ lencodeNormalRgba8(lua_State *L) {
 	return 1;
 }
 
-#define BGFX_LOG_ID 'bgfx'
+#define BGFX_LOG_ID ('b' << 24 | 'g' << 16 | 'f' << 8 | 'x')
 #define MAX_LOGBUFFER (64*1024)
 
 struct ltask;
