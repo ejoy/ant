@@ -51,4 +51,4 @@
 	url = https://github.com/zlib-ng/minizip-ng.git
 [submodule "3rd/bgfx.luamake"]
 	path = 3rd/bgfx.luamake
-	url = https://github.com/cloudwu/bgfx.luamake
+	url = https://github.com/actboy168/bgfx.luamake
