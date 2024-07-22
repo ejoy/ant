@@ -40,7 +40,10 @@ lm:lua_src "rmlui_core" {
     sources = {
         "src/core/*.cpp",
         "src/util/*.cpp",
-    }
+    },
+    msvc = {
+        flags = "/Zc:preprocessor",
+    },
 }
 
 lm:lua_src "rmlui_css" {
@@ -74,7 +77,10 @@ lm:lua_src "rmlui_binding" {
     },
     sources = {
         "src/binding/*.cpp",
-    }
+    },
+    msvc = {
+        flags = "/Zc:preprocessor",
+    },
 }
 
 lm:source_set "rmlui" {

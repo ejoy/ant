@@ -17,4 +17,7 @@ lm:lua_src "image" {
     sources = {
         "image.cpp",
     },
+    msvc = {
+        flags =	"/Zc:preprocessor",
+    },
 }

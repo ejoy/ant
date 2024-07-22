@@ -24,6 +24,9 @@ lm:lua_src "render_core" {
         "render/queue.cpp",
         "render/mesh.cpp",
     },
+    msvc = {
+        flags = "/Zc:preprocessor",
+    },
 }
 
 lm:lua_src "render" {

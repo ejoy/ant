@@ -44,6 +44,7 @@ lm:lua_src "font" {
     msvc = {
         flags = {
             "-wd4244",
+			"/Zc:preprocessor",
         }
     },
 }

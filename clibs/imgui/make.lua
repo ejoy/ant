@@ -91,6 +91,9 @@ lm:lua_src "imgui" {
     defines = {
         defines,
     },
+    msvc = {
+        flags = "/Zc:preprocessor",
+    },
 }
 
 lm:lua_src "imgui" {
@@ -110,6 +113,9 @@ lm:lua_src "imgui" {
     },
     defines = {
         defines,
+    },
+    msvc = {
+        flags = "/Zc:preprocessor",
     },
 }
 

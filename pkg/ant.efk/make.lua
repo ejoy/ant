@@ -28,7 +28,10 @@ lm:source_set "efk" {
             "-Wno-unused-variable",
             "-Wno-inconsistent-missing-override",
         }
-    }
+    },
+	msvc = {
+		flags = "/Zc:preprocessor",
+	},
 }
 
 lm:lua_src "efk" {
@@ -48,5 +51,8 @@ lm:lua_src "efk" {
     },
     sources = {
         "lefk.cpp",
-    }
+    },
+    msvc = {
+        flags = "/Zc:preprocessor",
+    },
 }

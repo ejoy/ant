@@ -19,6 +19,7 @@ lm:lua_src "bgfx" {
         flags = {
             "-wd4244",
             "-wd4267",
+			"/Zc:preprocessor",
         }
     },
 }
