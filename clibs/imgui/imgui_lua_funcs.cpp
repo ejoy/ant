@@ -46,31 +46,43 @@ static util::TableInteger ChildFlags[] = {
     ENUM(ImGuiChildFlags, AutoResizeY),
     ENUM(ImGuiChildFlags, AlwaysAutoResize),
     ENUM(ImGuiChildFlags, FrameStyle),
+    ENUM(ImGuiChildFlags, NavFlattened),
+};
+
+static util::TableInteger ItemFlags[] = {
+    ENUM(ImGuiItemFlags, None),
+    ENUM(ImGuiItemFlags, NoTabStop),
+    ENUM(ImGuiItemFlags, NoNav),
+    ENUM(ImGuiItemFlags, NoNavDefaultFocus),
+    ENUM(ImGuiItemFlags, ButtonRepeat),
+    ENUM(ImGuiItemFlags, AutoClosePopups),
 };
 
 static util::TableInteger InputTextFlags[] = {
     ENUM(ImGuiInputTextFlags, None),
     ENUM(ImGuiInputTextFlags, CharsDecimal),
     ENUM(ImGuiInputTextFlags, CharsHexadecimal),
+    ENUM(ImGuiInputTextFlags, CharsScientific),
     ENUM(ImGuiInputTextFlags, CharsUppercase),
     ENUM(ImGuiInputTextFlags, CharsNoBlank),
-    ENUM(ImGuiInputTextFlags, AutoSelectAll),
+    ENUM(ImGuiInputTextFlags, AllowTabInput),
     ENUM(ImGuiInputTextFlags, EnterReturnsTrue),
+    ENUM(ImGuiInputTextFlags, EscapeClearsAll),
+    ENUM(ImGuiInputTextFlags, CtrlEnterForNewLine),
+    ENUM(ImGuiInputTextFlags, ReadOnly),
+    ENUM(ImGuiInputTextFlags, Password),
+    ENUM(ImGuiInputTextFlags, AlwaysOverwrite),
+    ENUM(ImGuiInputTextFlags, AutoSelectAll),
+    ENUM(ImGuiInputTextFlags, ParseEmptyRefVal),
+    ENUM(ImGuiInputTextFlags, DisplayEmptyRefVal),
+    ENUM(ImGuiInputTextFlags, NoHorizontalScroll),
+    ENUM(ImGuiInputTextFlags, NoUndoRedo),
     ENUM(ImGuiInputTextFlags, CallbackCompletion),
     ENUM(ImGuiInputTextFlags, CallbackHistory),
     ENUM(ImGuiInputTextFlags, CallbackAlways),
     ENUM(ImGuiInputTextFlags, CallbackCharFilter),
-    ENUM(ImGuiInputTextFlags, AllowTabInput),
-    ENUM(ImGuiInputTextFlags, CtrlEnterForNewLine),
-    ENUM(ImGuiInputTextFlags, NoHorizontalScroll),
-    ENUM(ImGuiInputTextFlags, AlwaysOverwrite),
-    ENUM(ImGuiInputTextFlags, ReadOnly),
-    ENUM(ImGuiInputTextFlags, Password),
-    ENUM(ImGuiInputTextFlags, NoUndoRedo),
-    ENUM(ImGuiInputTextFlags, CharsScientific),
     ENUM(ImGuiInputTextFlags, CallbackResize),
     ENUM(ImGuiInputTextFlags, CallbackEdit),
-    ENUM(ImGuiInputTextFlags, EscapeClearsAll),
 };
 
 static util::TableInteger TreeNodeFlags[] = {
@@ -109,7 +121,7 @@ static util::TableInteger PopupFlags[] = {
 
 static util::TableInteger SelectableFlags[] = {
     ENUM(ImGuiSelectableFlags, None),
-    ENUM(ImGuiSelectableFlags, DontClosePopups),
+    ENUM(ImGuiSelectableFlags, NoAutoClosePopups),
     ENUM(ImGuiSelectableFlags, SpanAllColumns),
     ENUM(ImGuiSelectableFlags, AllowDoubleClick),
     ENUM(ImGuiSelectableFlags, Disabled),
@@ -136,6 +148,7 @@ static util::TableInteger TabBarFlags[] = {
     ENUM(ImGuiTabBarFlags, NoCloseWithMiddleMouseButton),
     ENUM(ImGuiTabBarFlags, NoTabListScrollingButtons),
     ENUM(ImGuiTabBarFlags, NoTooltip),
+    ENUM(ImGuiTabBarFlags, DrawSelectedOverline),
     ENUM(ImGuiTabBarFlags, FittingPolicyResizeDown),
     ENUM(ImGuiTabBarFlags, FittingPolicyScroll),
 };
@@ -205,7 +218,9 @@ static util::TableInteger DragDropFlags[] = {
     ENUM(ImGuiDragDropFlags, SourceNoHoldToOpenOthers),
     ENUM(ImGuiDragDropFlags, SourceAllowNullID),
     ENUM(ImGuiDragDropFlags, SourceExtern),
-    ENUM(ImGuiDragDropFlags, SourceAutoExpirePayload),
+    ENUM(ImGuiDragDropFlags, PayloadAutoExpire),
+    ENUM(ImGuiDragDropFlags, PayloadNoCrossContext),
+    ENUM(ImGuiDragDropFlags, PayloadNoCrossProcess),
     ENUM(ImGuiDragDropFlags, AcceptBeforeDelivery),
     ENUM(ImGuiDragDropFlags, AcceptNoDrawDefaultRect),
     ENUM(ImGuiDragDropFlags, AcceptNoPreviewTooltip),
@@ -234,6 +249,7 @@ static util::TableInteger ConfigFlags[] = {
     ENUM(ImGuiConfigFlags, NavNoCaptureKeyboard),
     ENUM(ImGuiConfigFlags, NoMouse),
     ENUM(ImGuiConfigFlags, NoMouseCursorChange),
+    ENUM(ImGuiConfigFlags, NoKeyboard),
     ENUM(ImGuiConfigFlags, DockingEnable),
     ENUM(ImGuiConfigFlags, ViewportsEnable),
     ENUM(ImGuiConfigFlags, DpiEnableScaleViewports),
@@ -293,6 +309,7 @@ static util::TableInteger SliderFlags[] = {
     ENUM(ImGuiSliderFlags, Logarithmic),
     ENUM(ImGuiSliderFlags, NoRoundToFormat),
     ENUM(ImGuiSliderFlags, NoInput),
+    ENUM(ImGuiSliderFlags, WrapAround),
 };
 
 static util::TableInteger TableFlags[] = {
@@ -366,6 +383,26 @@ static util::TableInteger TableRowFlags[] = {
     ENUM(ImGuiTableRowFlags, Headers),
 };
 
+static util::TableInteger MultiSelectFlags[] = {
+    ENUM(ImGuiMultiSelectFlags, None),
+    ENUM(ImGuiMultiSelectFlags, SingleSelect),
+    ENUM(ImGuiMultiSelectFlags, NoSelectAll),
+    ENUM(ImGuiMultiSelectFlags, NoRangeSelect),
+    ENUM(ImGuiMultiSelectFlags, NoAutoSelect),
+    ENUM(ImGuiMultiSelectFlags, NoAutoClear),
+    ENUM(ImGuiMultiSelectFlags, NoAutoClearOnReselect),
+    ENUM(ImGuiMultiSelectFlags, BoxSelect1d),
+    ENUM(ImGuiMultiSelectFlags, BoxSelect2d),
+    ENUM(ImGuiMultiSelectFlags, BoxSelectNoScroll),
+    ENUM(ImGuiMultiSelectFlags, ClearOnEscape),
+    ENUM(ImGuiMultiSelectFlags, ClearOnClickVoid),
+    ENUM(ImGuiMultiSelectFlags, ScopeWindow),
+    ENUM(ImGuiMultiSelectFlags, ScopeRect),
+    ENUM(ImGuiMultiSelectFlags, SelectOnClick),
+    ENUM(ImGuiMultiSelectFlags, SelectOnClickRelease),
+    ENUM(ImGuiMultiSelectFlags, NavWrapX),
+};
+
 static util::TableInteger DrawFlags[] = {
     ENUM(ImDrawFlags, None),
     ENUM(ImDrawFlags, Closed),
@@ -425,6 +462,7 @@ static util::TableInteger DataType[] = {
     ENUM(ImGuiDataType, U64),
     ENUM(ImGuiDataType, Float),
     ENUM(ImGuiDataType, Double),
+    ENUM(ImGuiDataType, Bool),
 };
 
 static util::TableInteger Dir[] = {
@@ -637,11 +675,13 @@ static util::TableInteger Col[] = {
     ENUM(ImGuiCol, ResizeGrip),
     ENUM(ImGuiCol, ResizeGripHovered),
     ENUM(ImGuiCol, ResizeGripActive),
-    ENUM(ImGuiCol, Tab),
     ENUM(ImGuiCol, TabHovered),
-    ENUM(ImGuiCol, TabActive),
-    ENUM(ImGuiCol, TabUnfocused),
-    ENUM(ImGuiCol, TabUnfocusedActive),
+    ENUM(ImGuiCol, Tab),
+    ENUM(ImGuiCol, TabSelected),
+    ENUM(ImGuiCol, TabSelectedOverline),
+    ENUM(ImGuiCol, TabDimmed),
+    ENUM(ImGuiCol, TabDimmedSelected),
+    ENUM(ImGuiCol, TabDimmedSelectedOverline),
     ENUM(ImGuiCol, DockingPreview),
     ENUM(ImGuiCol, DockingEmptyBg),
     ENUM(ImGuiCol, PlotLines),
@@ -653,6 +693,7 @@ static util::TableInteger Col[] = {
     ENUM(ImGuiCol, TableBorderLight),
     ENUM(ImGuiCol, TableRowBg),
     ENUM(ImGuiCol, TableRowBgAlt),
+    ENUM(ImGuiCol, TextLink),
     ENUM(ImGuiCol, TextSelectedBg),
     ENUM(ImGuiCol, DragDropTarget),
     ENUM(ImGuiCol, NavHighlight),
@@ -737,6 +778,12 @@ static util::TableInteger TableBgTarget[] = {
     ENUM(ImGuiTableBgTarget, CellBg),
 };
 
+static util::TableInteger SelectionRequestType[] = {
+    ENUM(ImGuiSelectionRequestType, None),
+    ENUM(ImGuiSelectionRequestType, SetAll),
+    ENUM(ImGuiSelectionRequestType, SetRange),
+};
+
 #undef ENUM
 
 namespace wrap_ImGuiContext {
@@ -750,6 +797,18 @@ namespace wrap_ImGuiInputTextCallbackData {
 }
 namespace wrap_ImGuiWindowClass {
     void pointer(lua_State* L, ImGuiWindowClass& v);
+}
+namespace wrap_ImGuiStorage {
+    void pointer(lua_State* L, ImGuiStorage& v);
+}
+namespace wrap_ImGuiMultiSelectIO {
+    void pointer(lua_State* L, ImGuiMultiSelectIO& v);
+}
+namespace wrap_ImGuiSelectionRequest {
+    void pointer(lua_State* L, ImGuiSelectionRequest& v);
+}
+namespace wrap_ImGuiSelectionExternalStorage {
+    void pointer(lua_State* L, ImGuiSelectionExternalStorage& v);
 }
 namespace wrap_ImFontConfig {
     void pointer(lua_State* L, ImFontConfig& v);
@@ -779,6 +838,34 @@ static int WindowClass(lua_State* L) {
     auto _retval = (ImGuiWindowClass*)lua_newuserdatauv(L, sizeof(ImGuiWindowClass), 0);
     new (_retval) ImGuiWindowClass;
     wrap_ImGuiWindowClass::pointer(L, *_retval);
+    return 2;
+}
+
+static int Storage(lua_State* L) {
+    auto _retval = (ImGuiStorage*)lua_newuserdatauv(L, sizeof(ImGuiStorage), 0);
+    new (_retval) ImGuiStorage;
+    wrap_ImGuiStorage::pointer(L, *_retval);
+    return 2;
+}
+
+static int MultiSelectIO(lua_State* L) {
+    auto _retval = (ImGuiMultiSelectIO*)lua_newuserdatauv(L, sizeof(ImGuiMultiSelectIO), 0);
+    new (_retval) ImGuiMultiSelectIO;
+    wrap_ImGuiMultiSelectIO::pointer(L, *_retval);
+    return 2;
+}
+
+static int SelectionRequest(lua_State* L) {
+    auto _retval = (ImGuiSelectionRequest*)lua_newuserdatauv(L, sizeof(ImGuiSelectionRequest), 0);
+    new (_retval) ImGuiSelectionRequest;
+    wrap_ImGuiSelectionRequest::pointer(L, *_retval);
+    return 2;
+}
+
+static int SelectionExternalStorage(lua_State* L) {
+    auto _retval = (ImGuiSelectionExternalStorage*)lua_newuserdatauv(L, sizeof(ImGuiSelectionExternalStorage), 0);
+    new (_retval) ImGuiSelectionExternalStorage;
+    wrap_ImGuiSelectionExternalStorage::pointer(L, *_retval);
     return 2;
 }
 
@@ -1292,25 +1379,15 @@ static int PopStyleVarEx(lua_State* L) {
     return 0;
 }
 
-static int PushTabStop(lua_State* L) {
-    auto tab_stop = !!lua_toboolean(L, 1);
-    ImGui::PushTabStop(tab_stop);
+static int PushItemFlag(lua_State* L) {
+    auto option = (ImGuiItemFlags)luaL_checkinteger(L, 1);
+    auto enabled = !!lua_toboolean(L, 2);
+    ImGui::PushItemFlag(option, enabled);
     return 0;
 }
 
-static int PopTabStop(lua_State* L) {
-    ImGui::PopTabStop();
-    return 0;
-}
-
-static int PushButtonRepeat(lua_State* L) {
-    auto repeat = !!lua_toboolean(L, 1);
-    ImGui::PushButtonRepeat(repeat);
-    return 0;
-}
-
-static int PopButtonRepeat(lua_State* L) {
-    ImGui::PopButtonRepeat();
+static int PopItemFlag(lua_State* L) {
+    ImGui::PopItemFlag();
     return 0;
 }
 
@@ -1813,6 +1890,26 @@ static int ProgressBar(lua_State* L) {
 
 static int Bullet(lua_State* L) {
     ImGui::Bullet();
+    return 0;
+}
+
+static int TextLink(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto&& _retval = ImGui::TextLink(label);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int TextLinkOpenURL(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    ImGui::TextLinkOpenURL(label);
+    return 0;
+}
+
+static int TextLinkOpenURLEx(lua_State* L) {
+    auto label = luaL_checkstring(L, 1);
+    auto url = luaL_optstring(L, 2, NULL);
+    ImGui::TextLinkOpenURL(label, url);
     return 0;
 }
 
@@ -3596,6 +3693,46 @@ static int SelectableBoolPtrEx(lua_State* L) {
     return 1;
 }
 
+static int BeginMultiSelect(lua_State* L) {
+    auto flags = (ImGuiMultiSelectFlags)luaL_checkinteger(L, 1);
+    auto&& _retval = ImGui::BeginMultiSelect(flags);
+    if (_retval != NULL) {
+        wrap_ImGuiMultiSelectIO::pointer(L, *_retval);
+    } else {
+        lua_pushnil(L);
+    }
+    return 1;
+}
+
+static int BeginMultiSelectEx(lua_State* L) {
+    auto flags = (ImGuiMultiSelectFlags)luaL_checkinteger(L, 1);
+    auto selection_size = (int)luaL_optinteger(L, 2, -1);
+    auto items_count = (int)luaL_optinteger(L, 3, -1);
+    auto&& _retval = ImGui::BeginMultiSelect(flags, selection_size, items_count);
+    if (_retval != NULL) {
+        wrap_ImGuiMultiSelectIO::pointer(L, *_retval);
+    } else {
+        lua_pushnil(L);
+    }
+    return 1;
+}
+
+static int EndMultiSelect(lua_State* L) {
+    auto&& _retval = ImGui::EndMultiSelect();
+    if (_retval != NULL) {
+        wrap_ImGuiMultiSelectIO::pointer(L, *_retval);
+    } else {
+        lua_pushnil(L);
+    }
+    return 1;
+}
+
+static int IsItemToggledSelection(lua_State* L) {
+    auto&& _retval = ImGui::IsItemToggledSelection();
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
 static int BeginListBox(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     auto size = ImVec2 {
@@ -3824,23 +3961,23 @@ static int IsPopupOpen(lua_State* L) {
 
 static int BeginTable(lua_State* L) {
     auto str_id = luaL_checkstring(L, 1);
-    auto column = (int)luaL_checkinteger(L, 2);
+    auto columns = (int)luaL_checkinteger(L, 2);
     auto flags = (ImGuiTableFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiTableFlags_None));
-    auto&& _retval = ImGui::BeginTable(str_id, column, flags);
+    auto&& _retval = ImGui::BeginTable(str_id, columns, flags);
     lua_pushboolean(L, _retval);
     return 1;
 }
 
 static int BeginTableEx(lua_State* L) {
     auto str_id = luaL_checkstring(L, 1);
-    auto column = (int)luaL_checkinteger(L, 2);
+    auto columns = (int)luaL_checkinteger(L, 2);
     auto flags = (ImGuiTableFlags)luaL_optinteger(L, 3, lua_Integer(ImGuiTableFlags_None));
     auto outer_size = ImVec2 {
         (float)luaL_optnumber(L, 4, 0.0f),
         (float)luaL_optnumber(L, 5, 0.0f),
     };
     auto inner_width = (float)luaL_optnumber(L, 6, 0.0f);
-    auto&& _retval = ImGui::BeginTable(str_id, column, flags, outer_size, inner_width);
+    auto&& _retval = ImGui::BeginTable(str_id, columns, flags, outer_size, inner_width);
     lua_pushboolean(L, _retval);
     return 1;
 }
@@ -3951,6 +4088,12 @@ static int TableSetColumnEnabled(lua_State* L) {
     auto v = !!lua_toboolean(L, 2);
     ImGui::TableSetColumnEnabled(column_n, v);
     return 0;
+}
+
+static int TableGetHoveredColumn(lua_State* L) {
+    auto&& _retval = ImGui::TableGetHoveredColumn();
+    lua_pushinteger(L, _retval);
+    return 1;
 }
 
 static int TableSetBgColor(lua_State* L) {
@@ -4441,6 +4584,12 @@ static int SetNextItemShortcut(lua_State* L) {
     return 0;
 }
 
+static int SetItemKeyOwner(lua_State* L) {
+    auto key = (ImGuiKey)luaL_checkinteger(L, 1);
+    ImGui::SetItemKeyOwner(key);
+    return 0;
+}
+
 static int IsMouseDown(lua_State* L) {
     auto button = (ImGuiMouseButton)luaL_checkinteger(L, 1);
     auto&& _retval = ImGui::IsMouseDown(button);
@@ -4790,6 +4939,12 @@ static int ClearEventsQueue(lua_State* L) {
 static int ClearInputKeys(lua_State* L) {
     auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
     OBJ.ClearInputKeys();
+    return 0;
+}
+
+static int ClearInputMouse(lua_State* L) {
+    auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+    OBJ.ClearInputMouse();
     return 0;
 }
 
@@ -5362,6 +5517,21 @@ struct ClipboardUserData {
     }
 };
 
+struct PlatformOpenInShellUserData {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushlightuserdata(L, OBJ.PlatformOpenInShellUserData);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+        OBJ.PlatformOpenInShellUserData = (void*)lua_touserdata(L, 1);
+        return 0;
+    }
+};
+
 struct PlatformLocaleDecimalPoint {
     static int getter(lua_State* L) {
         auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
@@ -5857,6 +6027,7 @@ static luaL_Reg funcs[] = {
     { "SetAppAcceptingEvents", SetAppAcceptingEvents },
     { "ClearEventsQueue", ClearEventsQueue },
     { "ClearInputKeys", ClearInputKeys },
+    { "ClearInputMouse", ClearInputMouse },
 };
 
 static luaL_Reg setters[] = {
@@ -5898,6 +6069,7 @@ static luaL_Reg setters[] = {
     { "BackendRendererUserData", BackendRendererUserData::setter },
     { "BackendLanguageUserData", BackendLanguageUserData::setter },
     { "ClipboardUserData", ClipboardUserData::setter },
+    { "PlatformOpenInShellUserData", PlatformOpenInShellUserData::setter },
     { "PlatformLocaleDecimalPoint", PlatformLocaleDecimalPoint::setter },
     { "WantCaptureMouse", WantCaptureMouse::setter },
     { "WantCaptureKeyboard", WantCaptureKeyboard::setter },
@@ -5973,6 +6145,7 @@ static luaL_Reg getters[] = {
     { "BackendRendererUserData", BackendRendererUserData::getter },
     { "BackendLanguageUserData", BackendLanguageUserData::getter },
     { "ClipboardUserData", ClipboardUserData::getter },
+    { "PlatformOpenInShellUserData", PlatformOpenInShellUserData::getter },
     { "PlatformLocaleDecimalPoint", PlatformLocaleDecimalPoint::getter },
     { "WantCaptureMouse", WantCaptureMouse::getter },
     { "WantCaptureKeyboard", WantCaptureKeyboard::getter },
@@ -6440,6 +6613,371 @@ void pointer(lua_State* L, ImGuiWindowClass& v) {
 
 static void init(lua_State* L) {
     util::struct_gen(L, "ImGuiWindowClass", {}, setters, getters);
+    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag_pointer);
+}
+
+}
+
+namespace wrap_ImGuiStorage {
+
+static int Clear(lua_State* L) {
+    auto& OBJ = **(ImGuiStorage**)lua_touserdata(L, lua_upvalueindex(1));
+    OBJ.Clear();
+    return 0;
+}
+
+static int GetInt(lua_State* L) {
+    auto& OBJ = **(ImGuiStorage**)lua_touserdata(L, lua_upvalueindex(1));
+    auto key = (ImGuiID)luaL_checkinteger(L, 1);
+    auto default_val = (int)luaL_optinteger(L, 2, 0);
+    auto&& _retval = OBJ.GetInt(key, default_val);
+    lua_pushinteger(L, _retval);
+    return 1;
+}
+
+static int SetInt(lua_State* L) {
+    auto& OBJ = **(ImGuiStorage**)lua_touserdata(L, lua_upvalueindex(1));
+    auto key = (ImGuiID)luaL_checkinteger(L, 1);
+    auto val = (int)luaL_checkinteger(L, 2);
+    OBJ.SetInt(key, val);
+    return 0;
+}
+
+static int GetBool(lua_State* L) {
+    auto& OBJ = **(ImGuiStorage**)lua_touserdata(L, lua_upvalueindex(1));
+    auto key = (ImGuiID)luaL_checkinteger(L, 1);
+    auto default_val = lua_isnoneornil(L, 2)? false: !!lua_toboolean(L, 2);
+    auto&& _retval = OBJ.GetBool(key, default_val);
+    lua_pushboolean(L, _retval);
+    return 1;
+}
+
+static int SetBool(lua_State* L) {
+    auto& OBJ = **(ImGuiStorage**)lua_touserdata(L, lua_upvalueindex(1));
+    auto key = (ImGuiID)luaL_checkinteger(L, 1);
+    auto val = !!lua_toboolean(L, 2);
+    OBJ.SetBool(key, val);
+    return 0;
+}
+
+static int GetFloat(lua_State* L) {
+    auto& OBJ = **(ImGuiStorage**)lua_touserdata(L, lua_upvalueindex(1));
+    auto key = (ImGuiID)luaL_checkinteger(L, 1);
+    auto default_val = (float)luaL_optnumber(L, 2, 0.0f);
+    auto&& _retval = OBJ.GetFloat(key, default_val);
+    lua_pushnumber(L, _retval);
+    return 1;
+}
+
+static int SetFloat(lua_State* L) {
+    auto& OBJ = **(ImGuiStorage**)lua_touserdata(L, lua_upvalueindex(1));
+    auto key = (ImGuiID)luaL_checkinteger(L, 1);
+    auto val = (float)luaL_checknumber(L, 2);
+    OBJ.SetFloat(key, val);
+    return 0;
+}
+
+static int SetVoidPtr(lua_State* L) {
+    auto& OBJ = **(ImGuiStorage**)lua_touserdata(L, lua_upvalueindex(1));
+    auto key = (ImGuiID)luaL_checkinteger(L, 1);
+    auto val = lua_touserdata(L, 2);
+    OBJ.SetVoidPtr(key, val);
+    return 0;
+}
+
+static int BuildSortByKey(lua_State* L) {
+    auto& OBJ = **(ImGuiStorage**)lua_touserdata(L, lua_upvalueindex(1));
+    OBJ.BuildSortByKey();
+    return 0;
+}
+
+static int SetAllInt(lua_State* L) {
+    auto& OBJ = **(ImGuiStorage**)lua_touserdata(L, lua_upvalueindex(1));
+    auto val = (int)luaL_checkinteger(L, 1);
+    OBJ.SetAllInt(val);
+    return 0;
+}
+
+static luaL_Reg funcs[] = {
+    { "Clear", Clear },
+    { "GetInt", GetInt },
+    { "SetInt", SetInt },
+    { "GetBool", GetBool },
+    { "SetBool", SetBool },
+    { "GetFloat", GetFloat },
+    { "SetFloat", SetFloat },
+    { "SetVoidPtr", SetVoidPtr },
+    { "BuildSortByKey", BuildSortByKey },
+    { "SetAllInt", SetAllInt },
+};
+
+static int tag_pointer = 0;
+
+void pointer(lua_State* L, ImGuiStorage& v) {
+    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_pointer);
+    auto** ptr = (ImGuiStorage**)lua_touserdata(L, -1);
+    *ptr = &v;
+}
+
+static void init(lua_State* L) {
+    util::struct_gen(L, "ImGuiStorage", funcs, {}, {});
+    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag_pointer);
+}
+
+}
+
+namespace wrap_ImGuiMultiSelectIO {
+
+struct RangeSrcItem {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiMultiSelectIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.RangeSrcItem);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiMultiSelectIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.RangeSrcItem = (ImGuiSelectionUserData)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct NavIdItem {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiMultiSelectIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.NavIdItem);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiMultiSelectIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.NavIdItem = (ImGuiSelectionUserData)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct NavIdSelected {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiMultiSelectIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.NavIdSelected);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiMultiSelectIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.NavIdSelected = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct RangeSrcReset {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiMultiSelectIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.RangeSrcReset);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiMultiSelectIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.RangeSrcReset = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct ItemsCount {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiMultiSelectIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.ItemsCount);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiMultiSelectIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ItemsCount = (int)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+static luaL_Reg setters[] = {
+    { "RangeSrcItem", RangeSrcItem::setter },
+    { "NavIdItem", NavIdItem::setter },
+    { "NavIdSelected", NavIdSelected::setter },
+    { "RangeSrcReset", RangeSrcReset::setter },
+    { "ItemsCount", ItemsCount::setter },
+};
+
+static luaL_Reg getters[] = {
+    { "RangeSrcItem", RangeSrcItem::getter },
+    { "NavIdItem", NavIdItem::getter },
+    { "NavIdSelected", NavIdSelected::getter },
+    { "RangeSrcReset", RangeSrcReset::getter },
+    { "ItemsCount", ItemsCount::getter },
+};
+
+static int tag_pointer = 0;
+
+void pointer(lua_State* L, ImGuiMultiSelectIO& v) {
+    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_pointer);
+    auto** ptr = (ImGuiMultiSelectIO**)lua_touserdata(L, -1);
+    *ptr = &v;
+}
+
+static void init(lua_State* L) {
+    util::struct_gen(L, "ImGuiMultiSelectIO", {}, setters, getters);
+    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag_pointer);
+}
+
+}
+
+namespace wrap_ImGuiSelectionRequest {
+
+struct Type {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiSelectionRequest**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.Type);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiSelectionRequest**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.Type = (ImGuiSelectionRequestType)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct Selected {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiSelectionRequest**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.Selected);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiSelectionRequest**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.Selected = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
+struct RangeDirection {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiSelectionRequest**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.RangeDirection);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiSelectionRequest**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.RangeDirection = (ImS8)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct RangeFirstItem {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiSelectionRequest**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.RangeFirstItem);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiSelectionRequest**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.RangeFirstItem = (ImGuiSelectionUserData)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+struct RangeLastItem {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiSelectionRequest**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushinteger(L, OBJ.RangeLastItem);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiSelectionRequest**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.RangeLastItem = (ImGuiSelectionUserData)luaL_checkinteger(L, 1);
+        return 0;
+    }
+};
+
+static luaL_Reg setters[] = {
+    { "Type", Type::setter },
+    { "Selected", Selected::setter },
+    { "RangeDirection", RangeDirection::setter },
+    { "RangeFirstItem", RangeFirstItem::setter },
+    { "RangeLastItem", RangeLastItem::setter },
+};
+
+static luaL_Reg getters[] = {
+    { "Type", Type::getter },
+    { "Selected", Selected::getter },
+    { "RangeDirection", RangeDirection::getter },
+    { "RangeFirstItem", RangeFirstItem::getter },
+    { "RangeLastItem", RangeLastItem::getter },
+};
+
+static int tag_pointer = 0;
+
+void pointer(lua_State* L, ImGuiSelectionRequest& v) {
+    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_pointer);
+    auto** ptr = (ImGuiSelectionRequest**)lua_touserdata(L, -1);
+    *ptr = &v;
+}
+
+static void init(lua_State* L) {
+    util::struct_gen(L, "ImGuiSelectionRequest", {}, setters, getters);
+    lua_rawsetp(L, LUA_REGISTRYINDEX, &tag_pointer);
+}
+
+}
+
+namespace wrap_ImGuiSelectionExternalStorage {
+
+static int ApplyRequests(lua_State* L) {
+    auto& OBJ = **(ImGuiSelectionExternalStorage**)lua_touserdata(L, lua_upvalueindex(1));
+    auto ms_io = *(ImGuiMultiSelectIO**)lua_touserdata(L, 1);
+    OBJ.ApplyRequests(ms_io);
+    return 0;
+}
+
+struct UserData {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiSelectionExternalStorage**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushlightuserdata(L, OBJ.UserData);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiSelectionExternalStorage**)lua_touserdata(L, lua_upvalueindex(1));
+        luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+        OBJ.UserData = (void*)lua_touserdata(L, 1);
+        return 0;
+    }
+};
+
+static luaL_Reg funcs[] = {
+    { "ApplyRequests", ApplyRequests },
+};
+
+static luaL_Reg setters[] = {
+    { "UserData", UserData::setter },
+};
+
+static luaL_Reg getters[] = {
+    { "UserData", UserData::getter },
+};
+
+static int tag_pointer = 0;
+
+void pointer(lua_State* L, ImGuiSelectionExternalStorage& v) {
+    lua_rawgetp(L, LUA_REGISTRYINDEX, &tag_pointer);
+    auto** ptr = (ImGuiSelectionExternalStorage**)lua_touserdata(L, -1);
+    *ptr = &v;
+}
+
+static void init(lua_State* L) {
+    util::struct_gen(L, "ImGuiSelectionExternalStorage", funcs, setters, getters);
     lua_rawsetp(L, LUA_REGISTRYINDEX, &tag_pointer);
 }
 
@@ -7303,6 +7841,10 @@ static void init(lua_State* L) {
         { "IO", IO },
         { "InputTextCallbackData", InputTextCallbackData },
         { "WindowClass", WindowClass },
+        { "Storage", Storage },
+        { "MultiSelectIO", MultiSelectIO },
+        { "SelectionRequest", SelectionRequest },
+        { "SelectionExternalStorage", SelectionExternalStorage },
         { "FontConfig", FontConfig },
         { "FontAtlas", FontAtlas },
         { "Viewport", Viewport },
@@ -7373,10 +7915,8 @@ static void init(lua_State* L) {
         { "PushStyleVarImVec2", PushStyleVarImVec2 },
         { "PopStyleVar", PopStyleVar },
         { "PopStyleVarEx", PopStyleVarEx },
-        { "PushTabStop", PushTabStop },
-        { "PopTabStop", PopTabStop },
-        { "PushButtonRepeat", PushButtonRepeat },
-        { "PopButtonRepeat", PopButtonRepeat },
+        { "PushItemFlag", PushItemFlag },
+        { "PopItemFlag", PopItemFlag },
         { "PushItemWidth", PushItemWidth },
         { "PopItemWidth", PopItemWidth },
         { "SetNextItemWidth", SetNextItemWidth },
@@ -7445,6 +7985,9 @@ static void init(lua_State* L) {
         { "RadioButtonIntPtr", RadioButtonIntPtr },
         { "ProgressBar", ProgressBar },
         { "Bullet", Bullet },
+        { "TextLink", TextLink },
+        { "TextLinkOpenURL", TextLinkOpenURL },
+        { "TextLinkOpenURLEx", TextLinkOpenURLEx },
         { "Image", Image },
         { "ImageEx", ImageEx },
         { "ImageButton", ImageButton },
@@ -7539,6 +8082,10 @@ static void init(lua_State* L) {
         { "SelectableEx", SelectableEx },
         { "SelectableBoolPtr", SelectableBoolPtr },
         { "SelectableBoolPtrEx", SelectableBoolPtrEx },
+        { "BeginMultiSelect", BeginMultiSelect },
+        { "BeginMultiSelectEx", BeginMultiSelectEx },
+        { "EndMultiSelect", EndMultiSelect },
+        { "IsItemToggledSelection", IsItemToggledSelection },
         { "BeginListBox", BeginListBox },
         { "EndListBox", EndListBox },
         { "BeginMenuBar", BeginMenuBar },
@@ -7589,6 +8136,7 @@ static void init(lua_State* L) {
         { "TableGetColumnName", TableGetColumnName },
         { "TableGetColumnFlags", TableGetColumnFlags },
         { "TableSetColumnEnabled", TableSetColumnEnabled },
+        { "TableGetHoveredColumn", TableGetHoveredColumn },
         { "TableSetBgColor", TableSetBgColor },
         { "BeginTabBar", BeginTabBar },
         { "EndTabBar", EndTabBar },
@@ -7656,6 +8204,7 @@ static void init(lua_State* L) {
         { "SetNextFrameWantCaptureKeyboard", SetNextFrameWantCaptureKeyboard },
         { "Shortcut", Shortcut },
         { "SetNextItemShortcut", SetNextItemShortcut },
+        { "SetItemKeyOwner", SetItemKeyOwner },
         { "IsMouseDown", IsMouseDown },
         { "IsMouseClicked", IsMouseClicked },
         { "IsMouseClickedEx", IsMouseClickedEx },
@@ -7697,6 +8246,7 @@ static void init(lua_State* L) {
     static util::TableAny flags[] = {
         GEN_FLAGS(WindowFlags),
         GEN_FLAGS(ChildFlags),
+        GEN_FLAGS(ItemFlags),
         GEN_FLAGS(InputTextFlags),
         GEN_FLAGS(TreeNodeFlags),
         GEN_FLAGS(PopupFlags),
@@ -7717,6 +8267,7 @@ static void init(lua_State* L) {
         GEN_FLAGS(TableFlags),
         GEN_FLAGS(TableColumnFlags),
         GEN_FLAGS(TableRowFlags),
+        GEN_FLAGS(MultiSelectFlags),
         GEN_FLAGS(DrawFlags),
         GEN_FLAGS(DrawListFlags),
         GEN_FLAGS(FontAtlasFlags),
@@ -7741,6 +8292,7 @@ static void init(lua_State* L) {
         GEN_ENUM(MouseSource),
         GEN_ENUM(Cond),
         GEN_ENUM(TableBgTarget),
+        GEN_ENUM(SelectionRequestType),
     };
     #undef GEN_ENUM
 
@@ -7757,6 +8309,10 @@ static void init(lua_State* L) {
     wrap_ImGuiIO::init(L);
     wrap_ImGuiInputTextCallbackData::init(L);
     wrap_ImGuiWindowClass::init(L);
+    wrap_ImGuiStorage::init(L);
+    wrap_ImGuiMultiSelectIO::init(L);
+    wrap_ImGuiSelectionRequest::init(L);
+    wrap_ImGuiSelectionExternalStorage::init(L);
     wrap_ImFontConfig::init(L);
     wrap_ImFontAtlas::init(L);
     wrap_ImGuiViewport::init(L);

@@ -66,10 +66,29 @@ function ImGui.WindowFlags(flags) end
 ---| "AutoResizeY"            #  Enable auto-resizing height. Read "IMPORTANT: Size measurement" details above.
 ---| "AlwaysAutoResize"       #  Combined with AutoResizeX/AutoResizeY. Always measure size even when child is hidden, always return true, always disable clipping optimization! NOT RECOMMENDED.
 ---| "FrameStyle"             #  Style the child window like a framed item: use FrameBg, FrameRounding, FrameBorderSize, FramePadding instead of ChildBg, ChildRounding, ChildBorderSize, WindowPadding.
+---| "NavFlattened"           #  Share focus scope, allow gamepad/keyboard navigation to cross over parent border to this child or between sibling child windows.
 
 ---@param flags _ImGuiChildFlags_Name[]
 ---@return ImGui.ChildFlags
 function ImGui.ChildFlags(flags) end
+
+--
+-- Flags for ImGui::PushItemFlag()
+-- (Those are shared by all items)
+--
+---@class ImGui.ItemFlags
+
+---@alias _ImGuiItemFlags_Name
+---| "None"              #  (Default)
+---| "NoTabStop"         #  false    // Disable keyboard tabbing. This is a "lighter" version of ImGuiItemFlags_NoNav.
+---| "NoNav"             #  false    // Disable any form of focusing (keyboard/gamepad directional navigation and SetKeyboardFocusHere() calls).
+---| "NoNavDefaultFocus" #  false    // Disable item being a candidate for default focus (e.g. used by title bar items).
+---| "ButtonRepeat"      #  false    // Any button-like behavior will have repeat mode enabled (based on io.KeyRepeatDelay and io.KeyRepeatRate values). Note that you can also call IsItemActive() after any button to tell if it is being held.
+---| "AutoClosePopups"   #  true     // MenuItem()/Selectable() automatically close their parent popup window.
+
+---@param flags _ImGuiItemFlags_Name[]
+---@return ImGui.ItemFlags
+function ImGui.ItemFlags(flags) end
 
 --
 -- Flags for ImGui::InputText()
@@ -81,25 +100,27 @@ function ImGui.ChildFlags(flags) end
 ---| "None"
 ---| "CharsDecimal"        #  Allow 0123456789.+-*/
 ---| "CharsHexadecimal"    #  Allow 0123456789ABCDEFabcdef
+---| "CharsScientific"     #  Allow 0123456789.+-*/eE (Scientific notation input)
 ---| "CharsUppercase"      #  Turn a..z into A..Z
 ---| "CharsNoBlank"        #  Filter out spaces, tabs
----| "AutoSelectAll"       #  Select entire text when first taking mouse focus
+---| "AllowTabInput"       #  Pressing TAB input a '\t' character into the text field
 ---| "EnterReturnsTrue"    #  Return 'true' when Enter is pressed (as opposed to every time the value was modified). Consider looking at the IsItemDeactivatedAfterEdit() function.
+---| "EscapeClearsAll"     #  Escape key clears content if not empty, and deactivate otherwise (contrast to default behavior of Escape to revert)
+---| "CtrlEnterForNewLine" #  In multi-line mode, validate with Enter, add new line with Ctrl+Enter (default is opposite: validate with Ctrl+Enter, add line with Enter).
+---| "ReadOnly"            #  Read-only mode
+---| "Password"            #  Password mode, display all characters as '*', disable copy
+---| "AlwaysOverwrite"     #  Overwrite mode
+---| "AutoSelectAll"       #  Select entire text when first taking mouse focus
+---| "ParseEmptyRefVal"    #  InputFloat(), InputInt(), InputScalar() etc. only: parse empty string as zero value.
+---| "DisplayEmptyRefVal"  #  InputFloat(), InputInt(), InputScalar() etc. only: when value is zero, do not display it. Generally used with ImGuiInputTextFlags_ParseEmptyRefVal.
+---| "NoHorizontalScroll"  #  Disable following the cursor horizontally
+---| "NoUndoRedo"          #  Disable undo/redo. Note that input text owns the text data while active, if you want to provide your own undo/redo stack you need e.g. to call ClearActiveID().
 ---| "CallbackCompletion"  #  Callback on pressing TAB (for completion handling)
 ---| "CallbackHistory"     #  Callback on pressing Up/Down arrows (for history handling)
 ---| "CallbackAlways"      #  Callback on each iteration. User code may query cursor position, modify text buffer.
 ---| "CallbackCharFilter"  #  Callback on character inputs to replace or discard them. Modify 'EventChar' to replace or discard, or return 1 in callback to discard.
----| "AllowTabInput"       #  Pressing TAB input a '\t' character into the text field
----| "CtrlEnterForNewLine" #  In multi-line mode, unfocus with Enter, add new line with Ctrl+Enter (default is opposite: unfocus with Ctrl+Enter, add line with Enter).
----| "NoHorizontalScroll"  #  Disable following the cursor horizontally
----| "AlwaysOverwrite"     #  Overwrite mode
----| "ReadOnly"            #  Read-only mode
----| "Password"            #  Password mode, display all characters as '*'
----| "NoUndoRedo"          #  Disable undo/redo. Note that input text owns the text data while active, if you want to provide your own undo/redo stack you need e.g. to call ClearActiveID().
----| "CharsScientific"     #  Allow 0123456789.+-*/eE (Scientific notation input)
 ---| "CallbackResize"      #  Callback on buffer capacity changes request (beyond 'buf_size' parameter value), allowing the string to grow. Notify when the string wants to be resized (for string types which hold a cache of their Size). You will be provided a new BufSize in the callback and NEED to honor it. (see misc/cpp/imgui_stdlib.h for an example of using this)
 ---| "CallbackEdit"        #  Callback on any edit (note that InputText() already returns true on edit, the callback is useful mainly to manipulate the underlying buffer while focus is active)
----| "EscapeClearsAll"     #  Escape key clears content if not empty, and deactivate otherwise (contrast to default behavior of Escape to revert)
 
 ---@param flags _ImGuiInputTextFlags_Name[]
 ---@return ImGui.InputTextFlags
@@ -122,7 +143,7 @@ function ImGui.InputTextFlags(flags) end
 ---| "OpenOnArrow"          #  Only open when clicking on the arrow part. If ImGuiTreeNodeFlags_OpenOnDoubleClick is also set, single-click arrow or double-click all box to open.
 ---| "Leaf"                 #  No collapsing, no arrow (use as a convenience for leaf nodes).
 ---| "Bullet"               #  Display a bullet instead of arrow. IMPORTANT: node can still be marked open/close if you don't set the _Leaf flag!
----| "FramePadding"         #  Use FramePadding (even for an unframed text node) to vertically align text baseline to regular widget height. Equivalent to calling AlignTextToFramePadding().
+---| "FramePadding"         #  Use FramePadding (even for an unframed text node) to vertically align text baseline to regular widget height. Equivalent to calling AlignTextToFramePadding() before the node.
 ---| "SpanAvailWidth"       #  Extend hit box to the right-most edge, even if not framed. This is not the default in order to allow adding other items on the same line without using AllowOverlap mode.
 ---| "SpanFullWidth"        #  Extend hit box to the left-most and right-most edges (cover the indent area).
 ---| "SpanTextWidth"        #  Narrow hit box + narrow hovering highlight, will only cover the label text.
@@ -169,11 +190,11 @@ function ImGui.PopupFlags(flags) end
 
 ---@alias _ImGuiSelectableFlags_Name
 ---| "None"
----| "DontClosePopups"  #  Clicking this doesn't close parent popup window
----| "SpanAllColumns"   #  Frame will span all columns of its container table (text will still fit in current column)
----| "AllowDoubleClick" #  Generate press events on double clicks too
----| "Disabled"         #  Cannot be selected, display grayed out text
----| "AllowOverlap"     #  (WIP) Hit testing to allow subsequent widgets to overlap this one
+---| "NoAutoClosePopups" #  Clicking this doesn't close parent popup window (overrides ImGuiItemFlags_AutoClosePopups)
+---| "SpanAllColumns"    #  Frame will span all columns of its container table (text will still fit in current column)
+---| "AllowDoubleClick"  #  Generate press events on double clicks too
+---| "Disabled"          #  Cannot be selected, display grayed out text
+---| "AllowOverlap"      #  (WIP) Hit testing to allow subsequent widgets to overlap this one
 
 ---@param flags _ImGuiSelectableFlags_Name[]
 ---@return ImGui.SelectableFlags
@@ -212,6 +233,7 @@ function ImGui.ComboFlags(flags) end
 ---| "NoCloseWithMiddleMouseButton" #  Disable behavior of closing tabs (that are submitted with p_open != NULL) with middle mouse button. You may handle this behavior manually on user's side with if (IsItemHovered() && IsMouseClicked(2)) *p_open = false.
 ---| "NoTabListScrollingButtons"    #  Disable scrolling buttons (apply when fitting policy is ImGuiTabBarFlags_FittingPolicyScroll)
 ---| "NoTooltip"                    #  Disable tooltips when hovering a tab
+---| "DrawSelectedOverline"         #  Draw selected overline markers over selected tab
 ---| "FittingPolicyResizeDown"      #  Resize tabs when they don't fit
 ---| "FittingPolicyScroll"          #  Add scroll buttons when tabs don't fit
 
@@ -325,7 +347,9 @@ function ImGui.DockNodeFlags(flags) end
 ---| "SourceNoHoldToOpenOthers" #  Disable the behavior that allows to open tree nodes and collapsing header by holding over them while dragging a source item.
 ---| "SourceAllowNullID"        #  Allow items such as Text(), Image() that have no unique identifier to be used as drag source, by manufacturing a temporary identifier based on their window-relative position. This is extremely unusual within the dear imgui ecosystem and so we made it explicit.
 ---| "SourceExtern"             #  External source (from outside of dear imgui), won't attempt to read current item/window info. Will always return true. Only one Extern source can be active simultaneously.
----| "SourceAutoExpirePayload"  #  Automatically expire the payload if the source cease to be submitted (otherwise payloads are persisting while being dragged)
+---| "PayloadAutoExpire"        #  Automatically expire the payload if the source cease to be submitted (otherwise payloads are persisting while being dragged)
+---| "PayloadNoCrossContext"    #  Hint to specify that the payload may not be copied outside current dear imgui context.
+---| "PayloadNoCrossProcess"    #  Hint to specify that the payload may not be copied outside current process.
 ---| "AcceptBeforeDelivery"     #  AcceptDragDropPayload() will returns true even before the mouse button is released. You can then call IsDelivery() to test if the payload needs to be delivered.
 ---| "AcceptNoDrawDefaultRect"  #  Do not draw the default highlight rectangle when hovering over target.
 ---| "AcceptNoPreviewTooltip"   #  Request hiding the BeginDragDropSource tooltip from the BeginDragDropTarget site.
@@ -370,8 +394,9 @@ function ImGui.InputFlags(flags) end
 ---| "NavEnableGamepad"        #  Master gamepad navigation enable flag. Backend also needs to set ImGuiBackendFlags_HasGamepad.
 ---| "NavEnableSetMousePos"    #  Instruct navigation to move the mouse cursor. May be useful on TV/console systems where moving a virtual mouse is awkward. Will update io.MousePos and set io.WantSetMousePos=true. If enabled you MUST honor io.WantSetMousePos requests in your backend, otherwise ImGui will react as if the mouse is jumping around back and forth.
 ---| "NavNoCaptureKeyboard"    #  Instruct navigation to not set the io.WantCaptureKeyboard flag when io.NavActive is set.
----| "NoMouse"                 #  Instruct imgui to clear mouse position/buttons in NewFrame(). This allows ignoring the mouse information set by the backend.
+---| "NoMouse"                 #  Instruct dear imgui to disable mouse inputs and interactions.
 ---| "NoMouseCursorChange"     #  Instruct backend to not alter mouse cursor shape and visibility. Use if the backend cursor changes are interfering with yours and you don't want to use SetMouseCursor() to change mouse cursor. You may want to honor requests from imgui by reading GetMouseCursor() yourself instead.
+---| "NoKeyboard"              #  Instruct dear imgui to disable keyboard inputs and interactions. This is done by ignoring keyboard events and clearing existing states.
 ---| "DockingEnable"           #  Docking enable flags.
 ---| "ViewportsEnable"         #  Viewport enable flags (require both ImGuiBackendFlags_PlatformHasViewports + ImGuiBackendFlags_RendererHasViewports set by the respective backends)
 ---| "DpiEnableScaleViewports" #  [BETA: Don't use] FIXME-DPI: Reposition and resize imgui windows when the DpiScale of a viewport changed (mostly useful for the main viewport hosting other window). Note that resizing the main window itself is up to your application.
@@ -463,8 +488,9 @@ function ImGui.ColorEditFlags(flags) end
 ---| "None"
 ---| "AlwaysClamp"     #  Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.
 ---| "Logarithmic"     #  Make the widget logarithmic (linear otherwise). Consider using ImGuiSliderFlags_NoRoundToFormat with this if using a format-string with small amount of digits.
----| "NoRoundToFormat" #  Disable rounding underlying value to match precision of the display format string (e.g. %.3f values are rounded to those 3 digits)
----| "NoInput"         #  Disable CTRL+Click or Enter key allowing to input text directly into the widget
+---| "NoRoundToFormat" #  Disable rounding underlying value to match precision of the display format string (e.g. %.3f values are rounded to those 3 digits).
+---| "NoInput"         #  Disable CTRL+Click or Enter key allowing to input text directly into the widget.
+---| "WrapAround"      #  Enable wrapping around from max to min and from min to max (only supported by DragXXX() functions for now.
 
 ---@param flags _ImGuiSliderFlags_Name[]
 ---@return ImGui.SliderFlags
@@ -587,6 +613,34 @@ function ImGui.TableColumnFlags(flags) end
 function ImGui.TableRowFlags(flags) end
 
 --
+-- Flags for BeginMultiSelect()
+--
+---@class ImGui.MultiSelectFlags
+
+---@alias _ImGuiMultiSelectFlags_Name
+---| "None"
+---| "SingleSelect"          #  Disable selecting more than one item. This is available to allow single-selection code to share same code/logic if desired. It essentially disables the main purpose of BeginMultiSelect() tho!
+---| "NoSelectAll"           #  Disable CTRL+A shortcut to select all.
+---| "NoRangeSelect"         #  Disable Shift+selection mouse/keyboard support (useful for unordered 2D selection). With BoxSelect is also ensure contiguous SetRange requests are not combined into one. This allows not handling interpolation in SetRange requests.
+---| "NoAutoSelect"          #  Disable selecting items when navigating (useful for e.g. supporting range-select in a list of checkboxes)
+---| "NoAutoClear"           #  Disable clearing selection when navigating or selecting another one (generally used with ImGuiMultiSelectFlags_NoAutoSelect. useful for e.g. supporting range-select in a list of checkboxes)
+---| "NoAutoClearOnReselect" #  Disable clearing selection when clicking/selecting an already selected item
+---| "BoxSelect1d"           #  Enable box-selection with same width and same x pos items (e.g. only full row Selectable()). Box-selection works better with little bit of spacing between items hit-box in order to be able to aim at empty space.
+---| "BoxSelect2d"           #  Enable box-selection with varying width or varying x pos items support (e.g. different width labels, or 2D layout/grid). This is slower: alters clipping logic so that e.g. horizontal movements will update selection of normally clipped items.
+---| "BoxSelectNoScroll"     #  Disable scrolling when box-selecting near edges of scope.
+---| "ClearOnEscape"         #  Clear selection when pressing Escape while scope is focused.
+---| "ClearOnClickVoid"      #  Clear selection when clicking on empty location within scope.
+---| "ScopeWindow"           #  Scope for _BoxSelect and _ClearOnClickVoid is whole window (Default). Use if BeginMultiSelect() covers a whole window or used a single time in same window.
+---| "ScopeRect"             #  Scope for _BoxSelect and _ClearOnClickVoid is rectangle encompassing BeginMultiSelect()/EndMultiSelect(). Use if BeginMultiSelect() is called multiple times in same window.
+---| "SelectOnClick"         #  Apply selection on mouse down when clicking on unselected item. (Default)
+---| "SelectOnClickRelease"  #  Apply selection on mouse release when clicking an unselected item. Allow dragging an unselected item without altering selection.
+---| "NavWrapX"              #  [Temporary] Enable navigation wrapping on X axis. Provided as a convenience because we don't have a design for the general Nav API for this yet. When the more general feature be public we may obsolete this flag in favor of new one.
+
+---@param flags _ImGuiMultiSelectFlags_Name[]
+---@return ImGui.MultiSelectFlags
+function ImGui.MultiSelectFlags(flags) end
+
+--
 -- Flags for ImDrawList functions
 -- (Legacy: bit 0 must always correspond to ImDrawFlags_Closed to be backward compatible with old API using a bool. Bits 1..3 must be unused)
 --
@@ -682,6 +736,7 @@ function ImGui.ViewportFlags(flags) end
 ---| `ImGui.DataType.U64`    #  unsigned long long / unsigned __int64
 ---| `ImGui.DataType.Float`  #  float
 ---| `ImGui.DataType.Double` #  double
+---| `ImGui.DataType.Bool`   #  bool (provided for user convenience, not supported by scalar widgets)
 ImGui.DataType = {}
 
 --
@@ -889,59 +944,62 @@ ImGui.Mod = {}
 ---@alias ImGui.Col
 ---| `ImGui.Col.Text`
 ---| `ImGui.Col.TextDisabled`
----| `ImGui.Col.WindowBg`              #  Background of normal windows
----| `ImGui.Col.ChildBg`               #  Background of child windows
----| `ImGui.Col.PopupBg`               #  Background of popups, menus, tooltips windows
+---| `ImGui.Col.WindowBg`                  #  Background of normal windows
+---| `ImGui.Col.ChildBg`                   #  Background of child windows
+---| `ImGui.Col.PopupBg`                   #  Background of popups, menus, tooltips windows
 ---| `ImGui.Col.Border`
 ---| `ImGui.Col.BorderShadow`
----| `ImGui.Col.FrameBg`               #  Background of checkbox, radio button, plot, slider, text input
+---| `ImGui.Col.FrameBg`                   #  Background of checkbox, radio button, plot, slider, text input
 ---| `ImGui.Col.FrameBgHovered`
 ---| `ImGui.Col.FrameBgActive`
----| `ImGui.Col.TitleBg`               #  Title bar
----| `ImGui.Col.TitleBgActive`         #  Title bar when focused
----| `ImGui.Col.TitleBgCollapsed`      #  Title bar when collapsed
+---| `ImGui.Col.TitleBg`                   #  Title bar
+---| `ImGui.Col.TitleBgActive`             #  Title bar when focused
+---| `ImGui.Col.TitleBgCollapsed`          #  Title bar when collapsed
 ---| `ImGui.Col.MenuBarBg`
 ---| `ImGui.Col.ScrollbarBg`
 ---| `ImGui.Col.ScrollbarGrab`
 ---| `ImGui.Col.ScrollbarGrabHovered`
 ---| `ImGui.Col.ScrollbarGrabActive`
----| `ImGui.Col.CheckMark`             #  Checkbox tick and RadioButton circle
+---| `ImGui.Col.CheckMark`                 #  Checkbox tick and RadioButton circle
 ---| `ImGui.Col.SliderGrab`
 ---| `ImGui.Col.SliderGrabActive`
 ---| `ImGui.Col.Button`
 ---| `ImGui.Col.ButtonHovered`
 ---| `ImGui.Col.ButtonActive`
----| `ImGui.Col.Header`                #  Header* colors are used for CollapsingHeader, TreeNode, Selectable, MenuItem
+---| `ImGui.Col.Header`                    #  Header* colors are used for CollapsingHeader, TreeNode, Selectable, MenuItem
 ---| `ImGui.Col.HeaderHovered`
 ---| `ImGui.Col.HeaderActive`
 ---| `ImGui.Col.Separator`
 ---| `ImGui.Col.SeparatorHovered`
 ---| `ImGui.Col.SeparatorActive`
----| `ImGui.Col.ResizeGrip`            #  Resize grip in lower-right and lower-left corners of windows.
+---| `ImGui.Col.ResizeGrip`                #  Resize grip in lower-right and lower-left corners of windows.
 ---| `ImGui.Col.ResizeGripHovered`
 ---| `ImGui.Col.ResizeGripActive`
----| `ImGui.Col.Tab`                   #  TabItem in a TabBar
----| `ImGui.Col.TabHovered`
----| `ImGui.Col.TabActive`
----| `ImGui.Col.TabUnfocused`
----| `ImGui.Col.TabUnfocusedActive`
----| `ImGui.Col.DockingPreview`        #  Preview overlay color when about to docking something
----| `ImGui.Col.DockingEmptyBg`        #  Background color for empty node (e.g. CentralNode with no window docked into it)
+---| `ImGui.Col.TabHovered`                #  Tab background, when hovered
+---| `ImGui.Col.Tab`                       #  Tab background, when tab-bar is focused & tab is unselected
+---| `ImGui.Col.TabSelected`               #  Tab background, when tab-bar is focused & tab is selected
+---| `ImGui.Col.TabSelectedOverline`       #  Tab horizontal overline, when tab-bar is focused & tab is selected
+---| `ImGui.Col.TabDimmed`                 #  Tab background, when tab-bar is unfocused & tab is unselected
+---| `ImGui.Col.TabDimmedSelected`         #  Tab background, when tab-bar is unfocused & tab is selected
+---| `ImGui.Col.TabDimmedSelectedOverline` # ..horizontal overline, when tab-bar is unfocused & tab is selected
+---| `ImGui.Col.DockingPreview`            #  Preview overlay color when about to docking something
+---| `ImGui.Col.DockingEmptyBg`            #  Background color for empty node (e.g. CentralNode with no window docked into it)
 ---| `ImGui.Col.PlotLines`
 ---| `ImGui.Col.PlotLinesHovered`
 ---| `ImGui.Col.PlotHistogram`
 ---| `ImGui.Col.PlotHistogramHovered`
----| `ImGui.Col.TableHeaderBg`         #  Table header background
----| `ImGui.Col.TableBorderStrong`     #  Table outer and header borders (prefer using Alpha=1.0 here)
----| `ImGui.Col.TableBorderLight`      #  Table inner borders (prefer using Alpha=1.0 here)
----| `ImGui.Col.TableRowBg`            #  Table row background (even rows)
----| `ImGui.Col.TableRowBgAlt`         #  Table row background (odd rows)
+---| `ImGui.Col.TableHeaderBg`             #  Table header background
+---| `ImGui.Col.TableBorderStrong`         #  Table outer and header borders (prefer using Alpha=1.0 here)
+---| `ImGui.Col.TableBorderLight`          #  Table inner borders (prefer using Alpha=1.0 here)
+---| `ImGui.Col.TableRowBg`                #  Table row background (even rows)
+---| `ImGui.Col.TableRowBgAlt`             #  Table row background (odd rows)
+---| `ImGui.Col.TextLink`                  #  Hyperlink color
 ---| `ImGui.Col.TextSelectedBg`
----| `ImGui.Col.DragDropTarget`        #  Rectangle highlighting a drop target
----| `ImGui.Col.NavHighlight`          #  Gamepad/keyboard: current highlighted item
----| `ImGui.Col.NavWindowingHighlight` #  Highlight window when using CTRL+TAB
----| `ImGui.Col.NavWindowingDimBg`     #  Darken/colorize entire screen behind the CTRL+TAB window list, when active
----| `ImGui.Col.ModalWindowDimBg`      #  Darken/colorize entire screen behind a modal window, when one is active
+---| `ImGui.Col.DragDropTarget`            #  Rectangle highlighting a drop target
+---| `ImGui.Col.NavHighlight`              #  Gamepad/keyboard: current highlighted item
+---| `ImGui.Col.NavWindowingHighlight`     #  Highlight window when using CTRL+TAB
+---| `ImGui.Col.NavWindowingDimBg`         #  Darken/colorize entire screen behind the CTRL+TAB window list, when active
+---| `ImGui.Col.ModalWindowDimBg`          #  Darken/colorize entire screen behind a modal window, when one is active
 ImGui.Col = {}
 
 --
@@ -1063,6 +1121,15 @@ ImGui.Cond = {}
 ---| `ImGui.TableBgTarget.CellBg` #  Set cell background color (top-most color)
 ImGui.TableBgTarget = {}
 
+--
+-- Selection request type
+--
+---@alias ImGui.SelectionRequestType
+---| `ImGui.SelectionRequestType.None`
+---| `ImGui.SelectionRequestType.SetAll`   #  Request app to clear selection (if Selected==false) or select all items (if Selected==true). We cannot set RangeFirstItem/RangeLastItem as its contents is entirely up to user (not necessarily an index)
+---| `ImGui.SelectionRequestType.SetRange` #  Request app to select/unselect [RangeFirstItem..RangeLastItem] items (inclusive) based on value of Selected. Only EndMultiSelect() request this, app code can read after BeginMultiSelect() and it will always be false.
+ImGui.SelectionRequestType = {}
+
 
 ---@alias ImGuiKeyChord ImGui.Key | ImGui.Mod
 
@@ -1111,6 +1178,8 @@ function ImStringBuf:Resize(size) end
 
 ---@alias ImWchar ImWchar32
 
+---@alias ImGuiSelectionUserData ImS64
+
 ---@class ImGuiContext
 
 ---@class ImGuiIO
@@ -1149,12 +1218,13 @@ function ImStringBuf:Resize(size) end
 ---@field ConfigDebugIsDebuggerPresent boolean     #  = false          // Enable various tools calling IM_DEBUG_BREAK().
 ---@field ConfigDebugBeginReturnValueOnce boolean  #  = false          // First-time calls to Begin()/BeginChild() will return false. NEEDS TO BE SET AT APPLICATION BOOT TIME if you don't want to miss windows.
 ---@field ConfigDebugBeginReturnValueLoop boolean  #  = false          // Some calls to Begin()/BeginChild() will return false. Will cycle through window depths then repeat. Suggested use: add "io.ConfigDebugBeginReturnValue = io.KeyShift" in your main loop then occasionally press SHIFT. Windows should be flickering while running.
----@field ConfigDebugIgnoreFocusLoss boolean       #  = false          // Ignore io.AddFocusEvent(false), consequently not calling io.ClearInputKeys() in input processing.
+---@field ConfigDebugIgnoreFocusLoss boolean       #  = false          // Ignore io.AddFocusEvent(false), consequently not calling io.ClearInputKeys()/io.ClearInputMouse() in input processing.
 ---@field ConfigDebugIniSettings boolean           #  = false          // Save .ini data with extra comments (particularly helpful for Docking, but makes saving slower)
 ---@field BackendPlatformUserData lightuserdata    #  = NULL           // User data for platform backend
 ---@field BackendRendererUserData lightuserdata    #  = NULL           // User data for renderer backend
 ---@field BackendLanguageUserData lightuserdata    #  = NULL           // User data for non C++ programming language backend
 ---@field ClipboardUserData lightuserdata
+---@field PlatformOpenInShellUserData lightuserdata
 ---@field PlatformLocaleDecimalPoint ImWchar       #  '.'              // [Experimental] Configure decimal point e.g. '.' or ',' useful for some languages (e.g. German), generally pulled from *localeconv()->decimal_point
 ---@field WantCaptureMouse boolean                 #  Set when Dear ImGui will use mouse inputs, in this case do not dispatch them to your main game/application (either way, always pass on mouse inputs to imgui). (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse was clicked over an imgui window, etc.).
 ---@field WantCaptureKeyboard boolean              #  Set when Dear ImGui will use keyboard inputs, in this case do not dispatch them to your main game/application (either way, always pass keyboard inputs to imgui). (e.g. InputText active, or an imgui window is focused and navigation is enabled, etc.).
@@ -1295,9 +1365,14 @@ function ImGuiIO.SetAppAcceptingEvents(accepting_events) end
 function ImGuiIO.ClearEventsQueue() end
 
 --
--- Clear current keyboard/mouse/gamepad state + current frame text input buffer. Equivalent to releasing all keys/buttons.
+-- Clear current keyboard/gamepad state + current frame text input buffer. Equivalent to releasing all keys/buttons.
 --
 function ImGuiIO.ClearInputKeys() end
+
+--
+-- Clear current mouse state.
+--
+function ImGuiIO.ClearInputMouse() end
 
 
 ---@class ImGuiInputTextCallbackData
@@ -1341,6 +1416,82 @@ function ImGuiInputTextCallbackData.HasSelection() end
 ---@field DockNodeFlagsOverrideSet ImGui.DockNodeFlags  #  [EXPERIMENTAL] Dock node flags to set when a window of this class is hosted by a dock node (it doesn't have to be selected!)
 ---@field DockingAlwaysTabBar boolean                   #  Set to true to enforce single floating windows of this class always having their own docking node (equivalent of setting the global io.ConfigDockingAlwaysTabBar)
 ---@field DockingAllowUnclassed boolean                 #  Set to true to allow windows of this class to be docked/merged with an unclassed window. // FIXME-DOCK: Move to DockNodeFlags override?
+
+---@class ImGuiStorage
+local ImGuiStorage = {}
+--
+-- - Get***() functions find pair, never add/allocate. Pairs are sorted so a query is O(log N)
+-- - Set***() functions find pair, insertion on demand if missing.
+-- - Sorted insertion is costly, paid once. A typical frame shouldn't need to insert any new pair.
+--
+function ImGuiStorage.Clear() end
+
+---@param key ImGuiID
+---@param default_val? integer | `0`
+---@return integer
+function ImGuiStorage.GetInt(key, default_val) end
+
+---@param key ImGuiID
+---@param val integer
+function ImGuiStorage.SetInt(key, val) end
+
+---@param key ImGuiID
+---@param default_val? boolean | `false`
+---@return boolean
+function ImGuiStorage.GetBool(key, default_val) end
+
+---@param key ImGuiID
+---@param val boolean
+function ImGuiStorage.SetBool(key, val) end
+
+---@param key ImGuiID
+---@param default_val? number | `0.0`
+---@return number
+function ImGuiStorage.GetFloat(key, default_val) end
+
+---@param key ImGuiID
+---@param val number
+function ImGuiStorage.SetFloat(key, val) end
+
+---@param key ImGuiID
+---@param val lightuserdata
+function ImGuiStorage.SetVoidPtr(key, val) end
+
+--
+-- Advanced: for quicker full rebuild of a storage (instead of an incremental one), you may add all your contents and then sort once.
+--
+function ImGuiStorage.BuildSortByKey() end
+
+--
+-- Obsolete: use on your own storage if you know only integer are being stored (open/close all tree nodes)
+--
+---@param val integer
+function ImGuiStorage.SetAllInt(val) end
+
+
+---@class ImGuiMultiSelectIO
+---@field RangeSrcItem ImGuiSelectionUserData#   ms:w  app:r     /                // (If using clipper) Begin: Source item (often the first selected item) must never be clipped: use clipper.IncludeItemByIndex() to ensure it is submitted.
+---@field NavIdItem ImGuiSelectionUserData   #   ms:w, app:r     /                // (If using deletion) Last known SetNextItemSelectionUserData() value for NavId (if part of submitted items).
+---@field NavIdSelected boolean              #   ms:w, app:r     /        app:r   // (If using deletion) Last known selection state for NavId (if part of submitted items).
+---@field RangeSrcReset boolean              #         app:w     /  ms:r          // (If using deletion) Set before EndMultiSelect() to reset ResetSrcItem (e.g. if deleted selection).
+---@field ItemsCount integer                 #   ms:w, app:r     /        app:r   // 'int items_count' parameter to BeginMultiSelect() is copied here for convenience, allowing simpler calls to your ApplyRequests handler. Not used internally.
+
+---@class ImGuiSelectionRequest
+---@field Type ImGui.SelectionRequestType      #   ms:w, app:r     /  ms:w, app:r   // Request type. You'll most often receive 1 Clear + 1 SetRange with a single-item range.
+---@field Selected boolean                     #   ms:w, app:r     /  ms:w, app:r   // Parameter for SetAll/SetRange requests (true = select, false = unselect)
+---@field RangeDirection ImS8                  #                   /  ms:w  app:r   // Parameter for SetRange request: +1 when RangeFirstItem comes before RangeLastItem, -1 otherwise. Useful if you want to preserve selection order on a backward Shift+Click.
+---@field RangeFirstItem ImGuiSelectionUserData#                   /  ms:w, app:r   // Parameter for SetRange request (this is generally == RangeSrcItem when shift selecting from top to bottom).
+---@field RangeLastItem ImGuiSelectionUserData #                   /  ms:w, app:r   // Parameter for SetRange request (this is generally == RangeSrcItem when shift selecting from bottom to top). Inclusive!
+
+---@class ImGuiSelectionExternalStorage
+---@field UserData lightuserdata#  User data for use by adapter function                                // e.g. selection.UserData = (void*)my_items;
+local ImGuiSelectionExternalStorage = {}
+--
+-- Apply selection requests by using AdapterSetItemSelected() calls
+--
+---@param ms_io ImGuiMultiSelectIO
+function ImGuiSelectionExternalStorage.ApplyRequests(ms_io) end
+
 
 ---@class ImFontConfig
 ---@field FontData lightuserdata      #           // TTF/OTF data
@@ -1555,7 +1706,7 @@ function ImFontAtlas.AddCustomRectFontGlyph(font, id, width, height, advance_x, 
 ---@field ParentViewportId ImGuiID       #  (Advanced) 0: no parent. Instruct the platform backend to setup a parent/child relationship between platform windows.
 ---@field RendererUserData lightuserdata #  void* to hold custom data structure for the renderer (e.g. swap chain, framebuffers etc.). generally set by your Renderer_CreateWindow function.
 ---@field PlatformUserData lightuserdata #  void* to hold custom data structure for the OS / platform (e.g. windowing info, render context). generally set by your Platform_CreateWindow function.
----@field PlatformHandle lightuserdata   #  void* for FindViewportByPlatformHandle(). (e.g. suggested to use natural platform handle such as HWND, GLFWWindow*, SDL_Window*)
+---@field PlatformHandle lightuserdata   #  void* to hold higher-level, platform window handle (e.g. HWND, GLFWWindow*, SDL_Window*), for FindViewportByPlatformHandle().
 ---@field PlatformHandleRaw lightuserdata#  void* to hold lower-level, platform-native window handle (under Win32 this is expected to be a HWND, unused for other platforms), when using an abstraction layer like GLFW or SDL (where PlatformHandle would be a SDL_Window*)
 ---@field PlatformWindowCreated boolean  #  Platform window has been created (Platform_CreateWindow() has been called). This is false during the first frame where a viewport is being created.
 ---@field PlatformRequestMove boolean    #  Platform window requested move (e.g. window was moved by the OS / host window manager, authoritative position will be OS window position)
@@ -1585,6 +1736,22 @@ function ImGui.InputTextCallbackData() end
 ---@return userdata
 ---@return ImGuiWindowClass
 function ImGui.WindowClass() end
+
+---@return userdata
+---@return ImGuiStorage
+function ImGui.Storage() end
+
+---@return userdata
+---@return ImGuiMultiSelectIO
+function ImGui.MultiSelectIO() end
+
+---@return userdata
+---@return ImGuiSelectionRequest
+function ImGui.SelectionRequest() end
+
+---@return userdata
+---@return ImGuiSelectionExternalStorage
+function ImGui.SelectionExternalStorage() end
 
 ---@return userdata
 ---@return ImFontConfig
@@ -2068,20 +2235,13 @@ function ImGui.PopStyleVar() end
 function ImGui.PopStyleVarEx(count) end
 
 --
--- == tab stop enable. Allow focusing using TAB/Shift-TAB, enabled by default but you can disable it for certain widgets
+-- modify specified shared item flag, e.g. PushItemFlag(ImGuiItemFlags_NoTabStop, true)
 --
----@param tab_stop boolean
-function ImGui.PushTabStop(tab_stop) end
+---@param option ImGui.ItemFlags
+---@param enabled boolean
+function ImGui.PushItemFlag(option, enabled) end
 
-function ImGui.PopTabStop() end
-
---
--- in 'repeat' mode, Button*() functions return repeated true in a typematic manner (using io.KeyRepeatDelay/io.KeyRepeatRate setting). Note that you can call IsItemActive() after any Button() to tell if the button is held in the current frame.
---
----@param arg_repeat boolean
-function ImGui.PushButtonRepeat(arg_repeat) end
-
-function ImGui.PopButtonRepeat() end
+function ImGui.PopItemFlag() end
 
 --
 -- Parameters stacks (current window)
@@ -2557,6 +2717,26 @@ function ImGui.ProgressBar(fraction, size_arg_x, size_arg_y, overlay) end
 -- draw a small circle + keep the cursor on the same line. advance cursor x position by GetTreeNodeToLabelSpacing(), same distance that TreeNode() uses
 --
 function ImGui.Bullet() end
+
+--
+-- hyperlink text button, return true when clicked
+--
+---@param label string
+---@return boolean
+function ImGui.TextLink(label) end
+
+--
+-- Implied url = NULL
+--
+---@param label string
+function ImGui.TextLinkOpenURL(label) end
+
+--
+-- hyperlink text button, automatically open file/url when clicked
+--
+---@param label string
+---@param url? string
+function ImGui.TextLinkOpenURLEx(label, url) end
 
 --
 -- Widgets: Images
@@ -3448,6 +3628,37 @@ function ImGui.SelectableBoolPtr(label, p_selected, flags) end
 function ImGui.SelectableBoolPtrEx(label, p_selected, flags, size_x, size_y) end
 
 --
+-- Multi-selection system for Selectable(), Checkbox() functions*
+-- - This enables standard multi-selection/range-selection idioms (CTRL+Mouse/Keyboard, SHIFT+Mouse/Keyboard, etc.) in a way that also allow a clipper to be used.
+-- - ImGuiSelectionUserData is often used to store your item index within the current view (but may store something else).
+-- - Read comments near ImGuiMultiSelectIO for instructions/details and see 'Demo->Widgets->Selection State & Multi-Select' for demo.
+-- - (*) TreeNode() is technically supported but... using this correctly is more complicate: you need some sort of linear/random access to your tree,
+--   which is suited to advanced trees setups already implementing filters and clipper. We will work toward simplifying and demoing this.
+-- - 'selection_size' and 'items_count' parameters are optional and used by a few features. If they are costly for you to compute, you may avoid them.
+--
+--
+-- Implied selection_size = -1, items_count = -1
+--
+---@param flags ImGui.MultiSelectFlags
+---@return ImGuiMultiSelectIO?
+function ImGui.BeginMultiSelect(flags) end
+
+---@param flags ImGui.MultiSelectFlags
+---@param selection_size? integer | `-1`
+---@param items_count? integer | `-1`
+---@return ImGuiMultiSelectIO?
+function ImGui.BeginMultiSelectEx(flags, selection_size, items_count) end
+
+---@return ImGuiMultiSelectIO?
+function ImGui.EndMultiSelect() end
+
+--
+-- Was the last item selection state toggled? Useful if you need the per-item information _before_ reaching EndMultiSelect(). We only returns toggle _event_ in order to handle clipping correctly.
+--
+---@return boolean
+function ImGui.IsItemToggledSelection() end
+
+--
 -- Widgets: List Boxes
 -- - This is essentially a thin wrapper to using BeginChild/EndChild with the ImGuiChildFlags_FrameStyle flag for stylistic changes + displaying a label.
 -- - You can submit contents and manage your selection state however you want it, by creating e.g. Selectable() or any other items.
@@ -3750,19 +3961,19 @@ function ImGui.IsPopupOpen(str_id, flags) end
 -- Implied outer_size = ImVec2(0.0f, 0.0f), inner_width = 0.0f
 --
 ---@param str_id string
----@param column integer
+---@param columns integer
 ---@param flags? ImGui.TableFlags | `ImGui.TableFlags { "None" }`
 ---@return boolean
-function ImGui.BeginTable(str_id, column, flags) end
+function ImGui.BeginTable(str_id, columns, flags) end
 
 ---@param str_id string
----@param column integer
+---@param columns integer
 ---@param flags? ImGui.TableFlags | `ImGui.TableFlags { "None" }`
 ---@param outer_size_x? number | `0.0`
 ---@param outer_size_y? number | `0.0`
 ---@param inner_width? number | `0.0`
 ---@return boolean
-function ImGui.BeginTableEx(str_id, column, flags, outer_size_x, outer_size_y, inner_width) end
+function ImGui.BeginTableEx(str_id, columns, flags, outer_size_x, outer_size_y, inner_width) end
 
 --
 -- only call EndTable() if BeginTable() returns true!
@@ -3878,6 +4089,12 @@ function ImGui.TableGetColumnFlags(column_n) end
 ---@param column_n integer
 ---@param v boolean
 function ImGui.TableSetColumnEnabled(column_n, v) end
+
+--
+-- return hovered column. return -1 when table is not hovered. return columns_count if the unused space at the right of visible columns is hovered. Can also use (TableGetColumnFlags() & ImGuiTableColumnFlags_IsHovered) instead.
+--
+---@return integer
+function ImGui.TableGetHoveredColumn() end
 
 --
 -- change the color of a cell, row, or column. See ImGuiTableBgTarget_ flags for details.
@@ -4048,6 +4265,7 @@ function ImGui.GetDragDropPayload() end
 -- Disabling [BETA API]
 -- - Disable all user interactions and dim items visuals (applying style.DisabledAlpha over current colors)
 -- - Those can be nested but it cannot be used to enable an already disabled section (a single BeginDisabled(true) in the stack is enough to keep everything disabled)
+-- - Tooltips windows by exception are opted out of disabling.
 -- - BeginDisabled(false) essentially does nothing useful but is provided to facilitate use of boolean expressions. If you can avoid calling BeginDisabled(False)/EndDisabled() best to avoid it.
 --
 ---@param disabled? boolean | `true`
@@ -4392,6 +4610,20 @@ function ImGui.Shortcut(key_chord, flags) end
 ---@param key_chord ImGuiKeyChord
 ---@param flags? ImGui.InputFlags | `ImGui.InputFlags { "None" }`
 function ImGui.SetNextItemShortcut(key_chord, flags) end
+
+--
+-- Inputs Utilities: Key/Input Ownership [BETA]
+-- - One common use case would be to allow your items to disable standard inputs behaviors such
+--   as Tab or Alt key handling, Mouse Wheel scrolling, etc.
+--   e.g. Button(...); SetItemKeyOwner(ImGuiKey_MouseWheelY); to make hovering/activating a button disable wheel for scrolling.
+-- - Reminder ImGuiKey enum include access to mouse buttons and gamepad, so key ownership can apply to them.
+-- - Many related features are still in imgui_internal.h. For instance, most IsKeyXXX()/IsMouseXXX() functions have an owner-id-aware version.
+--
+--
+-- Set key owner to last item ID if it is hovered or active. Equivalent to 'if (IsItemHovered() || IsItemActive()) { SetKeyOwner(key, GetItemID());'.
+--
+---@param key ImGui.Key
+function ImGui.SetItemKeyOwner(key) end
 
 --
 -- Inputs Utilities: Mouse specific

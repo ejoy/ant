@@ -128,6 +128,21 @@ local TodoFunction <const> = {
     ImFontAtlas_GetTexDataAsAlpha8 = true,
     ImFontAtlas_GetTexDataAsRGBA32 = true,
     ImFontAtlas_GetCustomRectByIndex = true,
+
+    ImGui_SetNextItemSelectionUserData = true,
+    ImGui_GetBackgroundDrawListEx = true,
+    ImGui_GetForegroundDrawListEx = true,
+
+    ImGuiStorage_GetVoidPtr = true,
+    ImGuiStorage_GetIntRef = true,
+    ImGuiStorage_GetBoolRef = true,
+    ImGuiStorage_GetFloatRef = true,
+    ImGuiStorage_GetVoidPtrRef = true,
+    ImGuiSelectionBasicStorage_GetNextSelectedItem = true,
+
+    ImGui_DebugLog = true,
+    ImGui_DebugLogUnformatted = true,
+    ImGui_DebugLogV = true,
 }
 
 local TodoStruct <const> = {
@@ -152,6 +167,7 @@ local TodoStruct <const> = {
     ImGuiPlatformImeData = true,
     ImGuiTableColumnSortSpecs = true,
     ImGuiSizeCallbackData = true,
+    ImGuiSelectionBasicStorage = true,
 }
 
 local TodoType <const> = {
