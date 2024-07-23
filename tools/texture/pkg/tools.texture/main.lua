@@ -49,7 +49,7 @@ do
 end
 
 local function read_file(p)
-    local f <close> = assert(io.open(p:localpath():string(), "rb"))
+    local f <close> = assert(io.open(p:string(), "rb"))
     return f:read "a"
 end
 
@@ -65,8 +65,8 @@ end
 
 local function which_file_format(f)
     local ext = f:extension()
-    assert(ext:string():sub(1, 1) == '.')
-    return ext:string():sub(2):upper()
+    assert(ext:sub(1, 1) == '.')
+    return ext:sub(2):upper()
 end
 
 local fileformat = which_file_format(outfile)
