@@ -498,7 +498,7 @@ enum class CubemapFace : uint8_t { PX, NX, PY, NY, PZ, NZ, Count};
 static void
 fill_cubemap_face(bimg::ImageContainer* &ic, const bimg::ImageContainer *face, CubemapFace cf, AlignedAllocator &allocator){
     if (!ic){
-        ic = bimg::imageAlloc(&allocator, bimg::TextureFormat::RGBA32F, face->m_width, face->m_height, 1, 1, false, false);
+        ic = bimg::imageAlloc(&allocator, bimg::TextureFormat::RGBA32F, face->m_width, face->m_height, 1, 1, true, false);
     }
 
     bimg::ImageMip cm_mip;
