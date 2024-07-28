@@ -205,12 +205,22 @@ local function check_varyings(mesh, material)
 	end
 end
 
+local function check_add_feature_from_material(e)
+	w:extend(e, "feature_set:in material:in")
+	local matres = assetmgr.resource(e.material)
+	if matres.fx.setting.shadow_alpha_mask then
+		e.feature_set.SHADOW_ALPHA_MASK = true
+	end
+end
+
 function render_sys:entity_init()
 	for e in w:select "INIT render_object:update" do
 		--filter_result
 		w:extend(e, "filter_result?out")
 		e.filter_result = true
 		update_default_material_index(e)
+
+		check_add_feature_from_material(e)
 
 		--mesh & material
 		w:extend(e, "mesh_result:in")

@@ -106,6 +106,7 @@ do
         no_predepth     = true,
         no_skinning     = true,
         threadsize      = true,
+        shadow_alpha_mask = true,
     }
 
     function CHECK_SETTING(mat, macros)
