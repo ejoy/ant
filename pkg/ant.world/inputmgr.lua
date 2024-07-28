@@ -34,6 +34,12 @@ local function create(world)
         end
         world:pub { e.type, e }
     end
+    function event.hover(e)
+        if rmlui_sendmsg(e.type, e) then
+            return
+        end
+        world:pub { e.type, e }
+    end
     function event.keyboard(e)
         world:pub { e.type, keymap[e.key], e.press, e.state }
     end

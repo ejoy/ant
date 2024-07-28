@@ -55,6 +55,7 @@ end
 
 S.gesture = document_manager.process_gesture
 S.touch = document_manager.process_touch
+S.hover = document_manager.process_hover
 
 local viewid = hwi.viewid_get "uiruntime"
 local canvasid = hwi.viewid_get "uicanvas"
