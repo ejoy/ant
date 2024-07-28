@@ -326,12 +326,14 @@ local function set_hover(doc, e, ev)
 	else
 		if active_hover.e then
 			ev.state = "leave"
+	        setPseudoClass(active_hover.e, "hover", false)
 		    eventListener.dispatch( active_hover.doc, active_hover.e, "hover", ev)
 		end
 		active_hover.doc = doc
 		active_hover.e = e
 		if e then
 			ev.state = "enter"
+	        setPseudoClass(e, "hover", true)
 		    eventListener.dispatch( doc, e, "hover", ev)
 		end
 	end
