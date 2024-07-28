@@ -184,6 +184,7 @@ return function (world)
         }
     end
     function m.mousemove(e)
+		local any_button = false
         if e.what.LEFT then
             world:dispatch_message {
                 type = "touch",
@@ -193,6 +194,7 @@ return function (world)
                 y = e.y,
                 timestamp = e.timestamp,
             }
+			any_button = true
             mouse_move(e)
         end
         if e.what.MIDDLE then
@@ -204,6 +206,7 @@ return function (world)
                 y = e.y,
                 timestamp = e.timestamp,
             }
+			any_button = true
         end
         if e.what.RIGHT then
             world:dispatch_message {
@@ -214,7 +217,16 @@ return function (world)
                 y = e.y,
                 timestamp = e.timestamp,
             }
+			any_button = true
         end
+		if not any_button then
+            world:dispatch_message {
+                type = "hover",
+                x = e.x,
+                y = e.y,
+                timestamp = e.timestamp,
+            }
+		end
     end
     function m.mouseclick(e)
         if e.state == "DOWN" then

@@ -318,6 +318,31 @@ function m.process_touch(ev)
     end
 end
 
+local active_hover = {}
+
+local function set_hover(doc, e, ev)
+	if e == active_hover.e and doc == active_hover.doc then
+		-- todo : hover mouse moved
+	else
+		if active_hover.e then
+			ev.state = "leave"
+		    eventListener.dispatch( active_hover.doc, active_hover.e, "hover", ev)
+		end
+		active_hover.doc = doc
+		active_hover.e = e
+		if e then
+			ev.state = "enter"
+		    eventListener.dispatch( doc, e, "hover", ev)
+		end
+	end
+end
+
+function m.process_hover(ev)
+	local x, y = round(ev.x), round(ev.y)
+	local doc, e = fromPoint(x, y)
+	set_hover(doc, e, ev)
+end
+
 function m.set_viewport(vr)
     local w = vr.w
     local h = vr.h
