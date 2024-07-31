@@ -321,6 +321,9 @@ local function shadow_changed()
 			w:extend(D, "scene:in")
 		else
 			D = w:first "make_shadow directional_light scene:in"
+			if not D then
+				return 
+			end
 		end
 
 		if sbe then
@@ -338,6 +341,10 @@ function shadow_sys:update_camera_depend()
 	if not changed then
 		return
 	end
+
+	assert(C)
+	assert(D)
+	assert(sb)
 
 	local si, li = sb.scene_info, sb.light_info
 	init_light_info(C, D, sb.light_info)
