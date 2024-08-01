@@ -46,14 +46,19 @@ for i, level in ipairs(LEVELS) do
     if SupportColor and COLOR[level] then
         fmt = COLOR[level] .. fmt .. '\x1b[0m'
     end
-    m[level] = function (...)
-        if i < levels[m.level] then
-            return
-        end
-        local info = debug.getinfo(2, 'Sl')
-        local message = fmt:format(info.short_src, info.currentline, packstring(...))
-        ltask.pushlog(ltask.pack(level, message))
+	local function log_func(stack_level)
+		return function (...)
+			if i < levels[m.level] then
+				return
+			end
+			local info = debug.getinfo(stack_level, 'Sl')
+			local message = fmt:format(info.short_src, info.currentline, packstring(...))
+			ltask.pushlog(ltask.pack(level, message))
+		end
     end
+
+	m[level] = log_func(2)
+	m[level .. "_"] = log_func(3)
 end
 
 ---@diagnostic disable-next-line: lowercase-global
