@@ -65,7 +65,6 @@ function m.create(datamodel, view, document, element, event_type, event_value)
         data.callback = function (e)
             local func = f
             if ev then
-				e.element_id = rmlui.ElementGetId(element)
                 debug.setupvalue(func, ev, e)
             end
             invoke(func)
