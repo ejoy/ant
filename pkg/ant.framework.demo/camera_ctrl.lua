@@ -88,7 +88,7 @@ function camera_ctrl:start_frame()
 			local z1 = dz * cos_r + dx * sin_r
 			local x1 = dx * cos_r - dz * sin_r
 			camera_change.x = camera.x + x1
-			camera_change.y = camera.y + z1
+			camera_change.y = camera.y - z1
 		end
 	end
 	if next(camera_change) == nil then
@@ -111,7 +111,7 @@ function camera_ctrl:start_frame()
 	local r = math3d.mul(math3d.quaternion(yaw), math3d.quaternion(pitch))
 	local t = math3d.vector(0,0,0-camera.distance,1)
 	t = math3d.transform(r, t, 1)
-	t = math3d.add(t, math3d.vector(camera.x, camera.z, camera.y))
+	t = math3d.add(t, math3d.vector(camera.x, camera.z, -camera.y))
 	iom.set_srt(main_camera, nil, r, t)
 end
 
