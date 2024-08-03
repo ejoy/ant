@@ -25,7 +25,8 @@ local irender   = ecs.require "ant.render|render"
 local irq       = ecs.require "ant.render|renderqueue"
 local iviewport = ecs.require "ant.render|viewport.state"
 local queuemgr  = ecs.require "queue_mgr"
-local ifg = ecs.require "ant.render|postprocess.postprocess"
+local ipps      = ecs.require "ant.render|postprocess.stages"
+
 local fxaa_viewid<const> = hwi.viewid_get "fxaa"
 
 local RENDER_ARG
@@ -48,9 +49,8 @@ local function create_fb(vr)
                 },
             }
         }
-        local handle = fbmgr.get_rb(fbidx, 1).handle
-        ifg.set_stage_output("fxaa", handle)
-        return fbidx 
+        ipps.stage "fxaa".output = fbmgr.get_rb(fbidx, 1).handle
+        return fbidx
     end
 end
 
@@ -79,11 +79,9 @@ function fxaasys:init()
 end
 
 local vr_mb = world:sub{"view_rect_changed", "main_queue"}
-
 local function update_scene_ldr()
     local fd = world:entity(fxaadrawer_eid, "filter_material:in")
-    local last_output    = ifg.get_last_output("fxaa")
-    imaterial.set_property(fd, "s_scene_ldr_color", last_output)
+    imaterial.set_property(fd, "s_scene_ldr_color", assert(ipps.input "fxaa"))
 end
 
 function fxaasys:init_world()
@@ -97,8 +95,7 @@ function fxaasys:fxaa()
         update_scene_ldr()
         if ENABLE_FSR then
             local q = w:first "fxaa_queue render_target:in"
-            local handle = fbmgr.get_rb(q.render_target.fb_idx, 1).handle
-            ifg.set_stage_output("fxaa", handle)
+            ipps.stage "fxaa".output = fbmgr.get_rb(q.render_target.fb_idx, 1).handle
         end
         break
     end

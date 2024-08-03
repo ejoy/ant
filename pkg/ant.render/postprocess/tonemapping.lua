@@ -3,24 +3,28 @@ local world = ecs.world
 local w     = world.w
 
 local hwi       = import_package "ant.hwi"
-
-local tm_sys    = ecs.system "tonemapping_system"
-local irender   = ecs.require "ant.render|render"
-local irq       = ecs.require "ant.render|renderqueue"
-
-local util      = ecs.require "postprocess.util"
 local mu        = import_package "ant.math".util
-local fbmgr     = require "framebuffer_mgr"
 local sampler   = import_package "ant.render.core".sampler
 local setting   = import_package "ant.settings"
-local iviewport = ecs.require "ant.render|viewport.state"
 local ENABLE_BLOOM<const>   = setting:get "graphic/postprocess/bloom/enable"
 local ENABLE_FXAA<const>    = setting:get "graphic/postprocess/fxaa/enable"
 local ENABLE_TAA<const>     = setting:get "graphic/postprocess/taa/enable"
 local ENABLE_TM_LUT<const>  = setting:get "graphic/postprocess/tonemapping/use_lut"
-local ifg = ecs.require "ant.render|postprocess.postprocess"
-local tm_viewid<const>      = hwi.viewid_get "tonemapping"
+local fbmgr                 = require "framebuffer_mgr"
+
+local iviewport             = ecs.require "ant.render|viewport.state"
+
+local irender               = ecs.require "ant.render|render"
+local irq                   = ecs.require "ant.render|renderqueue"
+
+local util                  = ecs.require "postprocess.util"
+local ipps                  = ecs.require "ant.render|postprocess.stages"
 local queuemgr              = ecs.require "queue_mgr"
+
+--system
+local tm_sys                = ecs.system "tonemapping_system"
+
+local tm_viewid<const>      = hwi.viewid_get "tonemapping"
 
 local RENDER_ARG
 local tonemapping_drawer_eid
@@ -41,8 +45,8 @@ local function check_create_fb(vr)
                 },
             }
         }
-        local handle = fbmgr.get_rb(fbidx, 1).handle
-        ifg.set_stage_output("tonemapping", handle)
+
+        ipps.stage "tonemapping".output = fbmgr.get_rb(fbidx, 1).handle
         return fbidx
     end
 end
@@ -76,14 +80,11 @@ end
 local vr_mb = world:sub{"view_rect_changed", "main_queue"}
 
 local function update_properties(material)
-    --TODO: we need something call frame graph, frame graph need two stage: compile and run, with virtual resource
-    -- in compile stage, determine which postprocess stage is needed, and connect those virtual resources
-    -- render target here, is one of the virtual resource
-    
-    local scenehandle = ifg.get_last_output("tonemapping", 1)
-    material.s_scene_color = scenehandle
+    local dependstages = ipps.stage "tonemapping".depend
+
+    material.s_scene_color = ipps.stage(dependstages[1]).output
     if ENABLE_BLOOM then
-        local bloomhandle = ifg.get_last_output("tonemapping", 2)
+        local bloomhandle = ipps.stage(dependstages[2]).output
         material.s_bloom_color = assert(bloomhandle)
     end
 end
@@ -97,8 +98,8 @@ function tm_sys:tonemapping()
     for _, _, vr in vr_mb:unpack() do
         irq.set_view_rect("tonemapping_queue", vr)
         local q = w:first "tonemapping_queue render_target:in"
-        local handle = fbmgr.get_rb(q.render_target.fb_idx, 1).handle
-        ifg.set_stage_output("tonemapping", handle)
+        ipps.stage "tonemapping".output = fbmgr.get_rb(q.render_target.fb_idx, 1).handle
+
         local m = w:first "tonemapping_drawer filter_material:in"
         update_properties(m.filter_material.DEFAULT_MATERIAL)
         break

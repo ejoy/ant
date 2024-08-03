@@ -4,9 +4,8 @@ local w = world.w
 
 local icamera	= ecs.require "ant.camera|camera"
 local iviewport = ecs.require "ant.render|viewport.state"
+local ipps		= ecs.require "ant.render|postprocess.stages"
 local fbmgr		= require "framebuffer_mgr"
-
-local fg		= ecs.require "ant.render|framegraph"
 
 local default	= import_package "ant.general".default
 local hwi		= import_package "ant.hwi"
@@ -112,6 +111,7 @@ end
 
 local function create_main_queue(vr, cameraref)
 	local fbidx = create_main_fb(vr)
+	ipps.stage "main".output = fbmgr.get_rb(fbidx, 1).handle
 	world:create_entity {
 		policy = {
 			"ant.render|watch_screen_buffer",
@@ -135,34 +135,6 @@ local function create_main_queue(vr, cameraref)
 	}
 end
 
-local function init_fraem_graph()
-	local depends = {}
-	if ENABLE_PRE_DEPTH then
-		depends[#depends+1] = "pre_depth"
-		fg.register_pass("pre_depth", {
-			init = function() end,
-			run = function ()
-				--TODO: submit code should be here, but right now, code submot in render.cpp, we should move submit code here???
-			end,
-		})
-	end
-
-	if ENABLE_SHADOW then
-		depends[#depends+1] = "csm1"
-		depends[#depends+1] = "csm2"
-		depends[#depends+1] = "csm3"
-		depends[#depends+1] = "csm4"
-	end
-	fg.register_pass("main_view", {
-		depends = depends,
-		init = function ()
-		end,
-		run = function ()
-			--same with predepth
-		end,
-	})
-end
-
 function fr_sys:init()
 	local vr = iviewport.viewrect
 	local camera = icamera.create{
@@ -180,8 +152,6 @@ function fr_sys:init()
 		create_predepth_queue(vr, camera)
 	end
 	create_main_queue(vr, camera)
-
-	init_fraem_graph()
 end
 
 local mq_vr_changed = world:sub{"view_rect_changed", "main_queue"}

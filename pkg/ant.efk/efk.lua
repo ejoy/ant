@@ -25,7 +25,7 @@ local iviewport = ecs.require "ant.render|viewport.state"
 local irq       = ecs.require "ant.render|renderqueue"
 local ivm       = ecs.require "ant.render|visible_mask"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
-local ifg       = ecs.require "ant.render|postprocess.postprocess"
+local ipps      = ecs.require "ant.render|postprocess.stages"
 local irender   = ecs.require "ant.render|render"
 
 local efk_sys   = ecs.system "efk_system"
@@ -117,8 +117,7 @@ local function init_efk()
     EFKCTX_HANDLE = EFKCTX
 end
 
-local function create_fb(vr)
-    local mq = w:first "main_queue render_target:in"
+local function create_effect_color_render_buffer(vr)
     local minmag_flag<const> = ENABLE_TAA and "POINT" or "LINEAR"
     local rbidx = fbmgr.create_rb{
         w = vr.w, h = vr.h, layers = 1,
@@ -130,19 +129,31 @@ local function create_fb(vr)
             MAG=minmag_flag,
             RT="RT_ON",
             BLIT="BLIT_AS_DST"
-        }    
+        }
     }
-    local fbidx = fbmgr.create({rbidx = rbidx},{rbidx = fbmgr.get(mq.render_target.fb_idx)[2].rbidx})
-    local handle = fbmgr.get_rb(fbidx, 1).handle
-    ifg.set_stage_output("effect", handle)
+
+    ipps.stage "effect".output = fbmgr.get_rb(rbidx).handle
+
+    return rbidx
+end
+
+local function create_fb(vr, color_rbidx)
+    local mq = w:first "main_queue render_target:in"
+    local fbidx = fbmgr.create({rbidx = color_rbidx}, { rbidx = fbmgr.get(mq.render_target.fb_idx)[2].rbidx})
     return fbidx
 end
 
 local need_update_cb_data = true
-
-function efk_sys:init()
+local color_rbidx
+local function init_efk_queue()
     queuemgr.register_queue "efk_queue"
     RC.set_queue_type("efk_queue", queuemgr.queue_index "efk_queue")
+
+    color_rbidx = create_effect_color_render_buffer(iviewport.viewrect)
+end
+
+function efk_sys:init()
+    init_efk_queue()
     init_efk()
     ServiceEfkUpdate = ltask.spawn("ant.efk|update", EFKCTX:handle(), EFKCTX.render)
     for _, n in ipairs{"play", "is_alive", "stop", "set_time", "pause", "set_speed", "set_visible", "set_texture"} do
@@ -167,7 +178,7 @@ function efk_sys:init_world()
             render_target = {
                 view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
                 viewid = effect_viewid,
-                fb_idx = create_fb(vr),
+                fb_idx = create_fb(vr, assert(color_rbidx)),
                 view_mode = "s",
                 clear_state = {clear = "",},
             },
@@ -272,8 +283,7 @@ local function update_cb_data(projmat)
         m33, m34,
         m43, m44,
     }
-    local last_output = ifg.get_last_output("effect")
-    efkasset.update_cb_data(last_output, depth)
+    efkasset.update_cb_data(ipps.input "effect", depth)
 end
 
 function efk_sys:camera_usage()
@@ -285,8 +295,7 @@ function efk_sys:camera_usage()
         need_update_cb_data = true
         irq.set_view_rect("efk_queue", vr)
         local q = w:first "efk_queue render_target:in"
-        local handle = fbmgr.get_rb(q.render_target.fb_idx, 1).handle
-        ifg.set_stage_output("effect", handle)
+        ipps.stage "effect".output = fbmgr.get_rb(q.render_target.fb_idx, 1).handle
     end
 
     local C = irq.main_camera_changed()
@@ -364,9 +373,9 @@ function efk_sys:render_preprocess()
 end
 
 function efk_sys:tonemapping_blit()
-    local current_output = ifg.get_stage_output("effect")
-    local last_output = ifg.get_last_output("effect")
-    bgfx.blit(blit_viewid, current_output, 0, 0, last_output)
+    local inputhandle = ipps.input "effect"
+    local outputhandle = ipps.stage "effect".output
+    bgfx.blit(blit_viewid, outputhandle, 0, 0, inputhandle)
 end
 
 local iefk = {}

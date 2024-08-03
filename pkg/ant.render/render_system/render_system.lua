@@ -26,9 +26,13 @@ local itimer	= ecs.require "ant.timer|timer_system"
 local irl		= ecs.require "ant.render|render_layer.render_layer"
 local RM        = ecs.require "ant.material|material"
 
+local ipps		= ecs.require "ant.render|postprocess.stages"
+
 local render_sys= ecs.system "render_system"
 local R			= world:clibs "render.render_material"
 local RC		= world:clibs "render.cache"
+
+local fbmgr		= require "framebuffer_mgr"
 
 function render_sys:device_check()
 	local caps = bgfx.get_caps()

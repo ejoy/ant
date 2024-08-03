@@ -15,6 +15,7 @@ pipeline "_init"
     .pipeline "init"
     .stage "frame_remove_entity"
     .stage "frame_create_entity"
+    .stage "preinit_world"
     .stage "init_world"
 
 pipeline "_update"

@@ -89,6 +89,8 @@ local function create_sample_queues(ps, mqvr)
     for idx, us in ipairs(upsample) do
         init_sample(us, chain_vr[mipcount-idx+1], fbpyramids[mipcount-idx+1])
     end
+
+    return fbpyramids
 end
 
 local SCENE_COLOR_PROPERTY = {
@@ -171,9 +173,9 @@ local function create_pyramid_sample(ps)
 end
 
 function ips.create(pyramid_sample, mqvr)
-    create_sample_queues(pyramid_sample, mqvr)
+    local fbs = create_sample_queues(pyramid_sample, mqvr)
     create_drawers(pyramid_sample)
-    return create_pyramid_sample(pyramid_sample)
+    return create_pyramid_sample(pyramid_sample), fbs
 end
 
 local function do_sample(sample_params, samplers, inputhandle, next_mip)

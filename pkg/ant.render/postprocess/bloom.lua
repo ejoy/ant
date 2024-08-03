@@ -5,17 +5,19 @@ local w     = world.w
 local setting   = import_package "ant.settings"
 local bloom_sys = ecs.system "bloom_system"
 local fbmgr     = require "framebuffer_mgr"
-local ifg = ecs.require "ant.render|postprocess.postprocess"
+
 if not setting:get "graphic/postprocess/bloom/enable" then
     return
 end
 
-local math3d    = require "math3d"
-local ips       = ecs.require "ant.render|postprocess.pyramid_sample"
 local hwi       = import_package "ant.hwi"
-local iviewport = ecs.require "viewport.state"
 
+local ipps      = ecs.require "ant.render|postprocess.stages"
+local ips       = ecs.require "ant.render|postprocess.pyramid_sample"
+local iviewport = ecs.require "viewport.state"
 local queuemgr  = ecs.require "queue_mgr"
+
+local math3d    = require "math3d"
 
 local DOWNSAMPLE_NAME<const> = "bloom_downsample"
 local UPSAMPLE_NAME<const> = "bloom_upsample"
@@ -39,15 +41,17 @@ local function register_queues()
         sample_params   = BLOOM_PARAM,
     }
 
-    pyramid_sampleeid = ips.create(pyramid_sample, iviewport.viewrect)
+    local fbs
+    pyramid_sampleeid, fbs = ips.create(pyramid_sample, iviewport.viewrect)
+    assert(fbs)
+    ipps.stage "bloom".output = fbmgr.get_rb(fbs[#fbs], 1).handle
 end
 
 local function update_bloom_handle(ps)
     local lasteid = ps.upsample[#ps.upsample].queue
     local q = world:entity(lasteid, "render_target:in")
     if q then
-        local handle = fbmgr.get_rb(q.render_target.fb_idx, 1).handle
-        ifg.set_stage_output("bloom", handle)
+        ipps.stage "bloom".output = fbmgr.get_rb(q.render_target.fb_idx, 1).handle
     end
 end
 
@@ -64,8 +68,7 @@ local vr_mb = world:sub{"view_rect_changed", "main_queue"}
 
 function bloom_sys:bloom()
     local e = world:entity(pyramid_sampleeid, "pyramid_sample:in")
-    local last_output = ifg.get_last_output("bloom")
-    ips.do_pyramid_sample(e, last_output)
+    ips.do_pyramid_sample(e, ipps.input "bloom")
 
     for _, _, vr in vr_mb:unpack() do
         ips.update_viewrect(e, vr)
