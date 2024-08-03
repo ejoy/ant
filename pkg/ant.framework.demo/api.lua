@@ -16,6 +16,9 @@ return function (ecs, args)
 	api.mouse_callback = mouse.mouse_callback
 	mouse.mouse_sync(api)
 	
+	local gesture = ecs.require "gesture"
+	api.gesture_listen = gesture.listen
+	
 	function api.show_profile(enable)
 	    rhwi.set_profie(enable)
 	end

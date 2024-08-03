@@ -8,6 +8,9 @@ system "keyboard"
 	
 system "mouse"
 	.implement "mouse.lua"
+	
+system "gesture"
+	.implement "gesture.lua"
 
 system "camera_ctrl"
 	.implement "camera_ctrl.lua"
