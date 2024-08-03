@@ -1,0 +1,46 @@
+local camera = require "camera"
+
+local game = {}
+
+ant.import_prefab "/asset/light.prefab"
+local cube = ant.primitive("cube", { x = 0, y = 0, r = 0, z = 0.5 } )
+
+local show_profile = false
+function game.keyboard(key)
+	if key == "F8" then
+		show_profile = not show_profile
+		ant.show_profile(show_profile)
+	elseif key == "Escape" then
+		ant.gui_send("reset")
+		cube.material.color = 0xffffff
+	end
+end
+
+function game.mouse(btn, state, x, y)
+	camera.mouse_ctrl(btn, state, x, y)
+end
+
+print_r(ant.setting)
+ant.maxfps(ant.setting.fps)
+ant.primitive("plane", {x = 0, y = 0, s = 10 })
+
+--ant.prefab("/asset/x.glb", { x = 0, y = 0, material = { color = 0xff0000 }})
+
+ant.gui_open "/ui/hud.html"
+
+ant.gui_listen("click", function (mode)
+	if mode == "red" then
+		cube.material.color = 0xff0000
+	elseif mode == "green" then
+		cube.material.color = 0x00ff00
+	elseif mode == "blue" then
+		cube.material.color = 0x0000ff
+	end
+end)
+
+function game.update()
+	camera.key_ctrl()
+	cube.r = cube.r + 1
+end
+
+return game

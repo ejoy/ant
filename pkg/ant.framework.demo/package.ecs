@@ -1,0 +1,14 @@
+component "entity2d"
+
+system "main_system"
+    .implement "game.lua"
+	
+system "keyboard"
+	.implement "keyboard.lua"
+	
+system "mouse"
+	.implement "mouse.lua"
+
+system "camera_ctrl"
+	.implement "camera_ctrl.lua"
+  

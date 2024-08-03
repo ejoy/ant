@@ -1,0 +1,12 @@
+colorspace: linear
+normalmap: false
+path: ./colorcube2x2.ktx
+mipmap: 0
+build_irradianceSH: true
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: LINEAR
+  U: CLAMP
+  V: CLAMP
+  W: CLAMP

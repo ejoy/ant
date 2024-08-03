@@ -1,0 +1,31 @@
+<html>
+    <head>
+        <style path = "/ui/styles.css"/>
+        <script type="text/x-lua" >
+            local model = window.createModel {}
+			local mode
+			local function reset()
+				if mode then
+					local e = document.getElementById(mode)
+					e.style["background-color"] = "black"
+				end
+			end
+			function model.click(ev)
+				reset()
+				mode = ev.current.id
+				ev.current.style["background-color"] = "red"
+				window.sendMessage("click", mode)
+			end
+			window.onMessage("reset", function()
+				reset()
+			end)
+        </script>
+    </head>
+    <body>
+        <action_panel>
+            <button id = "red" data-event-click="click(ev)">红</button>
+            <button id = "green" data-event-click="click(ev)">绿</button>
+            <button id = "blue" data-event-click="click(ev)">蓝</button>
+        </action_panel>
+    </body>
+</html>

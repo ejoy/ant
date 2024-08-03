@@ -1,0 +1,36 @@
+body {
+	font: "微软雅黑";
+	pointer-events: none;
+}
+
+action_panel {
+	display: flex;
+	flex-direction: row;
+	position: absolute;
+    bottom: 0;
+    right: 0;
+	margin: 20px;
+	gap: 20px;
+	pointer-events: none;
+}
+
+button {
+	padding: 10px;
+	text-align: center;
+	text-decoration: none;
+	border-radius: 10px;
+	border: 1px white;
+	background-color: black;
+	background-size: contain;
+	color: white;
+	transform: scale(1.0);
+}
+
+button:active {
+	transform: scale(1.1);
+}
+
+button:hover {
+	background-color: blue;
+}
+
