@@ -34,9 +34,9 @@ function camera.key_ctrl()
 	end
 	
 	if key_press.W then
-		camera_ctrl.delta.z = pan_speed
+		camera_ctrl.delta.y = pan_speed
 	elseif key_press.S then
-		camera_ctrl.delta.z = -pan_speed
+		camera_ctrl.delta.y = -pan_speed
 	end
 
 	if key_press.A then
