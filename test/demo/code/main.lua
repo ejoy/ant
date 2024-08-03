@@ -18,6 +18,9 @@ end
 
 function game.mouse(btn, state, x, y)
 	camera.mouse_ctrl(btn, state, x, y)
+	if btn == "LEFT" and state == "UP" then
+		print("Click", ant.camera_ctrl.screen_to_world(x, y))
+	end
 end
 
 print_r(ant.setting)
