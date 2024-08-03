@@ -130,7 +130,8 @@ function camera_accesor.screen_to_world(x, y)
     local p1 = mu.ndc_to_world(viewport_mat, ndcpt)
     local _ , p = math3d.plane_ray(p0, math3d.sub(p0, p1), XZ_PLANE, true)
 	if p then
-		return math3d.index(p, 1, 3)
+		local x, y = math3d.index(p, 1, 3)
+		return x, -y
 	end
 end
 
