@@ -32,18 +32,27 @@ ant.primitive("plane", {x = 0, y = 0, s = 10 })
 ant.gui_open "/ui/hud.html"
 
 ant.gui_listen("click", function (mode)
-	if mode == "red" then
-		cube.material.color = 0xff0000
-	elseif mode == "green" then
-		cube.material.color = 0x00ff00
-	elseif mode == "blue" then
-		cube.material.color = 0x0000ff
+	if cube then
+		if mode == "red" then
+			cube.material.color = 0xff0000
+		elseif mode == "green" then
+			cube.material.color = 0x00ff00
+		elseif mode == "blue" then
+			cube.material.color = 0x0000ff
+		end
 	end
+end)
+
+ant.gui_listen("remove", function ()
+	ant.remove(cube)
+	cube = nil
 end)
 
 function game.update()
 	camera.key_ctrl()
-	cube.r = cube.r + 1
+	if cube then
+		cube.r = cube.r + 1
+	end
 end
 
 return game

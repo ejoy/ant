@@ -38,6 +38,21 @@ return function (ecs, args)
 		return prefab.new(world, name, obj)
 	end
 	
+	function api.remove(obj)
+		local eid = obj and obj.eid
+		if eid == nil then
+			return
+		end
+		local inst = obj.inst
+		setmetatable(obj.material, nil)
+		setmetatable(obj, nil)
+		if inst then
+			world:remove_instance(inst)
+		elseif eid then
+			world:remove_entity(eid)
+		end
+	end
+
 	if args.setting then
 		local serialize = import_package "ant.serialize"
 		api.setting = serialize.load(args.setting)
