@@ -14,6 +14,7 @@ function prefab.new(world, name, obj)
 			local eid_list = inst.tag["*"]
 			local eid = eid_list[1]
 			obj.eid = eid
+			obj.inst = inst
 			local mat = obj.material
 			obj.material = monitor.material(world, eid_list)
 			obj.material.visible = mat.visible ~= false

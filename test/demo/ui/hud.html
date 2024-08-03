@@ -16,6 +16,10 @@
 				ev.current.style["background-color"] = "red"
 				window.sendMessage("click", mode)
 			end
+			function model.remove()
+				reset()
+				window.sendMessage("remove")
+			end
 			window.onMessage("reset", function()
 				reset()
 			end)
@@ -26,6 +30,7 @@
             <button id = "red" data-event-click="click(ev)">红</button>
             <button id = "green" data-event-click="click(ev)">绿</button>
             <button id = "blue" data-event-click="click(ev)">蓝</button>
+            <button data-event-click="remove()">删</button>
         </action_panel>
     </body>
 </html>
