@@ -1,0 +1,4 @@
+component "debug_text"
+
+system "debug_text_system"
+    .implement "debug_text.lua"

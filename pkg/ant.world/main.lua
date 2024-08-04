@@ -389,13 +389,16 @@ local function cpustat_update(w, funcs, symbols)
     end
 end
 
+local function dbg_print(x, y, ...)
+	return bgfx.dbg_text_print(x + 16, y + 1, ...)
+end
+
 local function cpustat_update_then_print(w, funcs, symbols)
     local update_func = cpustat_update(w, funcs, symbols)
     local MaxFrame <const> = 30
     local MaxText <const> = math.min(10, #funcs)
     local MaxName <const> = 48
     local CurFrame = 0
-    local dbg_print = bgfx.dbg_text_print
     local printtext = {}
     for i = 1, MaxText do
         printtext[i] = ""
@@ -425,7 +428,6 @@ local function cpustat_update_then_print(w, funcs, symbols)
             end
         end
         dbg_print(0, 2, 0x02, "--- "..table.concat(components, " "))
-        --dbg_print(0, 2, 0x02, "--- system")
         for i = 1, MaxText do
             dbg_print(2, 2+i, 0x02, printtext[i])
         end
@@ -463,8 +465,7 @@ function world:pipeline_func(what, step)
     if not funcs or #funcs == 0 then
         return function() end
     end
-    local CPU_STAT <const> = true
-    if CPU_STAT then
+    if self._profile then
         if what == "_update" then
             return cpustat_update_then_print(w, funcs, symbols)
         end
@@ -699,6 +700,7 @@ function m.new_world(config)
     local ecs = luaecs.world(components)
     local w; w = setmetatable({
         args = config,
+		_profile = config.ecs.profile ~= false,
         _group_tags = {},
         _create_entity_queue = {},
         _create_prefab_queue = {},

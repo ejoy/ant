@@ -1,4 +1,3 @@
-local rhwi = import_package "ant.hwi"
 local bgfx = require "bgfx"
 
 return function (ecs, args)
@@ -14,13 +13,29 @@ return function (ecs, args)
 	api.key_press = keyboard.key_press
 	api.key_callback = keyboard.key_callback
 	api.mouse_callback = mouse.mouse_callback
-	mouse.mouse_sync(api)
+	api.mouse_state = {}
+	mouse.mouse_sync(api.mouse_state)
 	
 	local gesture = ecs.require "gesture"
 	api.gesture_listen = gesture.listen
+
+	local profile_items = "fps time system view encoder"
 	
-	function api.show_profile(enable)
-	    rhwi.set_profie(enable)
+	bgfx.show_profile(profile_items, args.profile)
+	function api.profile_enable(enable)
+		if enable then
+			bgfx.show_profile(profile_items, false)
+		else
+			bgfx.show_profile(profile_items, true)
+		end
+	end
+
+	function api.show_debug(enable)
+		if enable then
+			bgfx.set_debug "T"
+		else
+			bgfx.set_debug ""
+		end
 	end
 
 	function api.import_prefab ( name )
@@ -74,6 +89,21 @@ return function (ecs, args)
 	api.gui_listen = gui.on_message
 	api.gui_send = gui.send
 	api.gui_call = gui.call
+	
+	local debug_text = ecs.require "ant.debug_text|debug_text"
+	
+	function api.print(obj, str)
+		local eid = obj.eid
+		if not eid then
+			local inst = obj.inst
+			if inst then
+				eid = inst.tag["*"][1]
+			end
+		end
+		if eid then
+			debug_text.print(eid, str)
+		end
+	end
 	
 	return api
 end

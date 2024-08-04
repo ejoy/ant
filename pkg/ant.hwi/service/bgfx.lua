@@ -91,6 +91,10 @@ local function stats_views()
     end
 end
 
+local function dbg_print(x, y, ...)
+	return S.dbg_text_print(x + 16, y + 1, 0x02, ...)
+end
+
 local function profile_print()
     if PROFILE_SHOW_STATE.view then
         stats_views()
@@ -154,7 +158,7 @@ local function profile_print()
         end
     end
     for i = 1, profile_printtext.n do
-        S.dbg_text_print(0, 2+MaxText+i, 0x02, profile_printtext[i])
+        dbg_print(0, 2+MaxText+i, profile_printtext[i])
     end
 end
 
@@ -297,7 +301,7 @@ local frame_control; do
                 printtext = ("FPS: %.03f"):format(fps)
             end
         end
-        S.dbg_text_print(0, 0, 0x02, printtext)
+        dbg_print(0, 0, printtext)
     end
     local function print_time()
         if not PROFILE_SHOW_STATE.time then
@@ -317,7 +321,7 @@ local frame_control; do
             end
         end
         avg = avg / (frame_last - frame_first)
-        S.dbg_text_print(0, 1, 0x02, ("avg: %.02fms max:%.02fms min:%.02fms          "):format(avg, max, min))
+        dbg_print(0, 1, ("avg: %.02fms max:%.02fms min:%.02fms          "):format(avg, max, min))
     end
     function frame_control()
         local time = btime.monotonic()
@@ -354,9 +358,10 @@ function S.maxfps(v)
     return maxfps
 end
 
-function S.dbg_text_print(x, y, ...)
-    return bgfx.dbg_text_print(x + 16, y + 1, ...)
-end
+--function S.dbg_text_print(x, y, ...)
+--    return bgfx.dbg_text_print(x, y, ...)
+--end
+S.dbg_text_print = bgfx.dbg_text_print
 
 function S.fontmanager()
     return fontmanager.instance()
