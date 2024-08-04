@@ -1,0 +1,10 @@
+texture : $path irbtn_normal.texture
+atlas:
+  x : 128	# x of texture
+  y : 128	# y of texture
+  dw : 256	# fix width
+  dh : 256	# fix height
+  w : 512	# virtual width
+  h : 512	# virtual height
+  dx : 128	# offset x
+  dy : 128	# offset y

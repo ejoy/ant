@@ -12,6 +12,18 @@
                 margin-bottom: 20%;
                 gap: 20px;
             }
+			subicon {
+				width: 100px;
+				height: 100px;
+				background-image: "/pkg/ant.resources/textures/irbtn_sub.atlas";
+				background-size: contain;
+			}
+			icon {
+				width: 100px;
+				height: 100px;
+				background-image: "/pkg/ant.resources/textures/irbtn_normal.texture";
+				background-size: contain;
+			}
             button {
                 padding: 0 20px;
                 text-align: center;
@@ -52,6 +64,8 @@
     </head>
     <body>
         <div>
+			<icon/>
+			<subicon/>
             <button id = "new" data-event-click="new(ev)">{{label}}</button>
             <button data-event-click="load(ev)">载入游戏</button>
             <button data-event-click="setting(ev)">设置</button>

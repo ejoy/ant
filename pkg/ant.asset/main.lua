@@ -1,3 +1,4 @@
+local ltask = require "ltask"
 local texture_mgr	= require "texture_mgr"
 local async			= require "async"
 local sa			= require "system_attribs"	-- must require after 'texture_mgr.init()', system_attribs need default texture id
@@ -122,6 +123,15 @@ assetmgr.material_isvalid	= async.material_isvalid
 assetmgr.textures 			= texture_mgr.textures
 assetmgr.default_textureid	= texture_mgr.default_textureid
 assetmgr.invalid_texture 	= texture_mgr.invalid
-assetmgr.load_texture 		= async.texture_create_fast
-assetmgr.set_atlas			= async.atlas_set
+assetmgr.load_texture       = async.texture_create_fast
+
+function assetmgr.load_texture_from_service(service, path)
+	-- todo: support atlas replacement
+	if path:find(".atlas", -6, true) then
+		return assetmgr.load(path)
+	else
+		return ltask.call(service, "texture_create", path)
+	end
+end
+
 return assetmgr

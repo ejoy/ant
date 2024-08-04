@@ -3,6 +3,7 @@ local ltask = require "ltask"
 local ServiceResource = ltask.queryservice "ant.resource_manager|resource"
 local fs = require "filesystem"
 local serialize = import_package "ant.serialize"
+local assetmgr = import_package "ant.asset"
 local config_table, path_table
  local texture_cfg_table = {
 } 
@@ -151,7 +152,7 @@ if config_table then
     end
         
     for path_idx, path_info in pairs(path_table) do
-        local info = ltask.call(ServiceResource, "texture_create", path_info.path)
+        local info = assetmgr.load_texture_from_service(ServiceResource, path_info.path)
         for abbrev, _ in pairs(path_info.list) do
             texture_table[abbrev].id = info.id
             texture_table[abbrev].width = info.texinfo.width

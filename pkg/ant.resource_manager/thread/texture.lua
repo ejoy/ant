@@ -62,15 +62,6 @@ local function loadExt(protocol, path, config, name)
 	return c
 end
 
-local function loadAtlas(name)
-    local sc = serialize.load(name)
-    local path = sc.atlas.path .. "/source.ant"
-    local pc = serialize.load(path)
-    pc.info.atlas = sc.atlas
-    pc.name = name
-    return pc
-end
-
 local function loadTexture(name)
 	local protocol, fullpath = name:match "/?(%w+):(.*)"
 	if protocol then
@@ -78,9 +69,6 @@ local function loadTexture(name)
 		path = path or fullpath
 		return loadExt(protocol, path, config, name)
 	end
-    if name:find ".atlas" then
-        return loadAtlas(name)
-    end
     local path = name.."/source.ant"
     local c = serialize.load(path)
     c.name = name

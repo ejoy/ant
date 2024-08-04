@@ -103,18 +103,16 @@ function iatlas.generate_sub_atlas(atlas)
         if rect.was_packed then
             local texture_content = {
                 atlas = {
-                    rect = {
-                        x = rect.x,
-                        y = rect.y,
-                        w = rect.w,
-                        h = rect.h,
-                        dx = rect.dx,
-                        dy = rect.dy,
-                        dw = rect.dw,
-                        dh = rect.dh
-                    },
-                    path = atlas.tvpath
-                }
+					x = rect.x,
+					y = rect.y,
+					w = rect.w,
+					h = rect.h,
+					dx = rect.dx,
+					dy = rect.dy,
+					dw = rect.dw,
+					dh = rect.dh
+                 },
+                 texture = atlas.tvpath,
             }
             local f <close> = assert(io.open(rect.arpath, "wb"))
             f:write(serialize.stringify(texture_content)) 

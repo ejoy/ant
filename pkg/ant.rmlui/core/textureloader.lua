@@ -1,8 +1,8 @@
 local ltask = require "ltask"
 local constructor = require "core.DOM.constructor"
-local atlas = import_package "ant.atlas_setting"
 local ServiceWindow = ltask.queryservice "ant.window|window"
 local ServiceResource = ltask.queryservice "ant.resource_manager|resource"
+local assetmgr = import_package "ant.asset"
 local m = {}
 
 local pendQueue = {}
@@ -32,7 +32,7 @@ function m.loadTexture(doc, e, path, width, height, isRT)
         end)
     else
         ltask.fork(function ()
-            local info = ltask.call(ServiceResource, "texture_create", atlas:get(path))
+			local info = assetmgr.load_texture_from_service(ServiceResource, path)
             readyQueue[#readyQueue+1] = {
                 path = path,
                 elements = pendQueue[path],

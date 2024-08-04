@@ -8,6 +8,7 @@ local m = ecs.system "init_system"
 font.import "/pkg/ant.resources.binary/font/Alibaba-PuHuiTi-Regular.ttf"
 
 function m:init()
+	local assetmgr  = import_package "ant.asset"
     iRmlUi.open "/pkg/ant.test.rmlui/start.html"
     iRmlUi.onMessage("click", function (msg)
         print(msg)
