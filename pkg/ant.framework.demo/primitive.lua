@@ -26,7 +26,6 @@ function primitive.new(world, name, obj)
 				obj.material = monitor.material(world, { e.eid })
 				obj.material.visible = mat.visible ~= false
 				obj.material.color = mat.color or 0xffffff
-				obj.material.emissive = mat.emissive or 0
 				monitor.new(obj)
 			end
 		}

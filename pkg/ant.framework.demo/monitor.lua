@@ -76,7 +76,7 @@ end
 local function material_new(list)
 	local raw = {
 		_list = list,
-		emissive = 0,
+		color = 0xffffffff,
 	}
 	raw.__index = raw
 	raw.__newindex = material_touch
@@ -118,7 +118,6 @@ local function flush_material(w)
 	local cache = {}
 	for list, obj in pairs(material_changes) do
 		local d = {
-			emissive = num2vec(obj.emissive),
 			color = num2vec(obj.color),
 			visible = obj.visible,
 		}
@@ -138,7 +137,6 @@ local function flush_material(w)
 	for e in w:select "entity2d eid:in filter_material:in visible?out" do
 		local obj = cache[e.eid]
 		local fm = e.filter_material[0]	-- 0 is DEFAULT_MATERIAL_IDX
-		fm.u_emissive_factor = obj.emissive
 		fm.u_basecolor_factor = obj.color
 		e.visible = obj.visible
 	end
