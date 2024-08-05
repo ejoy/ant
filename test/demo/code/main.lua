@@ -38,6 +38,8 @@ local plane = ant.primitive("plane", {x = 0, y = 0, s = 10 })
 
 --ant.prefab("/asset/x.glb", { x = 0, y = 0, material = { color = 0xff0000 }})
 
+local avatar = ant.sprite2d("/asset/avatar.atlas", { x = 0, y = 0 })
+
 ant.gui_open "/ui/hud.html"
 
 ant.gui_listen("click", function (mode)
@@ -68,6 +70,7 @@ function game.update()
 		cube.y = 3 * math.sin(math.rad(r))
 		ant.print(cube, ("Cube (%g,%g)"):format(cube.x, cube.y))
 	end
+	avatar.r = ant.camera_ctrl.yaw
 end
 
 return game

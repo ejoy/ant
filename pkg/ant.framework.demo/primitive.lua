@@ -12,22 +12,21 @@ function primitive.new(world, name, obj)
 		mat = { visible = true }
 		obj.material = mat
 	end
-	world:create_entity {
+	local eid; eid = world:create_entity {
 		policy = {
 			"ant.render|render",
 		},
 		data = {
-			scene 		= {	s = obj.s or 1 },
+			scene 		= {},
 			material 	= "/pkg/ant.resources/materials/primitive.material",
 			visible_masks = "main_view|cast_shadow",
 			visible     = mat.visible,
 			cast_shadow = true,
 			receive_shadow = true,
 			mesh        = name .. ".primitive",
-			on_ready = function (e)
-				world.w:extend(e, "eid:in")
-				obj.eid = e.eid
-				obj.material = monitor.material(world, { e.eid })
+			on_ready = function ()
+				obj.eid = eid
+				obj.material = monitor.material(world, { eid })
 				obj.material.visible = mat.visible ~= false
 				obj.material.color = mat.color or 0xffffff
 				monitor.new(obj, remove_primitive)

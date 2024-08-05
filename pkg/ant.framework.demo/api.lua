@@ -56,6 +56,11 @@ return function (ecs, args)
 		return prefab.new(world, name, obj)
 	end
 	
+	local sprite2d = require "sprite2d"
+	function api.sprite2d(name, obj)
+		return sprite2d.new(world, name, obj)
+	end
+	
 	function api.remove(obj)
 		local dtor = obj.__dtor
 		if dtor then

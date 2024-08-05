@@ -1,0 +1,28 @@
+fx:
+  shader_type: PBR
+  setting:
+    lighting: on
+    cast_shadow: on
+    receive_shadow: off
+    shadow_alpha_mask: on
+  varyings:
+    a_position: vec3
+    a_normal: vec3
+    a_texcoord0: vec2
+    v_texcoord0: vec2
+    v_posWS: "vec3 TEXCOORD1"
+    v_normal: "vec3 TEXCOORD2"
+properties:
+  s_basecolor:
+    stage: 0
+    texture: /pkg/ant.resources/textures/default.texture
+  u_pbr_factor: {0, 0.7, 0, 0}  #metallic, roughness, alpha_cutoff, occlusion strength
+  u_emissive_factor: {0, 0, 0, 0}
+  u_basecolor_factor: {1, 1, 1, 1}
+state:
+  ALPHA_REF: 0
+  CULL: NONE
+  DEPTH_TEST: GREATER
+  MSAA: true
+  WRITE_MASK: RGBAZ
+  BLEND: ALPHA

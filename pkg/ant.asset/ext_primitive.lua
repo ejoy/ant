@@ -45,8 +45,10 @@ function primitive.plane(u0, v0, u1, v1)
 	return create_mesh({"p3|n3|t2", vb}, {0, 1, 2, 1, 3, 2}, {{-0.5, 0, -0.5}, {0.5, 0, 0.5}})
 end
 
-function primitive.quad()
-	local u0, v0, u1, v1 = 0, 0, 1, 1
+function primitive.quad(u0, v0, u1, v1)
+	if not u0 then
+		u0, v0, u1, v1 = 0, 0, 1, 1
+	end
 	local vb = {
 		-0.5, 1, 0, 0, 0, 1, u0, v0,	--left top
 		 0.5, 1, 0, 0, 0, 1, u1, v0,	--right top

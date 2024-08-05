@@ -1,0 +1,10 @@
+texture : $path avatar.texture
+atlas:
+  x : 12	# x of texture
+  y : 31	# y of texture
+  dw : 134	# fix width
+  dh : 210	# fix height
+  w : 134	# virtual width
+  h : 210	# virtual height
+  dx : 0	# offset x
+  dy : 0	# offset y
