@@ -2,6 +2,10 @@ local monitor = require "monitor"
 
 local prefab = {}
 
+local function remove_prefab(world, self)
+	world:remove_instance(self.inst)
+end
+
 function prefab.new(world, name, obj)
 	local mat = obj.material
 	if mat == nil then
@@ -19,7 +23,7 @@ function prefab.new(world, name, obj)
 			obj.material = monitor.material(world, eid_list)
 			obj.material.visible = mat.visible ~= false
 			obj.material.color = mat.color or 0xffffff
-			monitor.new(obj)
+			monitor.new(obj, remove_prefab)
 		end,
 	}
 	

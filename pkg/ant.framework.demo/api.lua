@@ -57,17 +57,12 @@ return function (ecs, args)
 	end
 	
 	function api.remove(obj)
-		local eid = obj and obj.eid
-		if eid == nil then
-			return
-		end
-		local inst = obj.inst
-		setmetatable(obj.material, nil)
-		setmetatable(obj, nil)
-		if inst then
-			world:remove_instance(inst)
-		elseif eid then
-			world:remove_entity(eid)
+		local dtor = obj.__dtor
+		if dtor then
+			dtor(world, obj)
+			setmetatable(obj.material, nil)
+			setmetatable(obj, nil)
+			obj.__dtor = nil
 		end
 	end
 

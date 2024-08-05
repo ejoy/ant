@@ -2,6 +2,10 @@ local monitor = require "monitor"
 
 local primitive = {}
 
+local function remove_primitive(world, self)
+	world:remove_entity(self.eid)
+end
+
 function primitive.new(world, name, obj)
 	local mat = obj.material
 	if mat == nil then
@@ -26,7 +30,7 @@ function primitive.new(world, name, obj)
 				obj.material = monitor.material(world, { e.eid })
 				obj.material.visible = mat.visible ~= false
 				obj.material.color = mat.color or 0xffffff
-				monitor.new(obj)
+				monitor.new(obj, remove_primitive)
 			end
 		}
 	}

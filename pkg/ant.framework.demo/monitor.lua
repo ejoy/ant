@@ -11,7 +11,7 @@ local function touch(obj, k, v)
 	obj.__newindex = raw
 end
 
-local function new(obj)
+local function new(obj, remove)
 	local raw = {}
 	raw.__index = raw
 	raw.__newindex = touch
@@ -21,6 +21,7 @@ local function new(obj)
 	end
 	changes[raw.eid] = raw
 	obj.__raw = raw
+	obj.__dtor = remove
 	return setmetatable(obj, raw)
 end
 
