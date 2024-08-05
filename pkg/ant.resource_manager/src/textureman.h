@@ -4,5 +4,5 @@
 #include <bgfx/c99/bgfx.h>
 
 bgfx_texture_handle_t texture_get(int id);
-uint16_t texture_type(int id);
+
 #endif

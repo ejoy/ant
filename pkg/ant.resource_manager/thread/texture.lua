@@ -12,16 +12,6 @@ local mem_formats <const> = {
     RGBA32F = "ffff",
 }
 
-local function getTextureType(info)
-    if info.lattice then
-        return 1
-    elseif info.atlas then
-        return 2
-    else
-        return 0
-    end
-end
-
 local function createTexture(c)
     local h
     if c.value then
@@ -43,7 +33,7 @@ local function createTexture(c)
         local ti = c.info
         h = bgfx.create_texture2d(ti.width, ti.height, ti.numMips ~= 0, ti.numLayers, ti.format, c.flag)
     else
-        h = bgfx.create_texture(bgfx.memory_buffer(aio.readall((c.info.atlas and c.info.atlas.path or c.name) .."/main.bin")), c.flag)
+        h = bgfx.create_texture(bgfx.memory_buffer(aio.readall(c.name .."/main.bin")), c.flag)
     end
     bgfx.set_name(h, c.name)
     return h
@@ -190,7 +180,6 @@ local createQueue = {}
 local destroyQueue = {}
 local unloadQueue = {}
 local token = {}
-local atlas = {}
 
 local function which_texture_type(info)
     if info.cubemap then
@@ -246,7 +235,7 @@ local function asyncDestroyTexture(c)
 	else
 	    destroyQueue[#destroyQueue+1] = c.handle
 	end
-    textureman.texture_set(c.id, DefaultTexture[c.type], getTextureType(c.texinfo))
+    textureman.texture_set(c.id, DefaultTexture[c.type])
     c.handle = nil
 end
 
@@ -270,18 +259,12 @@ ltask.fork(function ()
                 ltask.sleep(10)
             end
             local textureData = createQueue[name]
-            if textureData.info.atlas and atlas[textureData.image] then
-                textureData.handle = atlas[textureData.image]
-            end
             createQueue[name] = nil
             local c = textureByName[name]
             local handle = textureData.handle or createTexture(textureData)
             c.handle = handle
-            if textureData.info.atlas and not (atlas[textureData.image]) then
-                atlas[textureData.image] = c.handle
-            end
             c.flag   = textureData.flag
-            textureman.texture_set(c.id, handle, getTextureType(textureData.info))
+            textureman.texture_set(c.id, handle)
             local block_token = blockQueue[name]
             if block_token then
                 blockQueue[name] = nil
@@ -341,7 +324,7 @@ local update; do
             for i = 1, #results do
                 local id = results[i]
                 local c = textureById[id]
-                if c and (not rt_table[id]) and (not chain_table[id]) and (not c.texinfo.atlas) then
+                if c and (not rt_table[id]) and (not chain_table[id]) then
                     asyncDestroyTexture(c)
                     print("Destroy Texture: " .. c.name)
                 end

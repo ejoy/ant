@@ -8,7 +8,7 @@
 
 #define TEXTURE_MAX_ID 0x7fff
 
-static uint32_t g_texture[TEXTURE_MAX_ID];
+static uint16_t g_texture[TEXTURE_MAX_ID];
 static uint16_t g_texture_id = 0;
 static uint32_t g_frame = 0;
 static uint32_t g_texture_timestamp[TEXTURE_MAX_ID];
@@ -16,12 +16,11 @@ static uint32_t g_texture_timestamp[TEXTURE_MAX_ID];
 static int
 ltexture_create(lua_State *L) {
 	uint16_t handle = BGFX_LUAHANDLE_ID(TEXTURE, (int)luaL_checkinteger(L, 1));
-	uint16_t type = (uint16_t)luaL_optinteger(L, 2, 0);
 	if (g_texture_id >= TEXTURE_MAX_ID) {
 		return luaL_error(L, "Too many textures");
 	}
 	int id = g_texture_id++;
-	g_texture[id] = (uint32_t)(type<<16|handle);
+	g_texture[id] = handle;
 	g_texture_timestamp[id] = g_frame;
 	lua_pushinteger(L, id+1);
 	return 1;
@@ -38,13 +37,10 @@ checktextureid(lua_State *L, int index) {
 static int
 ltexture_get(lua_State *L) {
 	int id = checktextureid(L, 1);
-	uint32_t texture = g_texture[id - 1];
-	uint16_t type = texture >> 16;
-	uint16_t handle = texture & 0xffff;
+	uint16_t handle = g_texture[id - 1];
 	g_texture_timestamp[id - 1] = g_frame;
 	int luahandle = (BGFX_HANDLE_TEXTURE << 16) | handle;
 	lua_pushinteger(L, luahandle);
-	lua_pushinteger(L, type);
 	return 2;
 }
 
@@ -53,7 +49,7 @@ texture_transform(int id) {
 	bgfx_texture_handle_t handle = BGFX_INVALID_HANDLE;
 	if (id <= 0 || id > g_texture_id)
 		return handle.idx;
-	uint16_t h = g_texture[id - 1] & 0xffff;
+	uint16_t h = g_texture[id - 1];
 	g_texture_timestamp[id - 1] = g_frame;
 	return h;
 }
@@ -64,19 +60,11 @@ texture_get(int id) {
 	return handle;
 }
 
-uint16_t
-texture_type(int id) {
-	uint32_t texture = g_texture[id - 1];
-	uint16_t type = texture >> 16;
-	return type;
-}
-
 static int
 ltexture_set(lua_State *L) {
 	int id = checktextureid(L, 1);
 	uint16_t handle = BGFX_LUAHANDLE_ID(TEXTURE, (int)luaL_checkinteger(L, 2));
-	uint16_t type = (uint16_t)luaL_optinteger(L, 3, 0);
-	g_texture[id - 1] = (uint32_t)(type<<16|handle);
+	g_texture[id - 1] = handle;
 	return 0;
 }
 
@@ -118,7 +106,7 @@ ltexture_timestamp(lua_State *L) {
 static inline int
 is_invalid(int id, uint16_t* filter, size_t filter_n) {
 	for (size_t i = 0; i < filter_n; ++i) {
-		if ((g_texture[id] & 0xffff) == filter[i]) {
+		if (g_texture[id] == filter[i]) {
 			return 1;
 		}
 	}
