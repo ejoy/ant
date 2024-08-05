@@ -89,12 +89,6 @@ return function (ecs, args)
 	
 	function api.print(obj, str)
 		local eid = obj.eid
-		if not eid then
-			local inst = obj.inst
-			if inst then
-				eid = inst.tag["*"][1]
-			end
-		end
 		if eid then
 			debug_text.print(eid, str)
 		end
