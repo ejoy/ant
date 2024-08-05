@@ -37,7 +37,7 @@ ant.maxfps(ant.setting.fps)
 local plane = ant.primitive("plane", {x = 0, y = 0, s = 10 })
 
 --ant.prefab("/asset/x.glb", { x = 0, y = 0, material = { color = 0xff0000 }})
-
+ant.sprite2d_base(256)
 local avatar = ant.sprite2d("/asset/avatar.atlas", { x = 0, y = 0 })
 
 ant.gui_open "/ui/hud.html"

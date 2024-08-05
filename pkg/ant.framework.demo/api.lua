@@ -61,6 +61,10 @@ return function (ecs, args)
 		return sprite2d.new(world, name, obj)
 	end
 	
+	function api.sprite2d_base(size)
+		sprite2d.base(size)
+	end
+	
 	function api.remove(obj)
 		local dtor = obj.__dtor
 		if dtor then
