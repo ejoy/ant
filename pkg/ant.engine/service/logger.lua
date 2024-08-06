@@ -54,22 +54,25 @@ local LOG = (function ()
 end)()
 
 local function writelog()
+	local sleep = 100
 	while true do
 		local ti, _, msg, sz = ltask.poplog()
 		if ti == nil then
 			break
 		end
+		sleep = 20
 		local tsec = ti // 100
 		local msec = ti % 100
 		local level, message = ltask.unpack_remove(msg, sz)
 		LOG(level, string.format("[%s.%02d][%-5s]%s", os.date("%Y-%m-%d %H:%M:%S", tsec), msec, level:upper(), message))
 	end
+	return sleep
 end
 
 ltask.fork(function ()
 	while true do
-		writelog()
-		ltask.sleep(100)
+		local ti = writelog()
+		ltask.sleep(ti)
 	end
 end)
 
