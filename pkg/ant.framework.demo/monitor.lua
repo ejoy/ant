@@ -137,7 +137,7 @@ local function flush_material(w)
 	
 	for e in w:select "entity2d eid:in filter_material:in visible?out" do
 		local obj = cache[e.eid]
-		local fm = e.filter_material.DEFAULT_MATERIAL
+		local fm = e.filter_material[0]
 		fm.u_basecolor_factor = obj.color
 		e.visible = obj.visible
 	end

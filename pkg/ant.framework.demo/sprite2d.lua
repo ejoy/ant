@@ -82,7 +82,7 @@ function sprite2d.new(world, texture, obj)
 					obj.material.color = mat.color or 0xffffff
 					
 					world.w:extend(e, "filter_material:in")
-					e.filter_material.DEFAULT_MATERIAL.s_basecolor = texture_info.id
+					e.filter_material[0].s_basecolor = texture_info.id
 										
 					monitor.new(obj, remove_sprite2d)
 				end
