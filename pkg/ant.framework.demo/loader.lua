@@ -34,10 +34,10 @@ local function demo_require(name)
 		return m
 	end
 	
-	name = name:gsub("%.", "/")
+	local path_name = name:gsub("%.", "/")
 
 	for pat in demo_search_path:gmatch "[^:]+" do
-		local filename = pat:gsub("?", name)
+		local filename = pat:gsub("?", path_name)
 		local r = runfile(filename)
 		if r then
 			package.loaded[name] = r
