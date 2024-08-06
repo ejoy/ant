@@ -60,7 +60,7 @@ local function writelog()
 		if ti == nil then
 			break
 		end
-		sleep = 20
+		sleep = 10
 		local tsec = ti // 100
 		local msec = ti % 100
 		local level, message = ltask.unpack_remove(msg, sz)
