@@ -448,6 +448,7 @@ function shadow_sys:entity_ready()
 				update_shadow_alpha_mask(e, mi)
 
 				fm[midx] = mi
+				fm.SHADOW_MATERIAL = mi
 				R.set(ro.rm_idx, midx, mi:ptr())
 				castshadow = hasaabb
 			end
