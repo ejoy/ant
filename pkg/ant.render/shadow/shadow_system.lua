@@ -417,7 +417,6 @@ local function update_shadow_alpha_mask(e, mi)
 			end
 
 			texpath = texpath:lexically_normal()
-			print("texpath", texpath:string())
 			local texid = assetmgr.resource(texpath:string()).id
 			assert(not assetmgr.invalid_texture(texid))
 			mi.s_alphamask = texid
