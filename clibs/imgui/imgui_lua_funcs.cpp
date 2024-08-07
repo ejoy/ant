@@ -126,6 +126,7 @@ static util::TableInteger SelectableFlags[] = {
     ENUM(ImGuiSelectableFlags, AllowDoubleClick),
     ENUM(ImGuiSelectableFlags, Disabled),
     ENUM(ImGuiSelectableFlags, AllowOverlap),
+    ENUM(ImGuiSelectableFlags, Highlight),
 };
 
 static util::TableInteger ComboFlags[] = {
@@ -728,6 +729,7 @@ static util::TableInteger StyleVar[] = {
     ENUM(ImGuiStyleVar, TabRounding),
     ENUM(ImGuiStyleVar, TabBorderSize),
     ENUM(ImGuiStyleVar, TabBarBorderSize),
+    ENUM(ImGuiStyleVar, TabBarOverlineSize),
     ENUM(ImGuiStyleVar, TableAngledHeadersAngle),
     ENUM(ImGuiStyleVar, TableAngledHeadersTextAlign),
     ENUM(ImGuiStyleVar, ButtonTextAlign),
@@ -1220,34 +1222,6 @@ static int SetWindowFocusStr(lua_State* L) {
     return 0;
 }
 
-static int GetContentRegionAvail(lua_State* L) {
-    auto&& _retval = ImGui::GetContentRegionAvail();
-    lua_pushnumber(L, _retval.x);
-    lua_pushnumber(L, _retval.y);
-    return 2;
-}
-
-static int GetContentRegionMax(lua_State* L) {
-    auto&& _retval = ImGui::GetContentRegionMax();
-    lua_pushnumber(L, _retval.x);
-    lua_pushnumber(L, _retval.y);
-    return 2;
-}
-
-static int GetWindowContentRegionMin(lua_State* L) {
-    auto&& _retval = ImGui::GetWindowContentRegionMin();
-    lua_pushnumber(L, _retval.x);
-    lua_pushnumber(L, _retval.y);
-    return 2;
-}
-
-static int GetWindowContentRegionMax(lua_State* L) {
-    auto&& _retval = ImGui::GetWindowContentRegionMax();
-    lua_pushnumber(L, _retval.x);
-    lua_pushnumber(L, _retval.y);
-    return 2;
-}
-
 static int GetScrollX(lua_State* L) {
     auto&& _retval = ImGui::GetScrollX();
     lua_pushnumber(L, _retval);
@@ -1512,6 +1486,13 @@ static int SetCursorScreenPos(lua_State* L) {
     return 0;
 }
 
+static int GetContentRegionAvail(lua_State* L) {
+    auto&& _retval = ImGui::GetContentRegionAvail();
+    lua_pushnumber(L, _retval.x);
+    lua_pushnumber(L, _retval.y);
+    return 2;
+}
+
 static int GetCursorPos(lua_State* L) {
     auto&& _retval = ImGui::GetCursorPos();
     lua_pushnumber(L, _retval.x);
@@ -1704,6 +1685,13 @@ static int GetIDStr(lua_State* L) {
 static int GetIDPtr(lua_State* L) {
     auto ptr_id = lua_touserdata(L, 1);
     auto&& _retval = ImGui::GetID(ptr_id);
+    lua_pushinteger(L, _retval);
+    return 1;
+}
+
+static int GetIDInt(lua_State* L) {
+    auto int_id = (int)luaL_checkinteger(L, 1);
+    auto&& _retval = ImGui::GetID(int_id);
     lua_pushinteger(L, _retval);
     return 1;
 }
@@ -3635,6 +3623,12 @@ static int SetNextItemOpen(lua_State* L) {
     return 0;
 }
 
+static int SetNextItemStorageID(lua_State* L) {
+    auto storage_id = (ImGuiID)luaL_checkinteger(L, 1);
+    ImGui::SetNextItemStorageID(storage_id);
+    return 0;
+}
+
 static int Selectable(lua_State* L) {
     auto label = luaL_checkstring(L, 1);
     auto&& _retval = ImGui::Selectable(label);
@@ -5219,6 +5213,20 @@ struct ConfigMacOSXBehaviors {
     }
 };
 
+struct ConfigNavSwapGamepadButtons {
+    static int getter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        lua_pushboolean(L, OBJ.ConfigNavSwapGamepadButtons);
+        return 1;
+    }
+
+    static int setter(lua_State* L) {
+        auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
+        OBJ.ConfigNavSwapGamepadButtons = (bool)!!lua_toboolean(L, 1);
+        return 0;
+    }
+};
+
 struct ConfigInputTrickleEventQueue {
     static int getter(lua_State* L) {
         auto& OBJ = **(ImGuiIO**)lua_touserdata(L, lua_upvalueindex(1));
@@ -6048,6 +6056,7 @@ static luaL_Reg setters[] = {
     { "ConfigViewportsNoDefaultParent", ConfigViewportsNoDefaultParent::setter },
     { "MouseDrawCursor", MouseDrawCursor::setter },
     { "ConfigMacOSXBehaviors", ConfigMacOSXBehaviors::setter },
+    { "ConfigNavSwapGamepadButtons", ConfigNavSwapGamepadButtons::setter },
     { "ConfigInputTrickleEventQueue", ConfigInputTrickleEventQueue::setter },
     { "ConfigInputTextCursorBlink", ConfigInputTextCursorBlink::setter },
     { "ConfigInputTextEnterKeepActive", ConfigInputTextEnterKeepActive::setter },
@@ -6124,6 +6133,7 @@ static luaL_Reg getters[] = {
     { "ConfigViewportsNoDefaultParent", ConfigViewportsNoDefaultParent::getter },
     { "MouseDrawCursor", MouseDrawCursor::getter },
     { "ConfigMacOSXBehaviors", ConfigMacOSXBehaviors::getter },
+    { "ConfigNavSwapGamepadButtons", ConfigNavSwapGamepadButtons::getter },
     { "ConfigInputTrickleEventQueue", ConfigInputTrickleEventQueue::getter },
     { "ConfigInputTextCursorBlink", ConfigInputTextCursorBlink::getter },
     { "ConfigInputTextEnterKeepActive", ConfigInputTextEnterKeepActive::getter },
@@ -7891,10 +7901,6 @@ static void init(lua_State* L) {
         { "SetWindowSizeStr", SetWindowSizeStr },
         { "SetWindowCollapsedStr", SetWindowCollapsedStr },
         { "SetWindowFocusStr", SetWindowFocusStr },
-        { "GetContentRegionAvail", GetContentRegionAvail },
-        { "GetContentRegionMax", GetContentRegionMax },
-        { "GetWindowContentRegionMin", GetWindowContentRegionMin },
-        { "GetWindowContentRegionMax", GetWindowContentRegionMax },
         { "GetScrollX", GetScrollX },
         { "GetScrollY", GetScrollY },
         { "SetScrollX", SetScrollX },
@@ -7934,6 +7940,7 @@ static void init(lua_State* L) {
         { "GetStyleColorVec4", GetStyleColorVec4 },
         { "GetCursorScreenPos", GetCursorScreenPos },
         { "SetCursorScreenPos", SetCursorScreenPos },
+        { "GetContentRegionAvail", GetContentRegionAvail },
         { "GetCursorPos", GetCursorPos },
         { "GetCursorPosX", GetCursorPosX },
         { "GetCursorPosY", GetCursorPosY },
@@ -7966,6 +7973,7 @@ static void init(lua_State* L) {
         { "GetID", GetID },
         { "GetIDStr", GetIDStr },
         { "GetIDPtr", GetIDPtr },
+        { "GetIDInt", GetIDInt },
         { "Text", Text },
         { "TextColored", TextColored },
         { "TextDisabled", TextDisabled },
@@ -8078,6 +8086,7 @@ static void init(lua_State* L) {
         { "CollapsingHeader", CollapsingHeader },
         { "CollapsingHeaderBoolPtr", CollapsingHeaderBoolPtr },
         { "SetNextItemOpen", SetNextItemOpen },
+        { "SetNextItemStorageID", SetNextItemStorageID },
         { "Selectable", Selectable },
         { "SelectableEx", SelectableEx },
         { "SelectableBoolPtr", SelectableBoolPtr },

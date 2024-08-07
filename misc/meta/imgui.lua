@@ -66,7 +66,7 @@ function ImGui.WindowFlags(flags) end
 ---| "AutoResizeY"            #  Enable auto-resizing height. Read "IMPORTANT: Size measurement" details above.
 ---| "AlwaysAutoResize"       #  Combined with AutoResizeX/AutoResizeY. Always measure size even when child is hidden, always return true, always disable clipping optimization! NOT RECOMMENDED.
 ---| "FrameStyle"             #  Style the child window like a framed item: use FrameBg, FrameRounding, FrameBorderSize, FramePadding instead of ChildBg, ChildRounding, ChildBorderSize, WindowPadding.
----| "NavFlattened"           #  Share focus scope, allow gamepad/keyboard navigation to cross over parent border to this child or between sibling child windows.
+---| "NavFlattened"           #  [BETA] Share focus scope, allow gamepad/keyboard navigation to cross over parent border to this child or between sibling child windows.
 
 ---@param flags _ImGuiChildFlags_Name[]
 ---@return ImGui.ChildFlags
@@ -139,8 +139,8 @@ function ImGui.InputTextFlags(flags) end
 ---| "NoTreePushOnOpen"     #  Don't do a TreePush() when open (e.g. for CollapsingHeader) = no extra indent nor pushing on ID stack
 ---| "NoAutoOpenOnLog"      #  Don't automatically and temporarily open node when Logging is active (by default logging will automatically open tree nodes)
 ---| "DefaultOpen"          #  Default node to be open
----| "OpenOnDoubleClick"    #  Need double-click to open node
----| "OpenOnArrow"          #  Only open when clicking on the arrow part. If ImGuiTreeNodeFlags_OpenOnDoubleClick is also set, single-click arrow or double-click all box to open.
+---| "OpenOnDoubleClick"    #  Open on double-click instead of simple click (default for multi-select unless any _OpenOnXXX behavior is set explicitly). Both behaviors may be combined.
+---| "OpenOnArrow"          #  Open when clicking on the arrow part (default for multi-select unless any _OpenOnXXX behavior is set explicitly). Both behaviors may be combined.
 ---| "Leaf"                 #  No collapsing, no arrow (use as a convenience for leaf nodes).
 ---| "Bullet"               #  Display a bullet instead of arrow. IMPORTANT: node can still be marked open/close if you don't set the _Leaf flag!
 ---| "FramePadding"         #  Use FramePadding (even for an unframed text node) to vertically align text baseline to regular widget height. Equivalent to calling AlignTextToFramePadding() before the node.
@@ -195,6 +195,7 @@ function ImGui.PopupFlags(flags) end
 ---| "AllowDoubleClick"  #  Generate press events on double clicks too
 ---| "Disabled"          #  Cannot be selected, display grayed out text
 ---| "AllowOverlap"      #  (WIP) Hit testing to allow subsequent widgets to overlap this one
+---| "Highlight"         #  Make the item be displayed as if it is hovered
 
 ---@param flags _ImGuiSelectableFlags_Name[]
 ---@return ImGui.SelectableFlags
@@ -622,10 +623,10 @@ function ImGui.TableRowFlags(flags) end
 ---| "SingleSelect"          #  Disable selecting more than one item. This is available to allow single-selection code to share same code/logic if desired. It essentially disables the main purpose of BeginMultiSelect() tho!
 ---| "NoSelectAll"           #  Disable CTRL+A shortcut to select all.
 ---| "NoRangeSelect"         #  Disable Shift+selection mouse/keyboard support (useful for unordered 2D selection). With BoxSelect is also ensure contiguous SetRange requests are not combined into one. This allows not handling interpolation in SetRange requests.
----| "NoAutoSelect"          #  Disable selecting items when navigating (useful for e.g. supporting range-select in a list of checkboxes)
----| "NoAutoClear"           #  Disable clearing selection when navigating or selecting another one (generally used with ImGuiMultiSelectFlags_NoAutoSelect. useful for e.g. supporting range-select in a list of checkboxes)
----| "NoAutoClearOnReselect" #  Disable clearing selection when clicking/selecting an already selected item
----| "BoxSelect1d"           #  Enable box-selection with same width and same x pos items (e.g. only full row Selectable()). Box-selection works better with little bit of spacing between items hit-box in order to be able to aim at empty space.
+---| "NoAutoSelect"          #  Disable selecting items when navigating (useful for e.g. supporting range-select in a list of checkboxes).
+---| "NoAutoClear"           #  Disable clearing selection when navigating or selecting another one (generally used with ImGuiMultiSelectFlags_NoAutoSelect. useful for e.g. supporting range-select in a list of checkboxes).
+---| "NoAutoClearOnReselect" #  Disable clearing selection when clicking/selecting an already selected item.
+---| "BoxSelect1d"           #  Enable box-selection with same width and same x pos items (e.g. full row Selectable()). Box-selection works better with little bit of spacing between items hit-box in order to be able to aim at empty space.
 ---| "BoxSelect2d"           #  Enable box-selection with varying width or varying x pos items support (e.g. different width labels, or 2D layout/grid). This is slower: alters clipping logic so that e.g. horizontal movements will update selection of normally clipped items.
 ---| "BoxSelectNoScroll"     #  Disable scrolling when box-selecting near edges of scope.
 ---| "ClearOnEscape"         #  Clear selection when pressing Escape while scope is focused.
@@ -1038,6 +1039,7 @@ ImGui.Col = {}
 ---| `ImGui.StyleVar.TabRounding`                 #  float     TabRounding
 ---| `ImGui.StyleVar.TabBorderSize`               #  float     TabBorderSize
 ---| `ImGui.StyleVar.TabBarBorderSize`            #  float     TabBarBorderSize
+---| `ImGui.StyleVar.TabBarOverlineSize`          #  float     TabBarOverlineSize
 ---| `ImGui.StyleVar.TableAngledHeadersAngle`     #  float     TableAngledHeadersAngle
 ---| `ImGui.StyleVar.TableAngledHeadersTextAlign` #  ImVec2  TableAngledHeadersTextAlign
 ---| `ImGui.StyleVar.ButtonTextAlign`             #  ImVec2    ButtonTextAlign
@@ -1203,6 +1205,7 @@ function ImStringBuf:Resize(size) end
 ---@field ConfigViewportsNoDefaultParent boolean   #  = false          // Disable default OS parenting to main viewport for secondary viewports. By default, viewports are marked with ParentViewportId = <main_viewport>, expecting the platform backend to setup a parent/child relationship between the OS windows (some backend may ignore this). Set to true if you want the default to be 0, then all viewports will be top-level OS windows.
 ---@field MouseDrawCursor boolean                  #  = false          // Request ImGui to draw a mouse cursor for you (if you are on a platform without a mouse cursor). Cannot be easily renamed to 'io.ConfigXXX' because this is frequently used by backend implementations.
 ---@field ConfigMacOSXBehaviors boolean            #  = defined(__APPLE__) // Swap Cmd<>Ctrl keys + OS X style text editing cursor movement using Alt instead of Ctrl, Shortcuts using Cmd/Super instead of Ctrl, Line/Text Start and End using Cmd+Arrows instead of Home/End, Double click selects by word instead of selecting whole text, Multi-selection in lists uses Cmd/Super instead of Ctrl.
+---@field ConfigNavSwapGamepadButtons boolean      #  = false          // Swap Activate<>Cancel (A<>B) buttons, matching typical "Nintendo/Japanese style" gamepad layout.
 ---@field ConfigInputTrickleEventQueue boolean     #  = true           // Enable input queue trickling: some types of events submitted during the same frame (e.g. button down + up) will be spread over multiple frames, improving interactions with low framerates.
 ---@field ConfigInputTextCursorBlink boolean       #  = true           // Enable blinking cursor (optional as some users consider it to be distracting).
 ---@field ConfigInputTextEnterKeepActive boolean   #  = false          // [BETA] Pressing Enter will keep item active and select contents (single-line only).
@@ -1913,27 +1916,27 @@ function ImGui.IsWindowHovered(flags) end
 function ImGui.GetWindowDpiScale() end
 
 --
--- get current window position in screen space (note: it is unlikely you need to use this. Consider using current layout pos instead, GetCursorScreenPos())
+-- get current window position in screen space (IT IS UNLIKELY YOU EVER NEED TO USE THIS. Consider always using GetCursorScreenPos() and GetContentRegionAvail() instead)
 --
 ---@return number
 ---@return number
 function ImGui.GetWindowPos() end
 
 --
--- get current window size (note: it is unlikely you need to use this. Consider using GetCursorScreenPos() and e.g. GetContentRegionAvail() instead)
+-- get current window size (IT IS UNLIKELY YOU EVER NEED TO USE THIS. Consider always using GetCursorScreenPos() and GetContentRegionAvail() instead)
 --
 ---@return number
 ---@return number
 function ImGui.GetWindowSize() end
 
 --
--- get current window width (shortcut for GetWindowSize().x)
+-- get current window width (IT IS UNLIKELY YOU EVER NEED TO USE THIS). Shortcut for GetWindowSize().x.
 --
 ---@return number
 function ImGui.GetWindowWidth() end
 
 --
--- get current window height (shortcut for GetWindowSize().y)
+-- get current window height (IT IS UNLIKELY YOU EVER NEED TO USE THIS). Shortcut for GetWindowSize().y.
 --
 ---@return number
 function ImGui.GetWindowHeight() end
@@ -2077,39 +2080,6 @@ function ImGui.SetWindowCollapsedStr(name, collapsed, cond) end
 --
 ---@param name string
 function ImGui.SetWindowFocusStr(name) end
-
---
--- Content region
--- - Retrieve available space from a given point. GetContentRegionAvail() is frequently useful.
--- - Those functions are bound to be redesigned (they are confusing, incomplete and the Min/Max return values are in local window coordinates which increases confusion)
---
---
--- == GetContentRegionMax() - GetCursorPos()
---
----@return number
----@return number
-function ImGui.GetContentRegionAvail() end
-
---
--- current content boundaries (typically window boundaries including scrolling, or current column boundaries), in windows coordinates
---
----@return number
----@return number
-function ImGui.GetContentRegionMax() end
-
---
--- content boundaries min for the full window (roughly (0,0)-Scroll), in window coordinates
---
----@return number
----@return number
-function ImGui.GetWindowContentRegionMin() end
-
---
--- content boundaries max for the full window (roughly (0,0)+Size-Scroll) where Size can be overridden with SetNextWindowContentSize(), in window coordinates
---
----@return number
----@return number
-function ImGui.GetWindowContentRegionMax() end
 
 --
 -- Windows Scrolling
@@ -2352,27 +2322,36 @@ function ImGui.GetStyleColorVec4(idx) end
 -- - By "cursor" we mean the current output position.
 -- - The typical widget behavior is to output themselves at the current cursor position, then move the cursor one line down.
 -- - You can call SameLine() between widgets to undo the last carriage return and output at the right of the preceding widget.
+-- - YOU CAN DO 99% OF WHAT YOU NEED WITH ONLY GetCursorScreenPos() and GetContentRegionAvail().
 -- - Attention! We currently have inconsistencies between window-local and absolute positions we will aim to fix with future API:
 --    - Absolute coordinate:        GetCursorScreenPos(), SetCursorScreenPos(), all ImDrawList:: functions. -> this is the preferred way forward.
---    - Window-local coordinates:   SameLine(), GetCursorPos(), SetCursorPos(), GetCursorStartPos(), GetContentRegionMax(), GetWindowContentRegion*(), PushTextWrapPos()
--- - GetCursorScreenPos() = GetCursorPos() + GetWindowPos(). GetWindowPos() is almost only ever useful to convert from window-local to absolute coordinates.
+--    - Window-local coordinates:   SameLine(offset), GetCursorPos(), SetCursorPos(), GetCursorStartPos(), PushTextWrapPos()
+--    - Window-local coordinates:   GetContentRegionMax(), GetWindowContentRegionMin(), GetWindowContentRegionMax() --> all obsoleted. YOU DON'T NEED THEM.
+-- - GetCursorScreenPos() = GetCursorPos() + GetWindowPos(). GetWindowPos() is almost only ever useful to convert from window-local to absolute coordinates. Try not to use it.
 --
 --
--- cursor position in absolute coordinates (prefer using this, also more useful to work with ImDrawList API).
+-- cursor position, absolute coordinates. THIS IS YOUR BEST FRIEND (prefer using this rather than GetCursorPos(), also more useful to work with ImDrawList API).
 --
 ---@return number
 ---@return number
 function ImGui.GetCursorScreenPos() end
 
 --
--- cursor position in absolute coordinates
+-- cursor position, absolute coordinates. THIS IS YOUR BEST FRIEND.
 --
 ---@param pos_x number
 ---@param pos_y number
 function ImGui.SetCursorScreenPos(pos_x, pos_y) end
 
 --
--- [window-local] cursor position in window coordinates (relative to window position)
+-- available space from current position. THIS IS YOUR BEST FRIEND.
+--
+---@return number
+---@return number
+function ImGui.GetContentRegionAvail() end
+
+--
+-- [window-local] cursor position in window-local coordinates. This is not your best friend.
 --
 ---@return number
 ---@return number
@@ -2410,7 +2389,7 @@ function ImGui.SetCursorPosX(local_x) end
 function ImGui.SetCursorPosY(local_y) end
 
 --
--- [window-local] initial cursor position, in window coordinates
+-- [window-local] initial cursor position, in window-local coordinates. Call GetCursorScreenPos() after Begin() to get the absolute coordinates version.
 --
 ---@return number
 ---@return number
@@ -2572,6 +2551,10 @@ function ImGui.GetIDStr(str_id_begin, str_id_end) end
 ---@param ptr_id lightuserdata
 ---@return ImGuiID
 function ImGui.GetIDPtr(ptr_id) end
+
+---@param int_id integer
+---@return ImGuiID
+function ImGui.GetIDInt(int_id) end
 
 --
 -- formatted text
@@ -3583,6 +3566,12 @@ function ImGui.CollapsingHeaderBoolPtr(label, p_visible, flags) end
 function ImGui.SetNextItemOpen(is_open, cond) end
 
 --
+-- set id to use for open/close storage (default to same as item id).
+--
+---@param storage_id ImGuiID
+function ImGui.SetNextItemStorageID(storage_id) end
+
+--
 -- Widgets: Selectables
 -- - A selectable highlights when hovered, and can display another color when selected.
 -- - Neighbors selectable extend their highlight bounds in order to leave no gap between them. This is so a series of selected Selectable appear contiguous.
@@ -3628,12 +3617,12 @@ function ImGui.SelectableBoolPtr(label, p_selected, flags) end
 function ImGui.SelectableBoolPtrEx(label, p_selected, flags, size_x, size_y) end
 
 --
--- Multi-selection system for Selectable(), Checkbox() functions*
+-- Multi-selection system for Selectable(), Checkbox(), TreeNode() functions [BETA]
 -- - This enables standard multi-selection/range-selection idioms (CTRL+Mouse/Keyboard, SHIFT+Mouse/Keyboard, etc.) in a way that also allow a clipper to be used.
 -- - ImGuiSelectionUserData is often used to store your item index within the current view (but may store something else).
 -- - Read comments near ImGuiMultiSelectIO for instructions/details and see 'Demo->Widgets->Selection State & Multi-Select' for demo.
--- - (*) TreeNode() is technically supported but... using this correctly is more complicate: you need some sort of linear/random access to your tree,
---   which is suited to advanced trees setups already implementing filters and clipper. We will work toward simplifying and demoing this.
+-- - TreeNode() is technically supported but... using this correctly is more complicated. You need some sort of linear/random access to your tree,
+--   which is suited to advanced trees setups already implementing filters and clipper. We will work simplifying the current demo.
 -- - 'selection_size' and 'items_count' parameters are optional and used by a few features. If they are costly for you to compute, you may avoid them.
 --
 --
