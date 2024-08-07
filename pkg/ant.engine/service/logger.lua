@@ -54,7 +54,7 @@ local LOG = (function ()
 end)()
 
 local function writelog()
-	local sleep = 100
+	local sleep = 50
 	while true do
 		local ti, _, msg, sz = ltask.poplog()
 		if ti == nil then
