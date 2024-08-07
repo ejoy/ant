@@ -53,14 +53,22 @@ local LOG = (function ()
 	end
 end)()
 
+local idle_sleep = 100
+local busy_sleep = 10
+
+function S.set_frequency(idle, busy)
+	idle_sleep = idle or idle_sleep
+	busy_sleep = busy or busy_sleep
+end
+
 local function writelog()
-	local sleep = 50
+	local sleep = idle_sleep
 	while true do
 		local ti, _, msg, sz = ltask.poplog()
 		if ti == nil then
 			break
 		end
-		sleep = 10
+		sleep = busy_sleep
 		local tsec = ti // 100
 		local msec = ti % 100
 		local level, message = ltask.unpack_remove(msg, sz)
