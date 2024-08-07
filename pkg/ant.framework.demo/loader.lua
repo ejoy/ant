@@ -29,10 +29,6 @@ local function demo_require(name)
 	if m ~= nil then
 		return m
 	end
-	m = package.preload[name]
-	if m ~= nil then
-		return m
-	end
 	
 	local path_name = name:gsub("%.", "/")
 
