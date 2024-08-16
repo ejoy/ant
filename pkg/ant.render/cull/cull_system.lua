@@ -39,7 +39,7 @@ function cull_sys:cull()
 		return
 	end
 
-	if w:check "camera_changed" then
+	if w:check "camera_changed" or w:check "scene_changed" then
 		build_cull_args()
 		cullcore.cull()
 	end
