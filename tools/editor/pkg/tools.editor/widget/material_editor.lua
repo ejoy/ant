@@ -6,10 +6,7 @@ local ImGui = require "imgui"
 
 local md = {} md.__index = md
 
-local wndflags = ImGui.WindowFlags {
-    "NoDocking",
-    "NoCollapse",
-}
+local wndflags = ImGui.WindowFlags "NoDocking|NoCollapse"
 
 function md.open(materialfile)
     ImGui.Begin("MaterialEditor", nil, wndflags) do

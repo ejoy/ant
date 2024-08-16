@@ -57,20 +57,8 @@ function m:data_changed()
 	ImGui.PushStyleVar(ImGui.StyleVar.WindowRounding, 0.0);
 	ImGui.PushStyleVar(ImGui.StyleVar.WindowBorderSize, 0.0);
     ImGui.PushStyleVarImVec2(ImGui.StyleVar.WindowPadding, 0.0, 0.0);
-    if ImGui.Begin("MainView", nil, ImGui.WindowFlags {
-        "NoDocking",
-        "NoTitleBar",
-        "NoCollapse",
-        "NoResize",
-        "NoMove",
-        "NoBringToFrontOnFocus",
-        "NoNavFocus",
-        "NoBackground",
-    }) then
-        ImGui.DockSpaceEx(ImGui.GetID "MainViewSpace", 0, 0, ImGui.DockNodeFlags {
-            "NoDockingOverCentralNode",
-            "PassthruCentralNode",
-        })
+    if ImGui.Begin("MainView", nil, ImGui.WindowFlags "NoDocking|NoTitleBar|NoCollapse|NoResize|NoMove|NoBringToFrontOnFocus|NoNavFocus|NoBackground") then
+        ImGui.DockSpaceEx(ImGui.GetID "MainViewSpace", 0, 0, ImGui.DockNodeFlags "NoDockingOverCentralNode|PassthruCentralNode")
     end
     ImGui.PopStyleVarEx(3)
     ImGui.End()
@@ -80,7 +68,7 @@ function m:data_changed()
     ImGui.SetNextWindowSize(viewport.WorkSize.x, viewport.WorkSize.y, ImGui.Cond.FirstUseEver)
     -- ImGui.SetNextWindowDockID("MainViewSpace", ImGui.Cond.FirstUseEver)
     local exit = false
-    if ImGui.Begin("##Choose project", true, ImGui.WindowFlags {"NoResize", "NoTitleBar", "NoCollapse" }) then
+    if ImGui.Begin("##Choose project", true, ImGui.WindowFlags "NoResize|NoTitleBar|NoCollapse") then
         -- exit = choose_project()
         -- local wid = ImGui.GetID("Choose project")
         local selected_proj
@@ -116,7 +104,7 @@ function m:data_changed()
         ImGui.Separator()
         if lastprojs then
             for i, proj in ipairs(lastprojs) do
-                if ImGui.SelectableEx(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, ImGui.SelectableFlags {"AllowDoubleClick"}) then
+                if ImGui.SelectableEx(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, ImGui.SelectableFlags "AllowDoubleClick") then
                     selected_proj = lastprojs[i]
                     do_open_proj(selected_proj.proj_path)
                     exit = true

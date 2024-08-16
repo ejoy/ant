@@ -257,7 +257,7 @@ function m.showLog(name)
     local current_log = log_items[current_tag]
     local total_virtual_count = #current_log
     if total_virtual_count <= 0 then return end
-    ImGui.BeginChild(name, 0, 0, ImGui.ChildFlags { "None" }, ImGui.WindowFlags { "HorizontalScrollbar" })
+    ImGui.BeginChild(name, 0, 0, ImGui.ChildFlags "None", ImGui.WindowFlags "HorizontalScrollbar")
     local textStart = 0
     for i, item in ipairs(current_log) do
         local textEnd = textStart + #item.message
@@ -303,7 +303,7 @@ function m.showLog(name)
     ImGui.SetCursorPos(cpx, cpy + 1)
     ImGui.Dummy(0, 0)
     -- ImGui.SetNextWindowContentSize(0, current_log.height)
-    -- ImGui.BeginChild(name, 0, 0, ImGui.ChildFlags { "None" }, ImGui.WindowFlags { "HorizontalScrollbar" })
+    -- ImGui.BeginChild(name, 0, 0, ImGui.ChildFlags "None" , ImGui.WindowFlags "HorizontalScrollbar" )
     -- if m.to_bottom then
     --     ImGui.SetScrollY(ImGui.GetScrollMaxY())
     --     m.to_bottom = false
@@ -388,7 +388,7 @@ function m.show()
     checkLog()
     ImGui.SetNextWindowPos(viewport.WorkPos.x, viewport.WorkPos.y + viewport.WorkSize.y - uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
     ImGui.SetNextWindowSize(viewport.WorkSize.x, uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
-    if ImGui.Begin("Log", nil, ImGui.WindowFlags { "NoCollapse", "NoScrollbar" }) then
+    if ImGui.Begin("Log", nil, ImGui.WindowFlags "NoCollapse|NoScrollbar" ) then
         showHeaderWidget()
         m.showLog("LogList")
     end

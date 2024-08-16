@@ -192,7 +192,7 @@ local function show_scene_node(node)
         end
         ImGui.PopID()
     end
-    local base_flags = ImGui.TreeNodeFlags { "OpenOnArrow", "SpanFullWidth" } | ((gizmo.target_eid == node.eid) and ImGui.TreeNodeFlags {"Selected"} or 0)
+    local base_flags = ImGui.TreeNodeFlags "OpenOnArrow|SpanFullWidth" | ((gizmo.target_eid == node.eid) and ImGui.TreeNodeFlags "Selected" or 0)
     if not node.display_name then
         local name = node.info.template.tag and node.info.template.tag[1] or node.info.name
         hierarchy:update_display_name(node.eid, name or "")
@@ -201,7 +201,7 @@ local function show_scene_node(node)
     local flags = base_flags
     local has_child = true
     if #node.children == 0 then
-        flags = base_flags | ImGui.TreeNodeFlags { "Leaf", "NoTreePushOnOpen" }
+        flags = base_flags | ImGui.TreeNodeFlags "Leaf|NoTreePushOnOpen"
         has_child = false
     end
     
@@ -260,7 +260,7 @@ function m.show()
     local viewport = ImGui.GetMainViewport()
     ImGui.SetNextWindowPos(viewport.WorkPos.x, viewport.WorkPos.y + uiconfig.ToolBarHeight, ImGui.Cond.FirstUseEver)
     ImGui.SetNextWindowSize(uiconfig.SceneWidgetWidth, viewport.WorkSize.y - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, ImGui.Cond.FirstUseEver)
-    if ImGui.Begin("Hierarchy", nil, ImGui.WindowFlags { "NoCollapse" }) then
+    if ImGui.Begin("Hierarchy", nil, ImGui.WindowFlags "NoCollapse") then
         if ImGui.Button(faicons.ICON_FA_SQUARE_PLUS.." Create") then
             ImGui.OpenPopup("CreateEntity")
         end
@@ -303,11 +303,11 @@ function m.show()
             ImGui.EndPopup()
         end
         ImGui.Separator()
-        if ImGui.BeginTable("InspectorTable", 3, ImGui.TableFlags {'ScrollY'}) then
-            ImGui.TableSetupColumnEx("Entity", ImGui.TableColumnFlags {'NoHide', 'WidthStretch'}, 1.0)
+        if ImGui.BeginTable("InspectorTable", 3, ImGui.TableFlags 'ScrollY') then
+            ImGui.TableSetupColumnEx("Entity", ImGui.TableColumnFlags 'NoHide|WidthStretch', 1.0)
             local fw = 24.0 * icons.scale
-            ImGui.TableSetupColumnEx("Lock", ImGui.TableColumnFlags {'WidthFixed'}, fw)
-            ImGui.TableSetupColumnEx("Visible", ImGui.TableColumnFlags {'WidthFixed'}, fw)
+            ImGui.TableSetupColumnEx("Lock", ImGui.TableColumnFlags 'WidthFixed', fw)
+            ImGui.TableSetupColumnEx("Visible", ImGui.TableColumnFlags 'WidthFixed', fw)
             ImGui.TableHeadersRow()
             for _, child in ipairs(hierarchy.root.children) do
                 target_e = nil

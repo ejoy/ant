@@ -40,13 +40,13 @@ function m.show()
     local viewport = ImGui.GetMainViewport()
     ImGui.SetNextWindowPos(viewport.WorkPos.x + viewport.WorkSize.x - uiconfig.PropertyWidgetWidth, viewport.WorkPos.y + uiconfig.ToolBarHeight, ImGui.Cond.FirstUseEver)
     ImGui.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize.y - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, ImGui.Cond.FirstUseEver)
-    if ImGui.Begin("GridMesh", nil, ImGui.WindowFlags { "NoCollapse" }) then
+    if ImGui.Begin("GridMesh", nil, ImGui.WindowFlags "NoCollapse") then
         local title = "CreateGridMesh"
         if ImGui.Button("Create") then
             ImGui.OpenPopup(title)
         end
 
-        local change = ImGui.BeginPopupModal(title, nil, ImGui.WindowFlags {"AlwaysAutoResize"})
+        local change = ImGui.BeginPopupModal(title, nil, ImGui.WindowFlags "AlwaysAutoResize")
         if change then
             local label = "Grid Size : "
             ImGui.Text(label)

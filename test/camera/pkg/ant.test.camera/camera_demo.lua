@@ -212,7 +212,7 @@ function m:data_changed()
 		move_object()
 	end
 	gameobject.flush(w)
-	if ImGui.Begin("Camera", nil, ImGui.WindowFlags {"AlwaysAutoResize", "NoMove", "NoTitleBar"}) then
+	if ImGui.Begin("Camera", nil, ImGui.WindowFlags "AlwaysAutoResize|NoMove|NoTitleBar" ) then
 		ImGui.LabelText ("Press space to pause",  "(%f,%f) R = %f", obj.x, obj.y, obj.r)
 		ImGui.LabelText ("pan",  "Press W A S D or Left button")
 		ImGui.LabelText ("yaw",  "Press Q E or Right button")

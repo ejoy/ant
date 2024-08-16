@@ -26,7 +26,7 @@ function m.AnimationView(tags)
     for eid, list in pairs(names) do
         names[eid] = table.concat(list, "|")
     end
-    if ImGui.Begin("entities", nil, ImGui.WindowFlags {"AlwaysAutoResize", "NoMove", "NoTitleBar"}) then
+    if ImGui.Begin("entities", nil, ImGui.WindowFlags "AlwaysAutoResize|NoMove|NoTitleBar" ) then
         local animation_eid
         if ImGui.TreeNode "mesh" then
             for i = 1, #entities do
@@ -53,7 +53,7 @@ function m.AnimationView(tags)
             end
         end
 
-        if ImGui.TreeNodeEx("light", ImGui.TreeNodeFlags{"DefaultOpen"}) then
+        if ImGui.TreeNodeEx("light", ImGui.TreeNodeFlags "DefaultOpen") then
             local dl = w:first "directional_light light:in"
             if dl and ImGui.TreeNode "directional" then
 
@@ -75,7 +75,7 @@ function m.AnimationView(tags)
             ImGui.TreePop()
         end
 
-        if animation_eid and ImGui.TreeNodeEx("animation", ImGui.TreeNodeFlags {"DefaultOpen"}) then
+        if animation_eid and ImGui.TreeNodeEx("animation", ImGui.TreeNodeFlags "DefaultOpen") then
             local e <close> = world:entity(animation_eid, "animation:in")
             local animation = e.animation
             for name, status in pairs(animation.status) do

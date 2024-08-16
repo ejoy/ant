@@ -83,21 +83,9 @@ local function handle_main_view(viewport)
 	ImGui.PushStyleVar(ImGui.StyleVar.WindowRounding, 0.0);
 	ImGui.PushStyleVar(ImGui.StyleVar.WindowBorderSize, 0.0);
     ImGui.PushStyleVarImVec2(ImGui.StyleVar.WindowPadding, 0.0, 0.0);
-    if ImGui.Begin("MainView", nil, ImGui.WindowFlags {
-        "NoDocking",
-        "NoTitleBar",
-        "NoCollapse",
-        "NoResize",
-        "NoMove",
-        "NoBringToFrontOnFocus",
-        "NoNavFocus",
-        "NoBackground",
-    }) then
+    if ImGui.Begin("MainView", nil, ImGui.WindowFlags "NoDocking|NoTitleBar|NoCollapse|NoResize|NoMove|NoBringToFrontOnFocus|NoNavFocus|NoBackground") then
         local node_id = ImGui.GetID "MainViewSpace"
-        ImGui.DockSpaceEx(node_id, 0, 0, ImGui.DockNodeFlags {
-            "NoDockingOverCentralNode",
-            "PassthruCentralNode",
-        })
+        ImGui.DockSpaceEx(node_id, 0, 0, ImGui.DockNodeFlags "NoDockingOverCentralNode|PassthruCentralNode")
         --NOTE: the coordinate return from DockBuilderGetCentralRect function is relative to full viewport
         local dock_vr = {}
         dock_vr.x, dock_vr.y, dock_vr.w, dock_vr.h = ImGuiInternal.DockBuilderGetCentralRect(node_id)

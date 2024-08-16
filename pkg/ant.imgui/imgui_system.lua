@@ -15,16 +15,11 @@ local m = ecs.system 'imgui_system'
 function m:init_system()
 	ImGui.CreateContext()
 	ImGuiBackend.Init()
-	local ConfigFlags = {
-		"NavEnableKeyboard",
-		"DockingEnable",
-		"NavNoCaptureKeyboard",
-		"NoMouseCursorChange",
-	}
+	local ConfigFlags = ImGui.ConfigFlags "NavEnableKeyboard|DockingEnable|NavNoCaptureKeyboard|NoMouseCursorChange"
 	if platform.os == "windows" then
-		ConfigFlags[#ConfigFlags+1] = "DpiEnableScaleFonts"
+		ConfigFlags = ConfigFlags | ImGui.ConfigFlags "DpiEnableScaleFonts"
 	end
-	ImGui.GetIO().ConfigFlags = ImGui.ConfigFlags(ConfigFlags)
+	ImGui.GetIO().ConfigFlags = ConfigFlags
 	ImGuiBackend.PlatformInit(rhwi.native_window())
 
 	local imgui_font = assetmgr.load_material "/pkg/ant.imgui/materials/font.material"

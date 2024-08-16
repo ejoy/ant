@@ -48,8 +48,8 @@ local function show_input()
     local reclaim_focus = false
     ImGui.PushItemWidth(-1)
     --TODO
-    --local flags = ImGui.InputTextFlags {"EnterReturnsTrue", "CallbackCompletion", "CallbackHistory"}
-    if ImGui.InputText("##SingleLineInput", console, ImGui.InputTextFlags { "EnterReturnsTrue" }) then
+    --local flags = ImGui.InputTextFlags "EnterReturnsTrue|CallbackCompletion|CallbackHistory"
+    if ImGui.InputText("##SingleLineInput", console, ImGui.InputTextFlags "EnterReturnsTrue" ) then
         local command = tostring(console)
         if command ~= "" then
             exec_command(command)
@@ -73,7 +73,7 @@ function m.show()
     local viewport = ImGui.GetMainViewport()
     ImGui.SetNextWindowPos(viewport.WorkPos.x, viewport.WorkPos.y + viewport.WorkSize.y - uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
     ImGui.SetNextWindowSize(viewport.WorkSize.x, uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
-    if ImGui.Begin("Console", nil, ImGui.WindowFlags { "NoCollapse", "NoScrollbar" }) then
+    if ImGui.Begin("Console", nil, ImGui.WindowFlags "NoCollapse|NoScrollbar") then
         show_input()
         log_widget.showConsole()
     end

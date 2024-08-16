@@ -19,7 +19,7 @@ function SlotView:_init()
         return
     end
     self.inited = true
-    self.slot = uiproperty.Group({label="Slot", flags=ImGui.TreeNodeFlags {"DefaultOpen"}}, {
+    self.slot = uiproperty.Group({label="Slot", flags=ImGui.TreeNodeFlags "DefaultOpen"}, {
             uiproperty.Combo({label="FollowJoint", options={}}, {
                 getter = function()
                     local info = hierarchy:get_node_info(self.eid)

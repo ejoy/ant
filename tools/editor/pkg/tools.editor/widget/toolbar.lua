@@ -45,7 +45,7 @@ function m.show()
     ImGui.PushStyleVar(ImGui.StyleVar.WindowRounding, 0)
     ImGui.PushStyleVar(ImGui.StyleVar.WindowBorderSize, 0)
     ImGui.PushStyleColorImVec4(ImGui.Col.WindowBg, 0.25, 0.25, 0.25, 1)
-    if ImGui.Begin("Controll", nil, ImGui.WindowFlags { "NoTitleBar", "NoResize", "NoScrollbar", "NoMove", "NoDocking" }) then
+    if ImGui.Begin("Controll", nil, ImGui.WindowFlags "NoTitleBar|NoResize|NoScrollbar|NoMove|NoDocking" ) then
         uiutils.imguiBeginToolbar()
         if uiutils.imguiToolbar(icons.ICON_SELECT, "Select", status.GizmoMode == "select") then
             status.GizmoMode = "select"

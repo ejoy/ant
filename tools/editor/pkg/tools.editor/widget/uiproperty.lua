@@ -328,9 +328,9 @@ function TextureResource:show()
     ResourcePath.show(self)
     if not self.runtimedata then return end
     --if not self.runtimedata._data.handle then return end
-    if ImGui.BeginTable("##TextureTable" .. self.label, 2, ImGui.TableFlags {}) then
-        ImGui.TableSetupColumnEx("ImagePreview", ImGui.TableColumnFlags {'WidthFixed'}, 64.0)
-        ImGui.TableSetupColumnEx("ImagePath", ImGui.TableColumnFlags {'NoHide', 'WidthStretch'}, 1.0)
+    if ImGui.BeginTable("##TextureTable" .. self.label, 2, ImGui.TableFlags "") then
+        ImGui.TableSetupColumnEx("ImagePreview", ImGui.TableColumnFlags 'WidthFixed', 64.0)
+        ImGui.TableSetupColumnEx("ImagePath", ImGui.TableColumnFlags 'NoHide|WidthStretch', 1.0)
         ImGui.TableNextColumn()
         if self.runtimedata._data.handle then
             ImGui.Image(assetmgr.textures[self.runtimedata._data.id], uiconfig.PropertyImageSize, uiconfig.PropertyImageSize)
@@ -484,7 +484,7 @@ local Group = class("Group", Container)
 function Group:_init(config, subproperty, modifier)
     Container._init(self, config, subproperty, modifier)
     if self.uidata.flags == nil then
-        self.uidata.flags = ImGui.TreeNodeFlags { "DefaultOpen" }
+        self.uidata.flags = ImGui.TreeNodeFlags "DefaultOpen"
     end
 end
 

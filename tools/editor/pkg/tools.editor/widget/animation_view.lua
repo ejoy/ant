@@ -621,7 +621,7 @@ function m.show()
     local viewport = ImGui.GetMainViewport()
     ImGui.SetNextWindowPos(viewport.WorkPos.x, viewport.WorkPos.y + viewport.WorkSize.y - uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
     ImGui.SetNextWindowSize(viewport.WorkSize.x, uiconfig.BottomWidgetHeight, ImGui.Cond.FirstUseEver)
-    if ImGui.Begin("Animation", nil, ImGui.WindowFlags { "NoCollapse", "NoScrollbar" }) then
+    if ImGui.Begin("Animation", nil, ImGui.WindowFlags "NoCollapse|NoScrollbar" ) then
         if (not current_anim or not anim_eid) and not edit_timeline then
             goto continue
         end
@@ -665,7 +665,7 @@ function m.show()
                 anim_path_ui:Assgin ""
                 ImGui.OpenPopup(title)
             end
-            local change = ImGui.BeginPopupModal(title, nil, ImGui.WindowFlags {"AlwaysAutoResize"})
+            local change = ImGui.BeginPopupModal(title, nil, ImGui.WindowFlags "AlwaysAutoResize")
             if change then
                 ImGui.Text("Anim Name:")
                 ImGui.SameLine()
@@ -807,12 +807,12 @@ function m.show()
         end
         ImGui.Separator()
         -- ImGui.GetIO().WantCaptureMouse = true
-        if ImGui.BeginTable("EventColumns", edit_timeline and 2 or 3, ImGui.TableFlags {'Resizable', 'ScrollY'}) then
+        if ImGui.BeginTable("EventColumns", edit_timeline and 2 or 3, ImGui.TableFlags 'Resizable|ScrollY') then
             if not edit_timeline then
-                ImGui.TableSetupColumnEx("Bones", ImGui.TableColumnFlags {'WidthStretch'}, 1.0)
+                ImGui.TableSetupColumnEx("Bones", ImGui.TableColumnFlags 'WidthStretch', 1.0)
             end
-            ImGui.TableSetupColumnEx("Event", ImGui.TableColumnFlags {'WidthStretch'}, 1.0)
-            ImGui.TableSetupColumnEx("Event(Detail)", ImGui.TableColumnFlags {'WidthStretch'}, 2.0)
+            ImGui.TableSetupColumnEx("Event", ImGui.TableColumnFlags 'WidthStretch', 1.0)
+            ImGui.TableSetupColumnEx("Event(Detail)", ImGui.TableColumnFlags 'WidthStretch', 2.0)
             ImGui.TableHeadersRow()
             local child_width, child_height
             if not edit_timeline then

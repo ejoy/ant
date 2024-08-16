@@ -62,7 +62,7 @@ function m.show_message_box()
         if not ImGui.IsPopupOpen(msg.title) then
             ImGui.OpenPopup(msg.title)
         end
-        local change = ImGui.BeginPopupModal(msg.title, nil, ImGui.WindowFlags {"AlwaysAutoResize"})
+        local change = ImGui.BeginPopupModal(msg.title, nil, ImGui.WindowFlags "AlwaysAutoResize")
         if change then
             ImGui.Text(msg.info)
             level = level + 1
@@ -81,7 +81,7 @@ end
 
 function m.confirm_dialog(info)
     ImGui.OpenPopup(info.title)
-    local change, opened = ImGui.BeginPopupModal(info.title, true, ImGui.WindowFlags {"AlwaysAutoResize"})
+    local change, opened = ImGui.BeginPopupModal(info.title, true, ImGui.WindowFlags "AlwaysAutoResize")
     if change then
         ImGui.Text(info.message)
         if ImGui.Button(faicons.ICON_FA_SQUARE_CHECK" OK") then

@@ -46,7 +46,7 @@ function m.show()
     local viewport = ImGui.GetMainViewport()
     ImGui.SetNextWindowPos(viewport.WorkPos.x + viewport.WorkSize.x - uiconfig.PropertyWidgetWidth, viewport.WorkPos.y + uiconfig.ToolBarHeight, ImGui.Cond.FirstUseEver)
     ImGui.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize.y - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, ImGui.Cond.FirstUseEver)
-    if ImGui.Begin("Inspector", nil, ImGui.WindowFlags { "NoCollapse" }) then
+    if ImGui.Begin("Inspector", nil, ImGui.WindowFlags "NoCollapse" ) then
         base_panel:show()
         camera_panel:show()
         light_panel:show()
