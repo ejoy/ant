@@ -41,7 +41,7 @@ ltexture_get(lua_State *L) {
 	g_texture_timestamp[id - 1] = g_frame;
 	int luahandle = (BGFX_HANDLE_TEXTURE << 16) | handle;
 	lua_pushinteger(L, luahandle);
-	return 2;
+	return 1;
 }
 
 static int
