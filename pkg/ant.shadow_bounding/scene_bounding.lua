@@ -95,7 +95,7 @@ local function build_scene_info(C, sb)
 	end
 
 	if math3d.aabb_isvalid(PSR) then
-		si.zn, si.zf = math.max(zn, F.n), math.min(zf, F.f)
+		si.zn, si.zf = mu.clamp(zn, F.n, F.f), mu.clamp(zf, F.n, F.f)
 	else
 		si.zn, si.zf = F.n, F.f
 		PSR = math3d.minmax(math3d.frustum_points(C.camera.viewprojmat))
