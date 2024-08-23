@@ -98,7 +98,7 @@ local function update_visible_state(e)
 		if ivm.check(e, "pre_depth_queue") then
 			local qn = DEBUG_view.queue[whichqueue].queue_name
 			ivm.set_masks(e, qn, true)
-			w:extend(e, "filter_material:update")
+			w:extend(e, "filter_material:in")
 			e.filter_material[qn] = e.filter_material[matchqueue]
 		end
 	end
