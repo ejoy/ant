@@ -90,9 +90,8 @@ local function material(world, list)
 	local rlist = {}
 	local n = 0
 	for _, eid in ipairs(list) do
-		 local e <close> = world:entity(eid, "filter_material?in")
-		 -- find render objects
-		 if e.filter_material then
+		 if world.w:access(eid, "filter_material") then
+			 -- find render objects
 			n = n + 1
 			rlist[n] = eid
 		 end
