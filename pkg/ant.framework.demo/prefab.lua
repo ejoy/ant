@@ -13,7 +13,7 @@ function prefab.new(world, name, obj)
 		obj.material = mat
 	end
 	world:create_instance {
-		prefab = name .. "/mesh.prefab",
+		prefab = name,
 		on_ready = function (inst)
 			local eid_list = inst.tag["*"]
 			local eid = eid_list[1]
