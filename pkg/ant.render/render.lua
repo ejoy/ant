@@ -204,7 +204,7 @@ end
 
 function irender.create_depth_state(os)
     local s = irender.has_depth_test(os)
-    if s and not s.BLEND then
+    if s and not s.BLEND and not s.BLEND_FUNC then
         s.DEPTH_TEST = INV_Z and "GREATER" or "LESS"
 		s.WRITE_MASK = "Z"
         return bgfx.make_state(s)
@@ -213,7 +213,7 @@ end
 
 function irender.create_write_state(os)
     local s = irender.has_depth_test(os)
-    if s and not s.BLEND then
+    if s and not s.BLEND and not s.BLEND_FUNC then
         s.DEPTH_TEST = INV_Z and "GREATER" or "LESS"
 		s.WRITE_MASK = "RGBAZ"
         return bgfx.make_state(s)
