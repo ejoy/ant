@@ -8,22 +8,32 @@ end
 
 function primitive.new(world, name, obj)
 	local mat = obj.material
+	local trans
 	if mat == nil then
 		mat = { visible = true }
 		obj.material = mat
+	elseif mat.color then
+		trans = (mat.color >> 24) > 0
+	end
+	local render_layer
+	local material = "/pkg/ant.resources/materials/primitive.material"
+	if trans then
+		render_layer = "translucent"
+		material = "/pkg/ant.resources/materials/primitive_translucent.material"
 	end
 	local eid; eid = world:create_entity {
 		policy = {
 			"ant.render|render",
 		},
 		data = {
-			scene 		= {},
-			material 	= "/pkg/ant.resources/materials/primitive.material",
+			scene = {},
+			render_layer = render_layer,
+			material = material,
 			visible_masks = "main_view|cast_shadow",
-			visible     = mat.visible,
+			visible = mat.visible,
 			cast_shadow = true,
 			receive_shadow = true,
-			mesh        = name .. ".primitive",
+			mesh = name .. ".primitive",
 			on_ready = function ()
 				obj.eid = eid
 				obj.material = monitor.material(world, { eid })
