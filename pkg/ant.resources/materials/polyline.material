@@ -15,4 +15,4 @@ state:
     DEPTH_TEST: GREATER
     MSAA: true
     WRITE_MASK: RGBA
-    BLEND: ALPHA
+    BLEND: NORMAL

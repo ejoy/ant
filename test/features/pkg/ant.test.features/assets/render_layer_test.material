@@ -10,6 +10,6 @@ properties:
 state:
   ALPHA_REF: 0
   CULL: CCW
-  BLEND: ALPHA
+  BLEND: NORMAL
   DEPTH_TEST: ALWAYS
   WRITE_MASK: RGBA

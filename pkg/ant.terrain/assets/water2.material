@@ -24,4 +24,4 @@ properties:
 state:
   WRITE_MASK: RGBA
   DEPTH_TEST: GREATER
-  BLEND: ALPHA
+  BLEND: NORMAL
