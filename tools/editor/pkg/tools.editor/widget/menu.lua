@@ -51,11 +51,14 @@ function m.show()
     local camera_setting
     if ImGui.BeginMainMenuBar() then
         if ImGui.BeginMenu "File" then
-            if ImGui.MenuItemEx(faicons.ICON_FA_FILE_PEN.." New", "Ctrl+N") then
+            if ImGui.MenuItemEx(faicons.ICON_FA_FILE.." New", "Ctrl+N") then
                 world:pub {"ResetPrefab"}
             end
-            if ImGui.MenuItemEx(faicons.ICON_FA_FOLDER_OPEN.." Open", "Ctrl+O") then
-                world:pub{"OpenProject"}
+            if ImGui.MenuItemEx(faicons.ICON_FA_FILE_PEN.." Open File", "Ctrl+O") then
+                local filepath = uiutils.get_open_file_path("Select Prefab", "prefab")
+                if lfs.exists(filepath) then
+                    world:pub{"OpenFile", filepath, lfs.path(filepath):extension() == ".prefab"}
+                end
             end
             ImGui.Separator()
             if ImGui.BeginMenu(faicons.ICON_FA_LIST.." Recent Files") then
