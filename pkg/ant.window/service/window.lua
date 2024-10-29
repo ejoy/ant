@@ -182,6 +182,10 @@ function S.msg(messages)
     end
 end
 
+function S.close()
+    window.close()
+end
+
 function S.set_cursor(cursor)
     window.set_cursor(cursor)
 end
