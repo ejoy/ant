@@ -38,6 +38,10 @@ end
 local function newproxy(t, k)
     local ServiceWindow = ltask.queryservice "ant.window|window"
 
+    local function close()
+        ltask.send(ServiceWindow, "close")
+    end
+
     local function reboot(initargs)
         ltask.send(ServiceWindow, "reboot", initargs)
     end
@@ -58,6 +62,7 @@ local function newproxy(t, k)
         ltask.call(ServiceWindow, "set_fullscreen", fullscreen)
     end
 
+    t.close = close
     t.reboot = reboot
     t.set_cursor = set_cursor
     t.show_cursor = show_cursor
