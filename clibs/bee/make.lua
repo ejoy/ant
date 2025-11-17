@@ -36,7 +36,7 @@ lm:source_set "bee" {
 lm:source_set "bee" {
     includes = {
         ".",
-        "3rd/lua",
+        "3rd/lua54",
     },
     sources = "bee/**/*.cpp",
     windows = {
@@ -81,7 +81,11 @@ lm:lua_src "bee" {
         "."
     },
     defines = "BEE_STATIC",
-    sources = "binding/*.cpp",
+    sources = {
+        "binding/*.cpp",
+        "3rd/lua-seri/lua-seri.cpp",
+        "3rd/lua-patch/bee_newstate.c",
+    },
     windows = {
         defines = "_CRT_SECURE_NO_WARNINGS",
         sources = {

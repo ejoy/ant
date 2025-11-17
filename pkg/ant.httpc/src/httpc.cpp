@@ -5,7 +5,7 @@
 #include <bee/nonstd/unreachable.h>
 #include <bee/thread/simplethread.h>
 #include <bee/win/wtf8.h>
-#include <bee/error.h>
+#include <bee/lua/error.h>
 #include <array>
 #include <charconv>
 #include <cstring>
@@ -74,7 +74,7 @@ struct HttpcDownloadOutput {
 struct HttpcDownloadOutputFile: public HttpcDownloadOutput {
     std::wstring file;
     HANDLE tmpFile = INVALID_HANDLE_VALUE;
-    HttpcDownloadOutputFile(bee::zstring_view file) noexcept
+    HttpcDownloadOutputFile(std::string_view file) noexcept
         : file(bee::wtf8::u2w(file))
     {}
     ~HttpcDownloadOutputFile() noexcept {
@@ -137,12 +137,12 @@ struct HttpcTask {
         Pending,
         Completion,
     };
-    HttpcTask(int64_t id, bee::zstring_view url, bee::zstring_view file) noexcept
+    HttpcTask(int64_t id, std::string_view url, std::string_view file) noexcept
         : id(id)
         , url(bee::wtf8::u2w(url))
         , output(new HttpcDownloadOutputFile(file))
     {}
-    HttpcTask(int64_t id, bee::zstring_view url) noexcept
+    HttpcTask(int64_t id, std::string_view url) noexcept
         : id(id)
         , url(bee::wtf8::u2w(url))
         , output(new HttpcDownloadOutputMemory())
@@ -334,7 +334,7 @@ struct HttpcSession {
         lua_setfield(L, -2, "id");
         lua_pushstring(L, "error");
         lua_setfield(L, -2, "type");
-        lua_pushstring(L, bee::error::sys_errmsg("download").c_str());
+        bee::lua::push_sys_error(L, "download");
         lua_setfield(L, -2, "errmsg");
         response.push(seri_pack(L, 0, NULL));
     }
@@ -368,7 +368,7 @@ struct HttpcSession {
     void select(SelectHandler handler) {
         response.select(handler);
     }
-    std::optional<int64_t> createDownloadTask(bee::zstring_view url, bee::zstring_view file) noexcept {
+    std::optional<int64_t> createDownloadTask(std::string_view url, std::string_view file) noexcept {
         int64_t id = ++taskid;
         auto task = std::make_unique<HttpcTask>(id, url, file);
         if (!task->parseUrl()) {
@@ -377,7 +377,7 @@ struct HttpcSession {
         request.push(task.release());
         return id;
     }
-    std::optional<int64_t> createDownloadTask(bee::zstring_view url) noexcept {
+    std::optional<int64_t> createDownloadTask(std::string_view url) noexcept {
         int64_t id = ++taskid;
         auto task = std::make_unique<HttpcTask>(id, url);
         if (!task->parseUrl()) {
@@ -388,7 +388,7 @@ struct HttpcSession {
     }
 };
 
-static bee::zstring_view lua_checkstrview(lua_State* L, int idx) {
+static std::string_view lua_checkstrview(lua_State* L, int idx) {
     size_t sz = 0;
     const char* str = luaL_checklstring(L, idx, &sz);
     return { str, sz };
@@ -398,7 +398,7 @@ static int session(lua_State* L) {
     auto& s = bee::lua::newudata<HttpcSession>(L);
     if (!s.init()) {
         lua_pushnil(L);
-        lua_pushstring(L, bee::error::sys_errmsg("session").c_str());
+        bee::lua::push_sys_error(L, "session");
         return 2;
     }
     return 1;
@@ -421,7 +421,7 @@ static int download(lua_State* L) {
         }
     }
     lua_pushnil(L);
-    lua_pushstring(L, bee::error::sys_errmsg("download").c_str());
+    bee::lua::push_sys_error(L, "download");
     return 2;
 }
 

@@ -8,7 +8,7 @@ end
 
 lm:source_set "lua_source" {
     sources = {
-        lm.AntDir .. "/3rd/bee.lua/3rd/lua/onelua.c",
+        lm.AntDir .. "/3rd/bee.lua/3rd/lua54/onelua.c",
     },
     defines = "MAKE_LIB",
     linux = {
@@ -25,7 +25,7 @@ lm:source_set "lua_source" {
         defines = "LUA_USE_LINUX",
     },
     msvc = {
-        sources = lm.AntDir .. ("/3rd/bee.lua/3rd/lua/fast_setjmp_%s.s"):format(lm.arch)
+        sources = lm.AntDir .. ("/3rd/bee.lua/3rd/lua-patch/fast_setjmp_%s.s"):format(lm.arch)
     }
 }
 
@@ -35,7 +35,7 @@ if lm.os == "windows" then
             lm.AntDir .. "/3rd/bee.lua/",
         },
         sources = {
-            lm.AntDir .. "/3rd/bee.lua/3rd/lua/bee_utf8_crt.cpp",
+            lm.AntDir .. "/3rd/bee.lua/3rd/lua-patch/bee_utf8_crt.cpp",
         }
     }
 end

@@ -153,7 +153,7 @@ namespace luadebug::debughost {
     }
 
 #if defined(_WIN32) && !defined(LUADBG_DISABLE)
-    static bee::zstring_view to_strview(lua_State* hL, int idx) {
+    static std::string_view to_strview(lua_State* hL, int idx) {
         size_t len      = 0;
         const char* buf = luaL_checklstring(hL, idx, &len);
         return { buf, len };

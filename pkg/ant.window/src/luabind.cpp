@@ -1,7 +1,7 @@
 #include <lua.hpp>
 #include "window.h"
 
-static bee::zstring_view lua_checkstrview(lua_State* L, int idx) {
+static std::string_view lua_checkstrview(lua_State* L, int idx) {
 	size_t sz = 0;
 	const char* str = luaL_checklstring(L, idx, &sz);
 	return { str, sz };

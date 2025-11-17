@@ -651,7 +651,7 @@ void window_set_cursor(int cursor)
     // TODO: implement actual logic
 }
 
-void window_set_title(bee::zstring_view title)
+void window_set_title(std::string_view title)
 {
     // TODO: implement actual logic
 }

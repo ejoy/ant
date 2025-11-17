@@ -6,7 +6,7 @@ lm:lua_src "debugger" {
     },
     includes = {
         lm.AntDir .. "/3rd/bee.lua/",
-        lm.AntDir .. "/3rd/bee.lua/3rd/lua/",
+        lm.AntDir .. "/3rd/bee.lua/3rd/lua54/",
         lm.AntDir .. "/3rd/bee.lua/3rd/lua-seri",
         "src",
     },

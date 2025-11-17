@@ -628,7 +628,7 @@ static void window_set_cursor(int cursor) {
 	G.MouseCursor = (ImGuiMouseCursor)cursor;
 }
 
-static void window_set_title(bee::zstring_view title) {
+static void window_set_title(std::string_view title) {
     ::SetWindowTextW(G.hWnd, bee::wtf8::u2w(title).c_str());
 }
 

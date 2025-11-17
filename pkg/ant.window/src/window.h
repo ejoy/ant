@@ -7,7 +7,6 @@
 #include <vector>
 #include <imgui.h>
 #include <bee/utility/bitmask.h>
-#include <bee/utility/zstring_view.h>
 
 struct lua_State;
 
@@ -208,7 +207,7 @@ BEE_BITMASK_OPERATORS(mouse_buttons)
 		enum type type;
 		union {
 			int cursor;
-			bee::zstring_view title = {};
+			std::string_view title = {};
 			float maxfps;
 			bool fullscreen;
 			bool show_cursor;

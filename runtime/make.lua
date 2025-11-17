@@ -51,7 +51,7 @@ lm:lua_src "ant_common" {
     windows = {
         sources = {
             "windows/main.cpp",
-            lm.AntDir .. "/3rd/bee.lua/3rd/lua/bee_utf8_main.c",
+            lm.AntDir .. "/3rd/bee.lua/3rd/lua-patch/bee_utf8_main.c",
         }
     },
     linux = {

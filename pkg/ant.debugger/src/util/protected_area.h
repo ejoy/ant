@@ -3,9 +3,9 @@
 #include <bee/nonstd/bit.h>
 #include <bee/nonstd/to_underlying.h>
 #include <bee/nonstd/unreachable.h>
-#include <bee/utility/zstring_view.h>
 
 #include <stdexcept>
+#include <string_view>
 #include <type_traits>
 
 #include "rdebug_debughost.h"
@@ -106,7 +106,7 @@ namespace luadebug {
             }
         }
 
-        inline bee::zstring_view checkstring(luadbg_State*, int arg) {
+        inline std::string_view checkstring(luadbg_State*, int arg) {
             size_t sz;
             const char* s = luadbg_tolstring(L, arg, &sz);
             if (!s) {

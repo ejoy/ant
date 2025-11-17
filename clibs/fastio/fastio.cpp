@@ -3,11 +3,11 @@
 #include <string.h>
 #include <assert.h>
 #include <array>
+#include <string_view>
 #include <optional>
 #include "memfile.h"
 
 #include <bee/nonstd/unreachable.h>
-#include <bee/utility/zstring_view.h>
 #include <bee/win/cwtf8.h>
 
 extern "C" {
@@ -15,7 +15,7 @@ extern "C" {
 }
 
 namespace fileutil {
-    static FILE* open(lua_State* L, bee::zstring_view filename) noexcept {
+    static FILE* open(lua_State* L, std::string_view filename) noexcept {
 #if defined(_WIN32)
         size_t wlen = wtf8_to_utf16_length(filename.data(), filename.size());
         if (wlen == (size_t)-1) {
@@ -54,7 +54,7 @@ namespace fileutil {
         (void)rc;
         assert(rc == 0);
     }
-    static memory_file* readall_v(lua_State* L, bee::zstring_view filename) noexcept {
+    static memory_file* readall_v(lua_State* L, std::string_view filename) noexcept {
         FILE* f = fileutil::open(L, filename);
         if (!f) {
             return nullptr;
@@ -77,7 +77,7 @@ namespace fileutil {
         lua_pushlightuserdata(L, file);
         return file;
     }
-    static std::optional<std::string_view> readall_s(lua_State* L, bee::zstring_view filename) noexcept {
+    static std::optional<std::string_view> readall_s(lua_State* L, std::string_view filename) noexcept {
         FILE* f = fileutil::open(L, filename);
         if (!f) {
             return std::nullopt;
@@ -109,7 +109,7 @@ static int raise_error(lua_State *L, const char* what, const char *filename) {
     }
 }
 
-static bee::zstring_view getfile(lua_State *L) {
+static std::string_view getfile(lua_State *L) {
     if (lua_type(L, 1) != LUA_TSTRING) {
         if (lua_type(L, 2) == LUA_TSTRING) {
             luaL_error(L, "unable to decode filename: %s", lua_tostring(L, 2));
@@ -133,7 +133,7 @@ static int set_readability(lua_State *L) {
     return 0;
 }
 
-static const char* getsymbol(lua_State *L, bee::zstring_view filename) {
+static const char* getsymbol(lua_State *L, std::string_view filename) {
     if (!readability) {
         return luaL_optstring(L, 2, filename.data());
     }

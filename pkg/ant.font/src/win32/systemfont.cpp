@@ -10,7 +10,7 @@
 static std::wstring towstring(lua_State* L, int idx) {
     size_t len = 0;
     const char* str = luaL_checklstring(L, idx, &len);
-    return bee::wtf8::u2w(bee::zstring_view(str, len));
+    return bee::wtf8::u2w(std::string_view(str, len));
 }
 
 static int systemfont(lua_State* L) {

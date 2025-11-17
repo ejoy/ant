@@ -2,7 +2,7 @@ local lm = require "luamake"
 
 lm:dll "lua54" {
 	includes = {
-		lm.AntDir .. "/3rd/bee.lua/3rd/lua",
+		lm.AntDir .. "/3rd/bee.lua/3rd/lua54",
 	},
     windows = {
         defines = "LUA_BUILD_AS_DLL",
