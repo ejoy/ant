@@ -44,7 +44,7 @@ jobs:
     - shell: msys2 {0}
       run: ./luamake/luamake
   macos-arm64:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
     - uses: actions/checkout@v4
       with:
@@ -60,7 +60,7 @@ jobs:
     - uses: actboy168/setup-luamake@master
     - run: luamake
   ios:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
     - uses: actions/checkout@v4
       with:
