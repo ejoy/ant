@@ -7,6 +7,9 @@ if lm.mode == "debug" and lm.target == "x64" and lm.compiler == "msvc" then
 end
 
 lm:source_set "lua_source" {
+    includes = {
+        lm.AntDir .. "/3rd/bee.lua/3rd/lua54",
+    },
     sources = {
         lm.AntDir .. "/3rd/bee.lua/3rd/lua54/onelua.c",
     },
