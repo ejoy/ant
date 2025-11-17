@@ -52,7 +52,7 @@ jobs:
     - uses: actboy168/setup-luamake@master
     - run: luamake
   macos-x86_64:
-    runs-on: macos-13
+    runs-on: macos-15-intel
     steps:
     - uses: actions/checkout@v4
       with:
