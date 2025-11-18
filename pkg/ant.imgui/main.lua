@@ -30,6 +30,7 @@ function ImGuiAnt.FontAtlasBuild(list)
         FontDatas[#FontDatas+1] = FontData
         local data, size = fastio.wrap(FontData)()
         ImFontConfig.MergeMode = i > 1
+        ImFontConfig.RasterizerDensity = config.RasterizerDensity
         atlas.AddFontFromMemoryTTF(data, size, config.SizePixels, ImFontConfig, glyphRanges(config.GlyphRanges))
     end
     atlas.Build()
